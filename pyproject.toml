@@ -1,0 +1,21 @@
+[tool.pdm]
+[tool.pdm.dev-dependencies]
+jupyter = [
+    "black==23.1.0",
+    "flake8==5.0.4",
+    "pre-commit==3.1.1",
+]
+
+[project]
+name = ""
+version = ""
+description = ""
+authors = [
+    {name = "wsy", email = "631535207@qq.com"},
+]
+dependencies = [
+    "pandas==1.5.3",
+    "pyarrow==11.0.0",
+]
+requires-python = ">=3.8"
+license = {text = "MIT"}

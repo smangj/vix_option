@@ -1,0 +1,6 @@
+[flake8]
+max-line-length = 120
+extend_ignore = E203
+per-file-ignores =
+    start_task_worker.py: F401
+    */__init__.py: F401
