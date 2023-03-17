@@ -12,3 +12,9 @@ def test_end_date():
     se = RAW_DATA.end_date()
 
     assert se is not True
+
+
+def test_date_view():
+    a = RAW_DATA.date_view()
+
+    assert len(a["2005-05-24"]) == 1
