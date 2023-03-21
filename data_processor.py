@@ -32,7 +32,7 @@ class DataProcessor:
                 OneGIFutInfo(
                     symbol=record["Symbol"],
                     expiration=record["Expiration"].strftime("%Y-%m-%d"),
-                    close=record["ClosePrice"],
+                    close=record["SettlementPrice"],
                 )
                 for index, record in group.iterrows()
             ]

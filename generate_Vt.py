@@ -11,7 +11,9 @@ from utils.time import to_pydatetime
 import typing
 
 
-def generate_vt(const_maturity_list: typing.Union[typing.List[int], int]) -> pd.DataFrame:
+def generate_vt(
+    const_maturity_list: typing.Union[typing.List[int], int]
+) -> pd.DataFrame:
 
     if isinstance(const_maturity_list, int):
         const_maturity_list = [const_maturity_list]
@@ -39,9 +41,11 @@ def generate_vt(const_maturity_list: typing.Union[typing.List[int], int]) -> pd.
                 near_sort_index = np.argsort(
                     [abs((to_pydatetime(x.expiration) - end_date).days) for x in v]
                 )
+                # 到期日实际是expiration - 1那一天
                 weight_0 = (
-                    end_date - to_pydatetime(v[near_sort_index[0]].expiration)
-                ).days / (
+                    (end_date - to_pydatetime(v[near_sort_index[0]].expiration)).days
+                    + 1
+                ) / (
                     to_pydatetime(v[near_sort_index[1]].expiration)
                     - to_pydatetime(v[near_sort_index[0]].expiration)
                 ).days
@@ -55,9 +59,9 @@ def generate_vt(const_maturity_list: typing.Union[typing.List[int], int]) -> pd.
 
 
 def main():
-    result = generate_vt([20, 40, 60, 80, 100, 120])
-    result.to_csv('1-6M_trading_days.csv')
+    result = generate_vt([21, 42, 63, 84, 105, 126])
+    result.to_csv("1-6M_trading_days.csv")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
