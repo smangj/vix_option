@@ -52,10 +52,19 @@ def generate_vt(
                 price = v[near_sort_index[0]].close * weight_0 + v[
                     near_sort_index[1]
                 ].close * (1 - weight_0)
-            price_dict[str(const_maturity) + "_DAYS"] = price
+            price_dict[str(const_maturity) + "_DAYS_price"] = price
         result.append(price_dict)
 
     return pd.DataFrame(result)
+
+
+def genarate_Xt() -> pd.DataFrame:
+
+    constant_days = [21, 42, 63, 84, 105, 126]
+
+    vt = generate_vt(constant_days)
+
+    return vt
 
 
 def main():
