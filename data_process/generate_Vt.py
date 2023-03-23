@@ -4,10 +4,8 @@
 # @Author   : wsy
 # @email    : 631535207@qq.com
 import pandas as pd
-import datetime as dt
 import numpy as np
 from data_process.data_processor import DataProcessor
-from utils.time import to_pydatetime
 import typing
 
 
@@ -27,7 +25,7 @@ def generate_vt(
         pd.Series(date_series.shift(1).values, index=date_series.values)
     )
 
-    masks = []
+    result = None
     for i in range(len(const_maturity_list)):
         map_series = pd.Series(
             date_series.shift(-const_maturity_list[i]).values, index=date_series.values
@@ -51,87 +49,74 @@ def generate_vt(
             .rank(ascending=False, method="first")
         )
 
-        masks.append(raw[str(const_maturity_list[i]) + "_rank_positive"] == 1)
-        masks.append(raw[str(const_maturity_list[i]) + "_rank_negative"] == 1)
+        # 选出距离最近的左右期货
+        left = raw.loc[raw[str(const_maturity_list[i]) + "_rank_negative"] == 1]
+        right = raw.loc[raw[str(const_maturity_list[i]) + "_rank_positive"] == 1]
 
-    final_mask = masks[0]
-    for m in masks[1:]:
-        final_mask |= m
+        result_df = pd.merge(left, right, on="Date", suffixes=("_left", "_right"))
 
-    result = raw.loc[final_mask]
+        result_df[str(const_maturity_list[i]) + "_w"] = (
+            result_df["Expiration_for_trade_right"]
+            - result_df[str(const_maturity_list[i]) + "_end_date" + "_right"]
+        ).dt.days / (
+            result_df["Expiration_for_trade_right"]
+            - result_df["Expiration_for_trade_left"]
+        ).dt.days
 
-    groups = raw.groupby("Date")
+        result_df[str(const_maturity_list[i]) + "_v"] = result_df[
+            "SettlementPrice_left"
+        ] * result_df[str(const_maturity_list[i]) + "_w"] + result_df[
+            "SettlementPrice_right"
+        ] * (
+            1 - result_df[str(const_maturity_list[i]) + "_w"]
+        )
 
-    result = []
-    for date, group in groups:
-
-        if len(group) <= 1:
-            continue
-        date_dict = {"date": date}
-        for const_maturity in const_maturity_list:
-            end_date_index = list(date_series.values).index(date) + const_maturity
-            if end_date_index < len(groups):
-                end_date = to_pydatetime(list(date_series.values)[end_date_index])
-            else:
-                end_date = to_pydatetime(date) + dt.timedelta(int(const_maturity))
-            near_sort_index = np.argsort(
-                group["Expiration_for_trade"]
-                .apply(lambda x: abs((to_pydatetime(x) - end_date).days))
-                .values
+        result_df[str(const_maturity_list[i]) + "_roll"] = (
+            (result_df["SettlementPrice_right"] - result_df["SettlementPrice_left"])
+            / result_df[str(const_maturity_list[i]) + "_v"].shift(1)
+            * (
+                result_df[str(const_maturity_list[i]) + "_w"]
+                - result_df[str(const_maturity_list[i]) + "_w"].shift(1)
             )
-            f = group.iloc[near_sort_index[0]]
-            f1 = None
-            for i in range(len(near_sort_index) - 1):
-                # 保证Ti <= t+ thetai <= Ti+1
-                if (
-                    group.iloc[near_sort_index[i + 1]]["Expiration_for_trade"]
-                    - end_date
-                ).days * (f["Expiration_for_trade"] - end_date).days <= 0:
-                    f1 = group.iloc[near_sort_index[i + 1]]
-                    break
-            if f1 is None:
-                date_dict[str(const_maturity) + "_left"] = np.nan
-                date_dict[str(const_maturity) + "_right"] = np.nan
-                date_dict[str(const_maturity) + "_w"] = np.nan
-                date_dict[str(const_maturity) + "_price"] = np.nan
-                continue
-            elif f["Expiration_for_trade"] >= end_date:
-                f_left = f1
-                f_right = f
-            else:
-                f_left = f
-                f_right = f1
-            fi = f_left["SettlementPrice"]
-            fi_ = f_right["SettlementPrice"]
-            w = (f_right["Expiration_for_trade"] - end_date).days / (
-                f_right["Expiration_for_trade"] - f_left["Expiration_for_trade"]
-            ).days
-            date_dict[str(const_maturity) + "_left"] = fi
-            date_dict[str(const_maturity) + "_right"] = fi_
-            date_dict[str(const_maturity) + "_w"] = w
-            date_dict[str(const_maturity) + "_price"] = fi * w + fi_ * (1 - w)
+            / (1.0 / 252)
+        )
 
-        result.append(date_dict)
+        result_df = result_df[
+            [
+                "Date",
+                str(const_maturity_list[i]) + "_w",
+                str(const_maturity_list[i]) + "_v",
+                str(const_maturity_list[i]) + "_roll",
+            ]
+        ]
+        if result is None:
+            result = result_df
+        else:
+            result = pd.merge(result, result_df, on="Date")
 
-    return pd.DataFrame.from_records(result)
+    return result
 
 
 def generate_xt() -> pd.DataFrame:
     constant_days = [21, 42, 63, 84, 105, 126]
 
     vt = generate_vt(constant_days)
+    vt["Date"] = vt["Date"].dt.date
 
     raw_data = DataProcessor()
     VIX = raw_data.df1.loc[raw_data.df1["ID"] == "VIX"]
-    VIX["date"] = VIX["Date"].apply(lambda x: x.strftime("%Y-%m-%d"))
 
-    result = pd.merge(vt, VIX, on="date").set_index("date")
-    result = result[["Close"] + [str(x) + "_DAYS_price" for x in constant_days]]
-    result.columns = ["VIX"] + ["VIX" + str(i + 1) for i in range(len(constant_days))]
+    merged_df = pd.merge(vt, VIX, on="Date").set_index("Date")
+
+    result = merged_df[["Close"] + [str(x) + "_v" for x in constant_days]]
+    result.columns = ["ln_VIX"] + [
+        "ln_V" + str(i + 1) for i in range(len(constant_days))
+    ]
     result = np.log(result)
-    result["roll1"] = None
+    result_roll = merged_df[[str(x) + "_roll" for x in constant_days]]
+    result_roll.columns = ["roll" + str(i + 1) for i in range(len(constant_days))]
 
-    return vt
+    return pd.concat([result, result_roll], axis=1)
 
 
 def main():
