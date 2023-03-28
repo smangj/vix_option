@@ -19,6 +19,9 @@ def generate_vt(
 
     data = DataProcessor()
     raw = data.df2.copy()
+    # 筛选出month的数据
+    month_contract_mask = raw["Symbol"].str.split().apply(lambda x: x[0] == "VX")
+    raw = raw.loc[month_contract_mask]
 
     date_series = pd.Series(raw["Date"].unique()).sort_values()
     raw["Expiration_for_trade"] = raw["Expiration"].map(
@@ -75,10 +78,12 @@ def generate_vt(
             (result_df["SettlementPrice_right"] - result_df["SettlementPrice_left"])
             / result_df[str(const_maturity_list[i]) + "_v"].shift(1)
             * (
-                result_df[str(const_maturity_list[i]) + "_w"]
-                - result_df[str(const_maturity_list[i]) + "_w"].shift(1)
+                -252
+                / (
+                    result_df["Expiration_for_trade_right"]
+                    - result_df["Expiration_for_trade_left"]
+                ).dt.days
             )
-            / (1.0 / 252)
         )
 
         result_df = result_df[
