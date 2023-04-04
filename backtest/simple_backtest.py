@@ -6,6 +6,7 @@
 import numpy as np
 import pandas as pd
 
+from data_process.data_processor import DataProcessor
 from data_process.generate_Vt import generate_xt
 
 
@@ -14,6 +15,7 @@ def simple_backtest():
     xt = generate_xt()
     xt["vix_ma"] = xt["ln_VIX"].rolling(window=roll).mean()
     xt["vix_std"] = xt["ln_VIX"].rolling(window=roll).std()
+    trading_price = DataProcessor().generate_trade_price().fillna(method="bfill")
 
     std_times = 2
     position_num = 1
@@ -21,30 +23,30 @@ def simple_backtest():
     for month in range(1, 7):
 
         buy_signal = xt["ln_V" + str(month)] <= (
-            xt["vix_ma"] - std_times * xt["vix_std"]
+                xt["vix_ma"] - std_times * xt["vix_std"]
         )
         sell_signal = xt["ln_V" + str(month)] >= (
-            xt["vix_ma"] + std_times * xt["vix_std"]
+                xt["vix_ma"] + std_times * xt["vix_std"]
         )
 
         xt["signal" + str(month)] = (
-            position_num * buy_signal - position_num * sell_signal
+                position_num * buy_signal - position_num * sell_signal
         )
 
         # 简单规则：遇到异号signal变position
         xt["position" + str(month)] = (
             xt["signal" + str(month)]
-            .replace(0, np.nan)
-            .fillna(method="ffill")
-            .replace(np.nan, 0)
+                .replace(0, np.nan)
+                .fillna(method="ffill")
+                .replace(np.nan, 0)
         )
         xt["trading_vol" + str(month)] = (
-            xt["position" + str(month)] - xt["position" + str(month)].shift(1)
+                xt["position" + str(month)] - xt["position" + str(month)].shift(1)
         ).fillna(0)
-        xt["trading_price" + str(month)] = xt["ln_V" + str(month)]
+        xt["trading_price" + str(month)] = trading_price.iloc[:, int(month)-1]
 
         xt["equity" + str(month)] = (
-            xt["position" + str(month)] * xt["ln_V" + str(month)]
+                xt["position" + str(month)] * xt["ln_V" + str(month)]
         )
 
         # cash能cover住
@@ -56,15 +58,15 @@ def simple_backtest():
                 cash.append(init_equity)
             else:
                 this_cash = (
-                    cash[-1]
-                    - xt["trading_vol" + str(month)][i]
-                    * xt["trading_price" + str(month)][i]
+                        cash[-1]
+                        - xt["trading_vol" + str(month)][i]
+                        * xt["trading_price" + str(month)][i]
                 )
                 cash.append(this_cash)
         xt["cash" + str(month)] = cash
 
         xt["total_equity" + str(month)] = (
-            xt["cash" + str(month)] + xt["equity" + str(month)]
+                xt["cash" + str(month)] + xt["equity" + str(month)]
         )
 
         net_value = (xt["total_equity" + str(month)] / init_equity).rename(

@@ -44,3 +44,11 @@ class DataProcessor:
         # 去掉时区
         self.df2["Expiration"] = self.df2["Expiration"].dt.tz_convert(None)
         self.df2["Date"] = self.df2["Date"].dt.tz_convert(None)
+
+    def generate_trade_price(self):
+        array = ['SPVXSP', 'SPVIX2ME', 'SPVIX3ME', 'SPVIX4ME', 'SPVXMP', 'SPVIX6ME']
+        raw = self.df1.loc[self.df1['ID'].isin(array)]
+        pivot = raw.pivot(index='Date', columns='ID', values='Close')
+        result = pivot[array]
+        return result
+
