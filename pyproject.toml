@@ -5,6 +5,7 @@ dev = [
     "flake8==5.0.4",
     "pre-commit==3.1.1",
     "jupyter==1.0.0",
+    "matplotlib==3.7.1",
 ]
 
 [project]

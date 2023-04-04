@@ -44,38 +44,46 @@ def simple_backtest():
         )
 
         # 简单规则：
-        xt["position" + str(month)] = (
+        xt["signal" + str(month)] = (
             xt["signal" + str(month)]
             .replace(0, np.nan)
             .fillna(method="ffill")
             .replace(np.nan, 0)
         )
-        xt["trading_vol" + str(month)] = (
-            xt["position" + str(month)] - xt["position" + str(month)].shift(1)
+        xt["trading_flag" + str(month)] = (
+            xt["signal" + str(month)] - xt["signal" + str(month)].shift(1)
         ).fillna(0)
         xt["trading_price" + str(month)] = xt[etf_map[month]]
 
-        xt["equity" + str(month)] = (
-            xt["position" + str(month)] * xt["trading_price" + str(month)]
-        )
-
-        # cash能cover住
-
         cash = []
+        position_list = []
+        equity_list = []
         for i in range(len(xt)):
             if i == 0:
-                cash.append(init_equity)
+                equity = init_equity
             else:
-                this_cash = (
-                    cash[-1]
-                    - xt["trading_vol" + str(month)][i]
-                    * xt["trading_price" + str(month)][i]
-                )
-                cash.append(this_cash)
-        xt["cash" + str(month)] = cash
+                equity = cash[-1] + xt["trading_price" + str(month)].iloc[i] * position_list[-1]
+            equity_list.append(equity)
 
-        xt["total_equity" + str(month)] = (
-            xt["cash" + str(month)] + xt["equity" + str(month)]
+            if xt["trading_flag" + str(month)].iloc[i] > 0:
+                position = equity / xt["trading_price" + str(month)].iloc[i]
+            elif xt["trading_flag" + str(month)].iloc[i] < 0:
+                position = -equity / xt["trading_price" + str(month)].iloc[i]
+            else:
+                if i == 0:
+                    position = 0
+                else:
+                    position = position_list[-1]
+            position_list.append(position)
+
+            this_cash = equity - position * xt["trading_price" + str(month)].iloc[i]
+            cash.append(this_cash)
+        xt["cash" + str(month)] = cash
+        xt["total_equity" + str(month)] = equity_list
+        xt["position" + str(month)] = position_list
+
+        xt["equity" + str(month)] = (
+                xt["position" + str(month)] * xt["trading_price" + str(month)]
         )
 
         net_value = (xt["total_equity" + str(month)] / init_equity).rename(
