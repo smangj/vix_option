@@ -152,6 +152,21 @@ class CrossBacktest(SimpleBacktest):
         return "cross_strategy"
 
 
-m = CrossBacktest()
+class RollSignalBacktest(SimpleBacktest):
+    def _generate_signal(self, month) -> pd.DataFrame:
+        xt = self.data.copy()
+
+        buy_signal = xt["roll" + str(month)] > 0
+        sell_signal = xt["roll" + str(month)] <= 0
+
+        xt["signal"] = 1 * buy_signal - 1 * sell_signal
+        return xt
+
+    @property
+    def name(self) -> str:
+        return "roll_signal_strategy"
+
+
+m = RollSignalBacktest()
 m.run()
 m.save_result()
