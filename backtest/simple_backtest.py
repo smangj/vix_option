@@ -3,6 +3,9 @@
 # @Time     : 2023/3/31 17:07
 # @Author   : wsy
 # @email    : 631535207@qq.com
+import abc
+import os
+
 import numpy as np
 import pandas as pd
 
@@ -10,12 +13,13 @@ from data_process.data_processor import DataProcessor
 from data_process.generate_Vt import generate_xt
 
 
-class SimpleBacktest:
+class SimpleBacktest(abc.ABC):
     """基于Xt和ETF的矩阵回测"""
 
     def __init__(self):
 
         self.data = self._feature_and_etfprice()
+        self.result = None
 
     @staticmethod
     def _feature_and_etfprice() -> pd.DataFrame:
@@ -34,25 +38,11 @@ class SimpleBacktest:
         )
         return xt
 
+    @abc.abstractmethod
     def _generate_signal(self, month) -> pd.DataFrame:
+        raise NotImplementedError
 
-        xt = self.data.copy()
-        roll = 20
-        xt["vix_ma"] = xt["ln_VIX"].rolling(window=roll).mean()
-        xt["vix_std"] = xt["ln_VIX"].rolling(window=roll).std()
-        std_times = 2
-        position_num = 1
-        buy_signal = xt["ln_V" + str(month)] <= (
-            xt["vix_ma"] - std_times * xt["vix_std"]
-        )
-        sell_signal = xt["ln_V" + str(month)] >= (
-            xt["vix_ma"] + std_times * xt["vix_std"]
-        )
-
-        xt["signal"] = position_num * buy_signal - position_num * sell_signal
-        return xt
-
-    def run(self):
+    def run(self) -> pd.DataFrame:
 
         net_values = []
         init_equity = 100000
@@ -108,8 +98,60 @@ class SimpleBacktest:
             )
             net_values.append(net_value)
         result = pd.concat(net_values, axis=1)
-        result.to_csv("vix_reversion_strategy.csv")
+        self.result = result
         return result
 
+    def save_result(self, dir_path: str = ""):
+        if self.result is not None:
+            self.result.to_csv(os.path.join(dir_path, self.name + ".csv"))
 
-SimpleBacktest().run()
+    @property
+    def name(self) -> str:
+        return "empty"
+
+
+class MeanReversionBacktest(SimpleBacktest):
+    def _generate_signal(self, month) -> pd.DataFrame:
+        xt = self.data.copy()
+        roll = 20
+        xt["vix_ma"] = xt["ln_VIX"].rolling(window=roll).mean()
+        xt["vix_std"] = xt["ln_VIX"].rolling(window=roll).std()
+        std_times = 2
+        position_num = 1
+        buy_signal = xt["ln_V" + str(month)] <= (
+            xt["vix_ma"] - std_times * xt["vix_std"]
+        )
+        sell_signal = xt["ln_V" + str(month)] >= (
+            xt["vix_ma"] + std_times * xt["vix_std"]
+        )
+
+        xt["signal"] = position_num * buy_signal - position_num * sell_signal
+        return xt
+
+    @property
+    def name(self) -> str:
+        return "vix_reversion_strategy"
+
+
+class CrossBacktest(SimpleBacktest):
+    def _generate_signal(self, month) -> pd.DataFrame:
+        xt = self.data.copy()
+        ma_long = 20
+        ma_short = 5
+        xt["ma_long"] = xt["ln_V" + str(month)].rolling(window=ma_long).mean()
+        xt["ma_short"] = xt["ln_V" + str(month)].rolling(window=ma_short).mean()
+
+        buy_signal = xt["ma_short"] > xt["ma_long"]
+        sell_signal = xt["ma_short"] <= xt["ma_long"]
+
+        xt["signal"] = 1 * buy_signal - 1 * sell_signal
+        return xt
+
+    @property
+    def name(self) -> str:
+        return "cross_strategy"
+
+
+m = CrossBacktest()
+m.run()
+m.save_result()
