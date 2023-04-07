@@ -45,7 +45,7 @@ class SimpleBacktest(abc.ABC):
     def run(self) -> pd.DataFrame:
 
         net_values = []
-        init_equity = 100000
+        # init_equity = 100000
         for month in range(1, 7):
 
             xt = self._generate_signal(month)
@@ -57,44 +57,49 @@ class SimpleBacktest(abc.ABC):
                 .fillna(method="ffill")
                 .replace(np.nan, 0)
             )
-            xt["trading_flag"] = (
-                xt["trading_flag"] - xt["trading_flag"].shift(1)
-            ).fillna(0)
+            # xt["trading_flag"] = (
+            #     xt["trading_flag"] - xt["trading_flag"].shift(1)
+            # ).fillna(0)
             xt["trading_price"] = xt["ETF" + str(month)]
+            xt["next_ret"] = (xt["trading_price"].shift(-1) / xt["trading_price"]) - 1
 
-            cash = []
-            position_list = []
-            equity_list = []
-            for i in range(len(xt)):
-                if i == 0:
-                    equity = init_equity
-                else:
-                    equity = cash[-1] + xt["trading_price"].iloc[i] * position_list[-1]
-                equity_list.append(equity)
+            # cash = []
+            # position_list = []
+            # equity_list = []
+            # for i in range(len(xt)):
+            #     if i == 0:
+            #         equity = init_equity
+            #     else:
+            #         equity = cash[-1] + xt["trading_price"].iloc[i] * position_list[-1]
+            #     equity_list.append(equity)
+            #
+            #     if xt["trading_flag"].iloc[i] > 0:
+            #         position = equity / xt["trading_price"].iloc[i]
+            #     elif xt["trading_flag"].iloc[i] < 0:
+            #         position = -equity / xt["trading_price"].iloc[i]
+            #     else:
+            #         if i == 0:
+            #             position = 0
+            #         else:
+            #             position = position_list[-1]
+            #     position_list.append(position)
+            #
+            #     this_cash = equity - position * xt["trading_price"].iloc[i]
+            #     cash.append(this_cash)
+            # xt["cash" + str(month)] = cash
+            # xt["total_equity" + str(month)] = equity_list
+            # xt["position" + str(month)] = position_list
 
-                if xt["trading_flag"].iloc[i] > 0:
-                    position = equity / xt["trading_price"].iloc[i]
-                elif xt["trading_flag"].iloc[i] < 0:
-                    position = -equity / xt["trading_price"].iloc[i]
-                else:
-                    if i == 0:
-                        position = 0
-                    else:
-                        position = position_list[-1]
-                position_list.append(position)
+            xt["daily_ret"] = xt["next_ret"] * xt["trading_flag"]
+            # xt["equity" + str(month)] = (
+            #     xt["position" + str(month)] * xt["trading_price"]
+            # )
 
-                this_cash = equity - position * xt["trading_price"].iloc[i]
-                cash.append(this_cash)
-            xt["cash" + str(month)] = cash
-            xt["total_equity" + str(month)] = equity_list
-            xt["position" + str(month)] = position_list
-
-            xt["equity" + str(month)] = (
-                xt["position" + str(month)] * xt["trading_price"]
-            )
-
-            net_value = (xt["total_equity" + str(month)] / init_equity).rename(
-                "net_value" + str(month)
+            net_value = (
+                np.cumprod(xt["daily_ret"] + 1)
+                .shift(1)
+                .fillna(1)
+                .rename("net_value" + str(month))
             )
             net_values.append(net_value)
         result = pd.concat(net_values, axis=1)
