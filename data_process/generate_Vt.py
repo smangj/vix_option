@@ -124,6 +124,23 @@ def generate_xt() -> pd.DataFrame:
     return pd.concat([result, result_roll], axis=1)
 
 
+def xt_with_etfprice() -> pd.DataFrame:
+    etf_map = {
+        "SPVXSP": "ETF1",
+        "SPVIX2ME": "ETF2",
+        "SPVIX3ME": "ETF3",
+        "SPVIX4ME": "ETF4",
+        "SPVXMP": "ETF5",
+        "SPVIX6ME": "ETF6",
+    }
+    xt = generate_xt().fillna(method="bfill")
+    trading_price = DataProcessor().generate_trade_price().fillna(method="bfill")
+    xt = pd.merge(xt, trading_price, left_index=True, right_index=True).rename(
+        columns=etf_map
+    )
+    return xt
+
+
 def main():
     result = generate_vt([21, 42, 63, 84, 105, 126])
     result.to_csv("1-6M_trading_days.csv")
