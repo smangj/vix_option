@@ -8,7 +8,9 @@ import os
 
 import numpy as np
 import pandas as pd
+import typing
 
+from backtest.qlib_custom.strategy import TargetPositionRecord
 from data_process.data_processor import DataProcessor
 from data_process.generate_Vt import generate_xt
 
@@ -24,12 +26,12 @@ class SimpleBacktest(abc.ABC):
     @staticmethod
     def _feature_and_etfprice() -> pd.DataFrame:
         etf_map = {
-            "SPVXSP": "ETF1",
-            "SPVIX2ME": "ETF2",
-            "SPVIX3ME": "ETF3",
-            "SPVIX4ME": "ETF4",
-            "SPVXMP": "ETF5",
-            "SPVIX6ME": "ETF6",
+            "SPVXSP": "VIX_1M",
+            "SPVIX2ME": "VIX_2M",
+            "SPVIX3ME": "VIX_3M",
+            "SPVIX4ME": "VIX_4M",
+            "SPVXMP": "VIX_5M",
+            "SPVIX6ME": "VIX_6M",
         }
         xt = generate_xt().fillna(method="bfill")
         trading_price = DataProcessor().generate_trade_price().fillna(method="bfill")
@@ -47,7 +49,6 @@ class SimpleBacktest(abc.ABC):
         net_values = []
         # init_equity = 100000
         for month in range(1, 7):
-
             xt = self._generate_signal(month)
 
             # 简单规则：
@@ -104,6 +105,55 @@ class SimpleBacktest(abc.ABC):
             net_values.append(net_value)
         result = pd.concat(net_values, axis=1)
         self.result = result
+        return result
+
+    def gen_target_position(
+        self, month, init_equity
+    ) -> typing.List[TargetPositionRecord]:
+        xt = self._generate_signal(month)
+
+        # 简单规则：
+        xt["trading_flag"] = (
+            xt["signal"].replace(0, np.nan).fillna(method="ffill").replace(np.nan, 0)
+        )
+        xt["trading_flag"] = (xt["trading_flag"] - xt["trading_flag"].shift(1)).fillna(
+            0
+        )
+        xt["trading_price"] = xt["VIX_" + str(month) + "M"]
+
+        cash = []
+        position_list = []
+        equity_list = []
+        result = []
+        for i in range(len(xt)):
+            if i == 0:
+                equity = init_equity
+            else:
+                equity = cash[-1] + xt["trading_price"].iloc[i] * position_list[-1]
+            equity_list.append(equity)
+
+            if xt["trading_flag"].iloc[i] > 0:
+                position = equity / xt["trading_price"].iloc[i]
+            elif xt["trading_flag"].iloc[i] < 0:
+                position = -equity / xt["trading_price"].iloc[i]
+            else:
+                if i == 0:
+                    position = 0
+                else:
+                    position = position_list[-1]
+            # 跟回测写法保持一致
+            position = (position + 0.1) // 1
+            position_list.append(position)
+            result.append(
+                TargetPositionRecord(
+                    stock_id="VIX_" + str(month) + "M",
+                    datetime=xt.index[i],
+                    target_position=position,
+                )
+            )
+
+            this_cash = equity - position * xt["trading_price"].iloc[i]
+            cash.append(this_cash)
         return result
 
     def save_result(self, dir_path: str = ""):
@@ -172,6 +222,6 @@ class RollSignalBacktest(SimpleBacktest):
         return "roll_signal_strategy"
 
 
-m = RollSignalBacktest()
-m.run()
-m.save_result()
+if __name__ == "__main__":
+    m = RollSignalBacktest()
+    position = m.gen_target_position(1, 1000000)

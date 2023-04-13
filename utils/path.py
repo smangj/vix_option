@@ -9,6 +9,7 @@ from pathlib import Path
 # 根据当前文件的路径获取项目根目录
 CUR_DIR = Path(__file__).resolve().parent
 PROJ_ROOT_DIR = CUR_DIR.parent
+DEFAULT_QLIB_PROVIDER_URI = str(PROJ_ROOT_DIR.joinpath("data/qlib_data"))
 
 
 def check_and_mkdirs(dir_path):
