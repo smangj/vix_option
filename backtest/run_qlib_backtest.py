@@ -9,7 +9,7 @@ from backtest.qlib_custom.strategy import TargetPositionStrategy
 from backtest.simple_backtest import RollSignalBacktest
 
 
-def main():
+def target_order_backtest():
     init_cash = 1000000
     model = RollSignalBacktest()
 
@@ -37,5 +37,9 @@ def main():
     pipeline.run()
 
 
+def model_based_backtest():
+    pass
+
+
 if __name__ == "__main__":
-    main()
+    model_based_backtest()

@@ -18,6 +18,7 @@ class DataProcessor:
     def __init__(self):
         self.df1 = pd.read_feather("./data/allVIXinfo.feather")
         self.df2 = pd.read_feather("./data/GIFutprices.feather")
+        self.df3 = pd.read_feather("./data/indexdata.feather")
 
         self.data_clean()
 
@@ -46,9 +47,8 @@ class DataProcessor:
         self.df2["Date"] = self.df2["Date"].dt.tz_convert(None)
 
     def generate_trade_price(self):
-        array = ['SPVXSP', 'SPVIX2ME', 'SPVIX3ME', 'SPVIX4ME', 'SPVXMP', 'SPVIX6ME']
-        raw = self.df1.loc[self.df1['ID'].isin(array)]
-        pivot = raw.pivot(index='Date', columns='ID', values='Close')
+        array = ["SPVXSP", "SPVIX2ME", "SPVIX3ME", "SPVIX4ME", "SPVXMP", "SPVIX6ME"]
+        raw = self.df1.loc[self.df1["ID"].isin(array)]
+        pivot = raw.pivot(index="Date", columns="ID", values="Close")
         result = pivot[array]
         return result
-

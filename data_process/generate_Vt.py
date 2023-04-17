@@ -110,13 +110,26 @@ def generate_xt() -> pd.DataFrame:
 
     raw_data = DataProcessor()
     VIX = raw_data.df1.loc[raw_data.df1["ID"] == "VIX"]
+    micro_data = raw_data.df3.query("ID in ['SPY US Equity', 'TLT US Equity']")
 
     merged_df = pd.merge(vt, VIX, on="Date").set_index("Date")
+    merged_df = pd.merge(
+        merged_df,
+        pd.pivot(micro_data, index="Date", columns="ID", values="C"),
+        left_index=True,
+        right_index=True,
+    )
 
-    result = merged_df[["Close"] + [str(x) + "_v" for x in constant_days]]
-    result.columns = ["ln_VIX"] + [
-        "ln_V" + str(i + 1) for i in range(len(constant_days))
+    result = merged_df[
+        ["Close"]
+        + [str(x) + "_v" for x in constant_days]
+        + ["SPY US Equity", "TLT US Equity"]
     ]
+    result.columns = (
+        ["ln_VIX"]
+        + ["ln_V" + str(i + 1) for i in range(len(constant_days))]
+        + ["ln_SPY", "ln_TLT"]
+    )
     result = np.log(result)
     result_roll = merged_df[[str(x) + "_roll" for x in constant_days]]
     result_roll.columns = ["roll" + str(i + 1) for i in range(len(constant_days))]
@@ -147,4 +160,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    generate_xt()

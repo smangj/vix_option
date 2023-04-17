@@ -6,6 +6,7 @@
 import os
 
 from data_process.data_processor import DataProcessor
+from data_process.generate_Vt import generate_xt
 from qlib_scripts import dump_bin
 from utils.path import check_and_mkdirs, PROJ_ROOT_DIR
 
@@ -33,7 +34,6 @@ def etf_to_csv():
     xt.index.name = "date"
 
     for k, v in etf_map.items():
-
         security = xt[v].dropna().reset_index()
         security.loc[:, "open"] = security[v]
         security.loc[:, "close"] = security[v]
@@ -45,6 +45,12 @@ def etf_to_csv():
         )
 
 
+def features_to_csv():
+    xt = generate_xt()
+    xt.index.name = "date"
+    xt.reset_index().to_csv(os.path.join(csv_output_dir, "features.csv"), index=False)
+
+
 def csv_to_bin():
     dump_bin.DumpDataAll(
         csv_path=csv_output_dir, qlib_dir=qlib_dir, date_field_name="date"
@@ -52,5 +58,4 @@ def csv_to_bin():
 
 
 if __name__ == "__main__":
-
     csv_to_bin()
