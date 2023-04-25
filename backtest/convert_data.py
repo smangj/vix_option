@@ -5,13 +5,15 @@
 # @email    : 631535207@qq.com
 import os
 
+import pandas as pd
+
 from data_process.data_processor import DataProcessor
 from data_process.generate_Vt import generate_xt
 from qlib_scripts import dump_bin
 from utils.path import check_and_mkdirs, PROJ_ROOT_DIR
 
-csv_output_dir = str(PROJ_ROOT_DIR.joinpath("data/qlib_data_csv"))
-qlib_dir = str(PROJ_ROOT_DIR.joinpath("data/qlib_data"))
+csv_output_dir = str(PROJ_ROOT_DIR.joinpath("data/qlib_data_csv2"))
+qlib_dir = str(PROJ_ROOT_DIR.joinpath("data/qlib_data2"))
 check_and_mkdirs(csv_output_dir)
 check_and_mkdirs(qlib_dir)
 
@@ -33,16 +35,18 @@ def etf_to_csv():
     )
     xt.index.name = "date"
 
+    feature = generate_xt().fillna(method="bfill")
+
     for k, v in etf_map.items():
-        security = xt[v].dropna().reset_index()
+        security = xt[v].reset_index().dropna()
         security.loc[:, "open"] = security[v]
         security.loc[:, "close"] = security[v]
         security.loc[:, "high"] = security[v]
         security.loc[:, "low"] = security[v]
+        security.loc[:, "volume"] = 10000
         security.loc[:, "factor"] = 1
-        security[["date", "open", "high", "low", "close", "factor"]].to_csv(
-            os.path.join(csv_output_dir, v + ".csv"), index=False
-        )
+        security = pd.merge(security, feature, left_on="date", right_index=True)
+        security.to_csv(os.path.join(csv_output_dir, v + ".csv"), index=False)
 
 
 def features_to_csv():
@@ -58,4 +62,4 @@ def csv_to_bin():
 
 
 if __name__ == "__main__":
-    csv_to_bin()
+    etf_to_csv()
