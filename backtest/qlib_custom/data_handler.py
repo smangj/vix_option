@@ -32,13 +32,11 @@ class ExternalFeatures(DataHandlerLP):
         learn_processors = check_transform_proc(
             learn_processors, fit_start_time, fit_end_time
         )
-        print(kwargs)
 
-        data_loader = {
+        instruments_data_loader = {
             "class": "QlibDataLoader",
             "kwargs": {
                 "config": {
-                    "feature": (["$close"], ["close"]),
                     "label": kwargs.pop("label", self.get_label_config()),
                 },
                 "filter_pipe": filter_pipe,
@@ -47,12 +45,11 @@ class ExternalFeatures(DataHandlerLP):
             },
         }
 
-        data_loader_2 = {
+        features_data_loader = {
             "class": "QlibDataLoader",
             "kwargs": {
                 "config": {
                     "feature": self.get_features(feature_instruments),
-                    "label": kwargs.pop("label", self.get_label_config()),
                 },
                 "filter_pipe": filter_pipe,
                 "freq": freq,
@@ -67,9 +64,8 @@ class ExternalFeatures(DataHandlerLP):
                 "start_time": start_time,
                 "end_time": end_time,
                 "instruments": instruments,
-                "infer_processors": infer_processors,
                 "learn_processors": learn_processors,
-                "data_loader": data_loader,
+                "data_loader": instruments_data_loader,
             },
         }
 
@@ -81,8 +77,7 @@ class ExternalFeatures(DataHandlerLP):
                 "end_time": end_time,
                 "instruments": feature_instruments,
                 "infer_processors": infer_processors,
-                "learn_processors": learn_processors,
-                "data_loader": data_loader_2,
+                "data_loader": features_data_loader,
             },
         }
         instruments_handler = init_instance_by_config(
@@ -91,8 +86,9 @@ class ExternalFeatures(DataHandlerLP):
         features_handler = init_instance_by_config(
             features_handler_config, accept_types=DataHandler
         )
-        data_loader_1 = {
-            "class": "DataLoaderDH",
+        data_loader = {
+            "class": "CombineLoader",
+            "module_path": "backtest.qlib_custom.data_loader",
             "kwargs": {
                 "handler_config": {
                     "instruments_handler": instruments_handler,
@@ -105,9 +101,7 @@ class ExternalFeatures(DataHandlerLP):
             instruments=instruments,
             start_time=start_time,
             end_time=end_time,
-            data_loader=data_loader_1,
-            infer_processors=infer_processors,
-            learn_processors=learn_processors,
+            data_loader=data_loader,
             process_type=process_type,
             **kwargs
         )
