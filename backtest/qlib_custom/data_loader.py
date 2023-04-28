@@ -16,16 +16,22 @@ class CombineLoader(DataLoaderDH):
             )
 
         if self.is_group:
-            data_list = [
-                dh.fetch(
+            data_dict = {
+                grp: dh.fetch(
                     selector=slice(start_time, end_time),
                     level="datetime",
                     **self.fetch_kwargs,
                 )
                 for grp, dh in self.handlers.items()
-            ]
-            df = data_list[0]
-            for data in data_list[1:]:
+        }
+            instrument = data_dict.get("instruments_handler")
+            if instrument is None:
+                raise ValueError("instruments_handler is necessary!")
+            df = instrument
+            for name, data in data_dict.items():
+                if name == "instruments_handler":
+                    continue
+                data.index = data.index.droplevel(1)
                 df = pd.merge(df, data, left_index=True, right_index=True, how="outer")
         else:
             df = self.handlers.fetch(
