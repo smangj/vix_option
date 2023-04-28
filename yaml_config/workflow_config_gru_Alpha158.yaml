@@ -37,7 +37,7 @@ port_analysis_config: &port_analysis_config
             n_drop: 1
     backtest:
         start_time: 2015-01-01
-        end_time: 2023-03-06
+        end_time: 2023-03-01
         account: 100000000
         benchmark: *benchmark
         exchange_kwargs:
@@ -49,22 +49,21 @@ port_analysis_config: &port_analysis_config
 task:
     model:
         class: GRU
-        module_path: qlib.contrib.model.pytorch_gru_ts
+        module_path: qlib.contrib.model.pytorch_gru
         kwargs:
-            d_feat: 20
+            d_feat: 5
             hidden_size: 64
             num_layers: 2
             dropout: 0.0
             n_epochs: 200
-            lr: 2e-4
-            early_stop: 10
+            lr: 1e-3
+            early_stop: 20
             batch_size: 800
             metric: loss
             loss: mse
-            n_jobs: 20
             GPU: 0
     dataset:
-        class: TSDatasetH
+        class: DatasetH
         module_path: qlib.data.dataset
         kwargs:
             handler:

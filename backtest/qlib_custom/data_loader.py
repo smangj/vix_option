@@ -23,7 +23,7 @@ class CombineLoader(DataLoaderDH):
                     **self.fetch_kwargs,
                 )
                 for grp, dh in self.handlers.items()
-        }
+            }
             instrument = data_dict.get("instruments_handler")
             if instrument is None:
                 raise ValueError("instruments_handler is necessary!")
@@ -32,7 +32,7 @@ class CombineLoader(DataLoaderDH):
                 if name == "instruments_handler":
                     continue
                 data.index = data.index.droplevel(1)
-                df = pd.merge(df, data, left_index=True, right_index=True, how="outer")
+                df = pd.merge(df, data, left_index=True, right_index=True)
         else:
             df = self.handlers.fetch(
                 selector=slice(start_time, end_time),
