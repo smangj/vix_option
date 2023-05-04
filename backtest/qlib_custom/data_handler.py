@@ -37,6 +37,7 @@ class ExternalFeatures(DataHandlerLP):
             "class": "QlibDataLoader",
             "kwargs": {
                 "config": {
+                    "feature": (["$close"], ["trade_price"]),
                     "label": kwargs.pop("label", self.get_label_config()),
                 },
                 "filter_pipe": filter_pipe,
@@ -64,6 +65,7 @@ class ExternalFeatures(DataHandlerLP):
                 "start_time": start_time,
                 "end_time": end_time,
                 "instruments": instruments,
+                "infer_processors": infer_processors,
                 "learn_processors": learn_processors,
                 "data_loader": instruments_data_loader,
             },

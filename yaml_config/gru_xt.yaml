@@ -2,7 +2,7 @@ qlib_init:
     provider_uri: "data/qlib_data"
     region: us
 market: &market trable
-benchmark: &benchmark VIX_1M
+benchmark: &benchmark TLT
 data_handler_config: &data_handler_config
     start_time: 2005-12-20
     end_time: 2023-03-06
@@ -36,7 +36,7 @@ port_analysis_config: &port_analysis_config
             topk: 3
             n_drop: 1
     backtest:
-        start_time: 2015-01-01
+        start_time: 2019-01-01
         end_time: 2023-03-01
         account: 100000000
         benchmark: *benchmark
@@ -51,7 +51,7 @@ task:
         class: GRU
         module_path: qlib.contrib.model.pytorch_gru
         kwargs:
-            d_feat: 5
+            d_feat: 4
             hidden_size: 64
             num_layers: 2
             dropout: 0.0
@@ -74,7 +74,6 @@ task:
                 train: [2005-12-20, 2011-12-31]
                 valid: [2012-01-01, 2018-12-31]
                 test: [2019-01-01, 2023-08-01]
-            step_len: 20
     record: 
         - class: SignalRecord
           module_path: qlib.workflow.record_temp

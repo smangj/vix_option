@@ -7,7 +7,7 @@ import os
 
 from qlib.workflow.cli import workflow
 
-name = "workflow_config_gru_Alpha158.yaml"
+name = "gru_xt.yaml"
 
 
 def main():
