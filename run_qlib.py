@@ -11,7 +11,7 @@ name = "gru_xt.yaml"
 
 
 def main():
-    workflow(os.path.join("yaml_config", name), experiment_name="vix_data_test")
+    workflow(os.path.join("yaml_config", name), experiment_name=name.split(".")[0])
 
 
 if __name__ == "__main__":

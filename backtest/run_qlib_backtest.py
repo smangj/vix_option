@@ -42,4 +42,4 @@ def model_based_backtest():
 
 
 if __name__ == "__main__":
-    model_based_backtest()
+    target_order_backtest()

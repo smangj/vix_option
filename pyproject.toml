@@ -25,6 +25,7 @@ dependencies = [
     "ffn==0.3.6",
     "torch<1.8,>=1.7",
     "scikit-learn==0.23.2",
+    "openpyxl==3.1.2",
 ]
 requires-python = ">=3.8,<3.9"
 license = {text = "MIT"}

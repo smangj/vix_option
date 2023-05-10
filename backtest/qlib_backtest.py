@@ -131,7 +131,7 @@ class BtPipeline:
             start_time=self._start_date,
             end_time=self._end_date,
             account=self._init_cash,
-            benchmark="VIX_1M",
+            benchmark="TLT",
             exchange_config_or_inst=exchange_instance,
         )
 

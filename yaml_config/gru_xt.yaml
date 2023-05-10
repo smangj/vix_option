@@ -34,7 +34,7 @@ port_analysis_config: &port_analysis_config
                 - <MODEL> 
                 - <DATASET>
             topk: 3
-            n_drop: 1
+            n_drop: 3
     backtest:
         start_time: 2019-01-01
         end_time: 2023-03-01
@@ -58,7 +58,7 @@ task:
             n_epochs: 200
             lr: 1e-3
             early_stop: 20
-            batch_size: 800
+            batch_size: 200
             metric: loss
             loss: mse
             GPU: 0
@@ -85,7 +85,7 @@ task:
           kwargs: 
             ana_long_short: True
             ann_scaler: 252
-        - class: PortAnaRecord
-          module_path: qlib.workflow.record_temp
+        - class: StandalonePortAnaRecord
+          module_path: backtest.qlib_custom.record
           kwargs: 
             config: *port_analysis_config

@@ -65,8 +65,6 @@ class ExternalFeatures(DataHandlerLP):
                 "start_time": start_time,
                 "end_time": end_time,
                 "instruments": instruments,
-                "infer_processors": infer_processors,
-                "learn_processors": learn_processors,
                 "data_loader": instruments_data_loader,
             },
         }
@@ -78,7 +76,6 @@ class ExternalFeatures(DataHandlerLP):
                 "start_time": start_time,
                 "end_time": end_time,
                 "instruments": feature_instruments,
-                "infer_processors": infer_processors,
                 "data_loader": features_data_loader,
             },
         }
@@ -104,6 +101,8 @@ class ExternalFeatures(DataHandlerLP):
             start_time=start_time,
             end_time=end_time,
             data_loader=data_loader,
+            infer_processors=infer_processors,
+            learn_processors=learn_processors,
             process_type=process_type,
             **kwargs
         )
