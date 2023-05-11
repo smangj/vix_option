@@ -20,7 +20,6 @@ data_handler_config: &data_handler_config
               fields_group: feature
     learn_processors:
         - class: DropnaLabel
-        - class: CSRankNorm
           kwargs:
               fields_group: label
     label: ["Ref($close, -1) / $close - 1"]
@@ -58,7 +57,7 @@ task:
             n_epochs: 200
             lr: 1e-3
             early_stop: 20
-            batch_size: 200
+            batch_size: 64
             metric: loss
             loss: mse
             GPU: 0
@@ -67,7 +66,7 @@ task:
         module_path: qlib.data.dataset
         kwargs:
             handler:
-                class: ExternalFeatures
+                class: VixHandler
                 module_path: backtest.qlib_custom.data_handler
                 kwargs: *data_handler_config
             segments:

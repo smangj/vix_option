@@ -9,7 +9,7 @@ from qlib.contrib.data.handler import _DEFAULT_LEARN_PROCESSORS, check_transform
 from qlib.utils import init_instance_by_config
 
 
-class ExternalFeatures(DataHandlerLP):
+class VixHandler(DataHandlerLP):
     def __init__(
         self,
         instruments="csi500",
@@ -37,7 +37,7 @@ class ExternalFeatures(DataHandlerLP):
             "class": "QlibDataLoader",
             "kwargs": {
                 "config": {
-                    "feature": (["$close"], ["trade_price"]),
+                    "feature": (["$maturity"], ["maturity"]),
                     "label": kwargs.pop("label", self.get_label_config()),
                 },
                 "filter_pipe": filter_pipe,
