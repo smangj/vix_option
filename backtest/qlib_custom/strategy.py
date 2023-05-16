@@ -15,6 +15,7 @@ from qlib.backtest.decision import TradeDecisionWO, BaseTradeDecision, Order
 from qlib.backtest.position import Position, BasePosition
 from qlib.backtest.signal import SignalWCache
 from qlib.strategy.base import BaseStrategy
+from qlib.contrib.strategy.signal_strategy import BaseSignalStrategy
 
 
 @dataclass(frozen=True)
@@ -348,3 +349,54 @@ class OrderStrategy(ActualVolumeStrategyBase):
     @property
     def volume_col(self) -> str:
         return "volume"
+
+
+class SimpleSignalStrategy(BaseSignalStrategy):
+    """配置signal为正的资产"""
+
+    def generate_trade_decision(
+        self, execute_result: list = None
+    ) -> Union[BaseTradeDecision, Generator[Any, Any, BaseTradeDecision]]:
+
+        temp_current_position = copy.deepcopy(self.trade_position)
+        assert isinstance(temp_current_position, Position)  # Avoid InfPosition
+
+        # get the number of trading step finished, trade_step can be [0, 1, 2, ..., trade_len - 1]
+        trade_step = self.trade_calendar.get_trade_step()
+        trade_start_time, trade_end_time = self.trade_calendar.get_step_time(trade_step)
+        pred_start_time, pred_end_time = self.trade_calendar.get_step_time(
+            trade_step, shift=1
+        )
+        pred_score = self.signal.get_signal(
+            start_time=pred_start_time, end_time=pred_end_time
+        )
+        # NOTE: the current version of topk dropout strategy can't handle pd.DataFrame(multiple signal)
+        # So it only leverage the first col of signal
+        if isinstance(pred_score, pd.DataFrame):
+            pred_score = pred_score.iloc[:, 0]
+        if pred_score is None:
+            return TradeDecisionWO([], self)
+
+        # load score
+        equity = temp_current_position.calculate_value()
+
+        # 要卖的是昨日有持仓，今日score为负的
+        buy = pred_score.loc[pred_score > 0].index
+        # equal weighted
+        trade_target_dict = {
+            stock_id: equity * self.risk_degree / len(buy) if len(buy) > 0 else 0
+            for stock_id in buy
+        }
+
+        order_list = [
+            order
+            for order in self.trade_exchange.generate_order_for_target_amount_position(
+                target_position=trade_target_dict,
+                current_position=temp_current_position.get_stock_amount_dict(),
+                start_time=trade_start_time,
+                end_time=trade_end_time,
+            )
+            if abs(order.amount) >= 1e-5  # 去除数量极小的订单，防止float误差导致的多余无效订单
+        ]
+
+        return TradeDecisionWO(order_list, self)
