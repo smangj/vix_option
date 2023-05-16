@@ -43,6 +43,7 @@ def etf_to_csv():
         security.loc[:, "close"] = security[v]
         security.loc[:, "high"] = security[v]
         security.loc[:, "low"] = security[v]
+        security.loc[:, "maturity"] = int(v[-2])
         security.loc[:, "volume"] = 10000
         security.loc[:, "factor"] = 1
         security = pd.merge(security, feature, left_on="date", right_index=True)

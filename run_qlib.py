@@ -4,15 +4,13 @@
 # @Author   : wsy
 # @email    : 631535207@qq.com
 import os
-
+import fire
 from qlib.workflow.cli import workflow
 
-name = "gru_xt.yaml"
 
-
-def main():
+def main(name: str = "gru_xt_one_for_test.yaml"):
     workflow(os.path.join("yaml_config", name), experiment_name=name.split(".")[0])
 
 
 if __name__ == "__main__":
-    main()
+    fire.Fire(main)
