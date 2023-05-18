@@ -1,0 +1,63 @@
+qlib_init:
+    provider_uri: "data/qlib_data"
+    region: cn
+market: &market one_for_test
+benchmark: &benchmark TLT
+data_handler_config: &data_handler_config
+    start_time: 2005-12-20
+    end_time: 2023-03-06
+    instruments: *market
+    infer_processors:
+        - class: BFill
+          module_path: backtest.qlib_custom.processors
+          kwargs:
+              fields_group: feature
+    learn_processors:
+        - class: DropnaLabel
+    label: ["Ref($close, -1) / $close - 1"]
+port_analysis_config: &port_analysis_config
+    strategy:
+        class: SimpleSignalStrategy
+        module_path: backtest.qlib_custom.strategy
+        kwargs:
+            signal:
+                - <MODEL> 
+                - <DATASET>
+    backtest:
+        start_time: 2019-01-01
+        end_time: 2023-03-01
+        account: 100000000
+        benchmark: *benchmark
+        exchange_kwargs:
+            deal_price: close
+            open_cost: 0
+            close_cost: 0
+            min_cost: 0
+task:
+    model:
+        class: LinearModel
+        module_path: qlib.contrib.model.linear
+        kwargs:
+            estimator: ols
+    dataset:
+        class: DatasetH
+        module_path: qlib.data.dataset
+        kwargs:
+            handler:
+                class: SimpleVixHandler
+                module_path: backtest.qlib_custom.data_handler
+                kwargs: *data_handler_config
+            segments:
+                train: [2005-12-20, 2011-12-31]
+                valid: [2012-01-01, 2018-12-31]
+                test: [2019-01-01, 2023-08-01]
+    record: 
+        - class: SignalRecord
+          module_path: qlib.workflow.record_temp
+          kwargs: 
+            model: <MODEL>
+            dataset: <DATASET>
+        - class: SimpleBacktestRecord
+          module_path: backtest.qlib_custom.record
+          kwargs: 
+            config: *port_analysis_config
