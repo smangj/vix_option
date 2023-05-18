@@ -26,12 +26,12 @@ class SimpleBacktest(abc.ABC):
     @staticmethod
     def _feature_and_etfprice() -> pd.DataFrame:
         etf_map = {
-            "SPVXSP": "VIX_1M",
-            "SPVIX2ME": "VIX_2M",
-            "SPVIX3ME": "VIX_3M",
-            "SPVIX4ME": "VIX_4M",
-            "SPVXMP": "VIX_5M",
-            "SPVIX6ME": "VIX_6M",
+            "SPVXSP": "ETF1",
+            "SPVIX2ME": "ETF2",
+            "SPVIX3ME": "ETF3",
+            "SPVIX4ME": "ETF4",
+            "SPVXMP": "ETF5",
+            "SPVIX6ME": "ETF6",
         }
         xt = generate_xt().fillna(method="bfill")
         trading_price = DataProcessor().generate_trade_price().fillna(method="bfill")
@@ -224,4 +224,5 @@ class RollSignalBacktest(SimpleBacktest):
 
 if __name__ == "__main__":
     m = RollSignalBacktest()
+    result = m.run()
     position = m.gen_target_position(1, 1000000)

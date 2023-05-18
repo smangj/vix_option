@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import abc
 
 from dataclasses import dataclass
 import logging
@@ -258,3 +259,39 @@ class StandalonePortAnaRecord(PortAnaRecord):
                 self.get_path(), self._ORDERS_HIST_EXCEL_FORMAT.format(freq_tag)
             ),
         )
+
+
+class SimpleBacktestRecord(PortAnaRecord, abc.ABC):
+    """
+    调用SimpleBacktest回测并保存相关结果
+    只支持根据score生成signal的简单策略
+    """
+
+    _NET_VALUE_EXCEL_FORMAT = "net_value_{}.xlsx"
+
+    def __init__(
+        self,
+        recorder,
+        config=None,
+        risk_analysis_freq: Union[List, str] = None,
+        indicator_analysis_freq: Union[List, str] = None,
+        indicator_analysis_method=None,
+        skip_existing=False,
+        **kwargs,
+    ):
+        super().__init__(
+            recorder,
+            config,
+            risk_analysis_freq,
+            indicator_analysis_freq,
+            indicator_analysis_method,
+            skip_existing,
+            **kwargs,
+        )
+
+    def _generate(self, *args, **kwargs):
+        pred = self.load("pred.pkl")
+        assert pred
+
+    def _generate_signal(self, month) -> pd.DataFrame:
+        raise NotImplementedError
