@@ -315,7 +315,7 @@ class _SimpleBacktestRecord(PortAnaRecord, abc.ABC):
 
     def _save_df(self, df: pd.DataFrame, file_name: str, dir_path: str):
         file_path = os.path.join(dir_path, file_name)
-        df.to_excel(file_path, index=False)
+        df.to_excel(file_path, index=True)
         pprint(file_path)
         self.save(local_path=file_path)
 
@@ -353,7 +353,7 @@ class _SimpleBacktestRecord(PortAnaRecord, abc.ABC):
                 pred_label.loc[(slice(None), instrument), :], instrument
             )
             # 简单规则：
-            xt["trading_flag"] = (
+            xt["trading_flag" + "_" + instrument] = (
                 xt["signal"]
                 .replace(0, np.nan)
                 .fillna(method="ffill")
@@ -361,17 +361,17 @@ class _SimpleBacktestRecord(PortAnaRecord, abc.ABC):
             )
 
             xt["next_ret"] = (xt["close"].shift(-1) / xt["close"]) - 1
-            xt["daily_ret"] = xt["next_ret"] * xt["trading_flag"]
-            net_value = (
-                np.cumprod(xt["daily_ret"] + 1).shift(1).fillna(1).rename(instrument)
-            )
+            xt["daily_ret"] = xt["next_ret"] * xt["trading_flag" + "_" + instrument]
+            xt[instrument] = np.cumprod(xt["daily_ret"] + 1).shift(1).fillna(1)
+            net_value = xt[[instrument, "trading_flag" + "_" + instrument]]
             net_value.index = dt_values.unique().sort_values()
+            net_value.name = instrument
             net_values.append(net_value)
         with tempfile.TemporaryDirectory() as tmp_dir_path:
             file_path = report(
-                [Values(nv.name, nv) for nv in net_values],
+                [Values(nv.name, nv[nv.name]) for nv in net_values],
                 output_dir=tmp_dir_path,
-                file_name=self.name + "report",
+                file_name=self.name + "_report",
             )
             self.recorder.log_artifact(local_path=file_path)
             values_df = pd.concat(net_values, axis=1)
@@ -389,6 +389,22 @@ class _SimpleBacktestRecord(PortAnaRecord, abc.ABC):
         return: columns新增"signal"
         """
         raise NotImplementedError
+
+    def list(self):
+
+        full_list = super().list()
+
+        for _freq in self.all_freq:
+            indicators_files = [
+                f"indicators_normal_{_freq}.pkl",
+                f"indicators_normal_{_freq}_obj.pkl",
+                self._NET_VALUE_EXCEL_FORMAT.format(_freq),
+            ]
+            for _file in indicators_files:
+                if _file not in full_list:
+                    full_list.append(_file)
+
+        return full_list
 
     @property
     def name(self) -> str:

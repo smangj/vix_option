@@ -24,8 +24,8 @@ port_analysis_config: &port_analysis_config
                 - <MODEL> 
                 - <DATASET>
     backtest:
-        start_time: 2019-01-01
-        end_time: 2023-03-01
+        start_time: 2018-01-01
+        end_time: 2022-12-15
         account: 100000000
         benchmark: *benchmark
         exchange_kwargs:
@@ -35,10 +35,11 @@ port_analysis_config: &port_analysis_config
             min_cost: 0
 task:
     model:
-        class: LinearModel
-        module_path: qlib.contrib.model.linear
+        class: SmLinearModel
+        module_path: backtest.qlib_custom.model
         kwargs:
             estimator: ols
+            fit_intercept: 1
     dataset:
         class: DatasetH
         module_path: qlib.data.dataset
@@ -49,8 +50,8 @@ task:
                 kwargs: *data_handler_config
             segments:
                 train: [2005-12-20, 2011-12-31]
-                valid: [2012-01-01, 2018-12-31]
-                test: [2019-01-01, 2023-08-01]
+                valid: [2012-01-01, 2016-12-31]
+                test: [2018-01-01, 2023-08-01]
     record: 
         - class: SignalRecord
           module_path: qlib.workflow.record_temp
