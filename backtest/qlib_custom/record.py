@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import abc
 
+import numpy as np
 from dataclasses import dataclass
 import logging
 import os
@@ -8,7 +10,7 @@ import tempfile
 import warnings
 from pprint import pprint
 from typing import Union, List, Optional
-
+from qlib.data import D
 import pandas as pd
 from qlib.backtest import backtest as normal_backtest
 from qlib.contrib.evaluate import risk_analysis, indicator_analysis
@@ -18,10 +20,7 @@ from qlib.utils.time import Freq
 from qlib.workflow.record_temp import PortAnaRecord
 
 from .utils import gen_acct_pos_dfs, gen_orders_df
-
-__author__ = "Vitor Chen"
-__email__ = "exen3995@gmail.com"
-__version__ = "0.1.0"
+from ..report import report, Values
 
 logger = get_module_logger("workflow", logging.INFO)
 
@@ -258,3 +257,228 @@ class StandalonePortAnaRecord(PortAnaRecord):
                 self.get_path(), self._ORDERS_HIST_EXCEL_FORMAT.format(freq_tag)
             ),
         )
+
+
+class _SimpleBacktestRecord(PortAnaRecord, abc.ABC):
+    """
+    调用SimpleBacktest回测并保存相关结果
+    只支持根据score生成signal的简单策略
+    """
+
+    _NET_VALUE_EXCEL_FORMAT = "net_value_{}.xlsx"
+
+    def __init__(
+        self,
+        recorder,
+        config=None,
+        risk_analysis_freq: Union[List, str] = None,
+        indicator_analysis_freq: Union[List, str] = None,
+        indicator_analysis_method=None,
+        skip_existing=False,
+        **kwargs,
+    ):
+        super().__init__(
+            recorder,
+            config,
+            risk_analysis_freq,
+            indicator_analysis_freq,
+            indicator_analysis_method,
+            skip_existing,
+            **kwargs,
+        )
+        self._fields = [
+            "$close",
+            "$ln_VIX",
+            "$ln_V1",
+            "$ln_V2",
+            "$ln_V3",
+            "$ln_V4",
+            "$ln_V5",
+            "$ln_V6",
+            "$ln_SPY",
+            "$ln_TLT",
+            "$roll1",
+            "$roll2",
+            "$roll3",
+            "$roll4",
+            "$roll5",
+            "$roll6",
+        ]
+        self._freq = "day"
+        market_data_df = D.features(
+            instruments=["VIX_1M", "VIX_2M", "VIX_3M", "VIX_4M", "VIX_5M", "VIX_6M"],
+            fields=self._fields,
+            freq=self._freq,
+            disk_cache=1,
+        ).rename(columns={x: x[1:] for x in self._fields})
+        self._data = market_data_df.swaplevel().sort_index()
+
+    def _save_df(self, df: pd.DataFrame, file_name: str, dir_path: str):
+        file_path = os.path.join(dir_path, file_name)
+        df.to_excel(file_path, index=True)
+        pprint(file_path)
+        self.save(local_path=file_path)
+
+    def _generate(self, *args, **kwargs):
+        pred = self.load("pred.pkl")
+        label_df = self.load("label.pkl").dropna()
+        label_df.columns = ["label"]
+
+        pred_label = pd.concat([pred, label_df, self._data], axis=1, sort=True).reindex(
+            label_df.index
+        )
+        assert "instrument" in pred_label.index.names
+        assert "datetime" in pred_label.index.names
+        instruments = list(pred_label.index.get_level_values("instrument").unique())
+        dt_values = pred_label.index.get_level_values("datetime")
+
+        start_time = (
+            dt_values[0]
+            if self.backtest_config["start_time"] is None
+            else self.backtest_config["start_time"]
+        )
+        end_time = (
+            dt_values[-1]
+            if self.backtest_config["end_time"] is None
+            else self.backtest_config["end_time"]
+        )
+        time_mask = (dt_values >= pd.to_datetime(start_time)) & (
+            dt_values <= pd.to_datetime(end_time)
+        )
+        pred_label = pred_label.loc[time_mask]
+
+        net_values = []
+        for instrument in instruments:
+            xt = self._generate_signal(
+                pred_label.loc[(slice(None), instrument), :], instrument
+            )
+            # 简单规则：
+            xt["trading_flag" + "_" + instrument] = (
+                xt["signal"]
+                .replace(0, np.nan)
+                .fillna(method="ffill")
+                .replace(np.nan, 0)
+            )
+
+            xt["next_ret"] = (xt["close"].shift(-1) / xt["close"]) - 1
+            xt["daily_ret"] = xt["next_ret"] * xt["trading_flag" + "_" + instrument]
+            xt[instrument] = np.cumprod(xt["daily_ret"] + 1).shift(1).fillna(1)
+            net_value = xt[[instrument, "trading_flag" + "_" + instrument]]
+            net_value.index = dt_values.unique().sort_values()
+            net_value.name = instrument
+            net_values.append(net_value)
+        with tempfile.TemporaryDirectory() as tmp_dir_path:
+            file_path = report(
+                [Values(nv.name, nv[nv.name]) for nv in net_values],
+                output_dir=tmp_dir_path,
+                file_name=self.name + "_report",
+            )
+            self.recorder.log_artifact(local_path=file_path)
+            values_df = pd.concat(net_values, axis=1)
+            self._save_df(
+                df=values_df,
+                file_name=self.name
+                + "_"
+                + self._NET_VALUE_EXCEL_FORMAT.format(self._freq),
+                dir_path=tmp_dir_path,
+            )
+
+    def _generate_signal(self, score_df: pd.DataFrame, instrument: str) -> pd.DataFrame:
+        """
+        score_df: columns=["score", "label"]
+        return: columns新增"signal"
+        """
+        raise NotImplementedError
+
+    def list(self):
+
+        full_list = super().list()
+
+        for _freq in self.all_freq:
+            indicators_files = [
+                f"indicators_normal_{_freq}.pkl",
+                f"indicators_normal_{_freq}_obj.pkl",
+                self._NET_VALUE_EXCEL_FORMAT.format(_freq),
+            ]
+            for _file in indicators_files:
+                if _file not in full_list:
+                    full_list.append(_file)
+
+        return full_list
+
+    @property
+    def name(self) -> str:
+        return "empty"
+
+
+class Cross(_SimpleBacktestRecord):
+    def _generate_signal(self, score_df, instrument) -> pd.DataFrame:
+        xt = score_df.copy()
+        month = instrument.split("_")[1][0]
+        ma_long = 20
+        ma_short = 5
+        xt["ma_long"] = xt["ln_V" + str(month)].rolling(window=ma_long).mean()
+        xt["ma_short"] = xt["ln_V" + str(month)].rolling(window=ma_short).mean()
+
+        buy_signal = xt["ma_short"] > xt["ma_long"]
+        sell_signal = xt["ma_short"] <= xt["ma_long"]
+
+        xt["signal"] = 1 * buy_signal - 1 * sell_signal
+        return xt
+
+    @property
+    def name(self) -> str:
+        return "cross_strategy"
+
+
+class MeanReversion(_SimpleBacktestRecord):
+    def _generate_signal(self, score_df, instrument) -> pd.DataFrame:
+        xt = score_df.copy()
+        month = instrument.split("_")[1][0]
+        roll = 20
+        xt["vix_ma"] = xt["ln_VIX"].rolling(window=roll).mean()
+        xt["vix_std"] = xt["ln_VIX"].rolling(window=roll).std()
+        std_times = 2
+        position_num = 1
+        buy_signal = xt["ln_V" + str(month)] <= (
+            xt["vix_ma"] - std_times * xt["vix_std"]
+        )
+        sell_signal = xt["ln_V" + str(month)] >= (
+            xt["vix_ma"] + std_times * xt["vix_std"]
+        )
+
+        xt["signal"] = position_num * buy_signal - position_num * sell_signal
+        return xt
+
+    @property
+    def name(self) -> str:
+        return "vix_reversion_strategy"
+
+
+class RollSignal(_SimpleBacktestRecord):
+    def _generate_signal(self, score_df, instrument) -> pd.DataFrame:
+        xt = score_df.copy()
+        month = instrument.split("_")[1][0]
+        buy_signal = xt["roll" + str(month)] > 0
+        sell_signal = xt["roll" + str(month)] <= 0
+
+        xt["signal"] = 1 * buy_signal - 1 * sell_signal
+        return xt
+
+    @property
+    def name(self) -> str:
+        return "roll_signal_strategy"
+
+
+class ScoreSign(_SimpleBacktestRecord):
+    def _generate_signal(self, score_df, instrument) -> pd.DataFrame:
+        xt = score_df.copy()
+        buy_signal = xt["score"] > 0
+        sell_signal = xt["score"] <= 0
+
+        xt["signal"] = 1 * buy_signal - 1 * sell_signal
+        return xt
+
+    @property
+    def name(self) -> str:
+        return "score_sign"
