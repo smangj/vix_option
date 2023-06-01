@@ -49,9 +49,10 @@ task:
             n_epochs: 200
             lr: 1e-3
             early_stop: 20
-            batch_size: 64
+            batch_size: 32
             metric: loss
             loss: mse
+            n_jobs: 1
             GPU: 0
     dataset:
         class: TSDatasetH
