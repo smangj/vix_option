@@ -347,6 +347,13 @@ class _SimpleBacktestRecord(PortAnaRecord, abc.ABC):
         )
         pred_label = pred_label.loc[time_mask]
 
+        # temp
+        # pred_label = pred_label.drop(index=pd.to_datetime("2018-02-05"))
+
+        bt_dt_values = (
+            pred_label.index.get_level_values("datetime").unique().sort_values()
+        )
+
         net_values = []
         for instrument in instruments:
             xt = self._generate_signal(
@@ -364,7 +371,7 @@ class _SimpleBacktestRecord(PortAnaRecord, abc.ABC):
             xt["daily_ret"] = xt["next_ret"] * xt["trading_flag" + "_" + instrument]
             xt[instrument] = np.cumprod(xt["daily_ret"] + 1).shift(1).fillna(1)
             net_value = xt[[instrument, "trading_flag" + "_" + instrument]]
-            net_value.index = dt_values.unique().sort_values()
+            net_value.index = bt_dt_values
             net_value.name = instrument
             net_values.append(net_value)
         with tempfile.TemporaryDirectory() as tmp_dir_path:
@@ -380,6 +387,11 @@ class _SimpleBacktestRecord(PortAnaRecord, abc.ABC):
                 file_name=self.name
                 + "_"
                 + self._NET_VALUE_EXCEL_FORMAT.format(self._freq),
+                dir_path=tmp_dir_path,
+            )
+            self._save_df(
+                df=pred_label,
+                file_name="pred_label.xlsx",
                 dir_path=tmp_dir_path,
             )
 
