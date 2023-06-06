@@ -1878,6 +1878,16 @@ requires_python = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7"
 summary = "Module for decorators, wrappers and monkey patching."
 
 [[package]]
+name = "xgboost"
+version = "1.2.1"
+requires_python = ">=3.6"
+summary = "XGBoost Python Package"
+dependencies = [
+    "numpy",
+    "scipy",
+]
+
+[[package]]
 name = "xlrd"
 version = "2.0.1"
 requires_python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*"
@@ -1902,9 +1912,8 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "4.2"
-cross_platform = true
 groups = ["default", "dev", "torch-default"]
-content_hash = "sha256:7d24930f45ad6794ef855dc2b8440e21151548b3973d8152fbbb5fa21930e48b"
+content_hash = "sha256:b3b23a8941aa797dda2691bd1fb9e8b9405ed6ef0947c98ef2fc24751c3b0ece"
 
 [metadata.files]
 "alembic 1.10.3" = [
@@ -3715,9 +3724,10 @@ content_hash = "sha256:7d24930f45ad6794ef855dc2b8440e21151548b3973d8152fbbb5fa21
     {url = "https://mirrors.cloud.tencent.com/pypi/packages/da/f4/928e950925fe1b9eb048ddab8eef073a52e9ae01afd06f98f1daf743e355/ruamel.yaml.clib-0.2.7-cp37-cp37m-win_amd64.whl", hash = "sha256:be2a7ad8fd8f7442b24323d24ba0b56c51219513cfa45b9ada3b87b76c374d4b"},
     {url = "https://mirrors.cloud.tencent.com/pypi/packages/dd/76/730425e8e1ded9383256e2b13dccbf92f3dcf814c1b4a65f8cc839116faf/ruamel.yaml.clib-0.2.7-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:4b3a93bb9bc662fc1f99c5c3ea8e623d8b23ad22f861eb6fce9377ac07ad6072"},
     {url = "https://mirrors.cloud.tencent.com/pypi/packages/e4/80/73660f96b7f7191406da9a10c317145c86f54a4e1f7dba08cb0eac793fcc/ruamel.yaml.clib-0.2.7-cp36-cp36m-win_amd64.whl", hash = "sha256:f34019dced51047d6f70cb9383b2ae2853b7fc4dce65129a5acd49f4f9256646"},
+    {url = "https://mirrors.cloud.tencent.com/pypi/packages/f3/1d/291c1d38b0e6b9cbaacfdea24448453456a42f580d70b60e9c9e3dd35f9d/ruamel.yaml.clib-0.2.7-cp311-cp311-manylinux2014_aarch64.whl", hash = "sha256:9c7617df90c1365638916b98cdd9be833d31d337dbcd722485597b43c4a215bf"},
+    {url = "https://mirrors.cloud.tencent.com/pypi/packages/f5/23/b8ff333e40fa194678b01b66c1aced9dc5ecbc16a043b0d09beb6a37377c/ruamel.yaml.clib-0.2.7-cp311-cp311-macosx_13_0_arm64.whl", hash = "sha256:1a6391a7cabb7641c32517539ca42cf84b87b667bad38b78d4d42dd23e957c81"},
     {url = "https://mirrors.cloud.tencent.com/pypi/packages/f5/ac/dda2d23d652bc2f6db886496ad632957af82e33d22c1088cc0ac87c496b5/ruamel.yaml.clib-0.2.7-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:5bc0667c1eb8f83a3752b71b9c4ba55ef7c7058ae57022dd9b29065186a113d9"},
     {url = "https://mirrors.cloud.tencent.com/pypi/packages/fb/c0/de69d49a6d0a346fb27ddf3114d807380b08a40d8e22e0fbaf19be8b6044/ruamel.yaml.clib-0.2.7-cp37-cp37m-macosx_12_0_arm64.whl", hash = "sha256:f01da5790e95815eb5a8a138508c01c758e5f5bc0ce4286c4f7028b8dd7ac3d0"},
-    {url = "https://mirrors.cloud.tencent.com/pypi/packages/fc/47/a8e865b6097969e162c2e9efcfed8ded0582ea18305b09426dd648a6b2d4/ruamel.yaml.clib-0.2.7-cp311-cp311-macosx_12_6_arm64.whl", hash = "sha256:721bc4ba4525f53f6a611ec0967bdcee61b31df5a56801281027a3a6d1c2daf5"},
     {url = "https://mirrors.cloud.tencent.com/pypi/packages/ff/66/4c05485243e24c6db5d7305063304c410b5539577becc89e4539d2897e41/ruamel.yaml.clib-0.2.7-cp39-cp39-manylinux2014_aarch64.whl", hash = "sha256:bf9a6bc4a0221538b1a7de3ed7bca4c93c02346853f44e1cd764be0023cd3640"},
 ]
 "sacred 0.8.4" = [
@@ -4188,6 +4198,13 @@ content_hash = "sha256:7d24930f45ad6794ef855dc2b8440e21151548b3973d8152fbbb5fa21
     {url = "https://mirrors.cloud.tencent.com/pypi/packages/fb/bd/ca7fd05a45e7022f3b780a709bbdb081a6138d828ecdb5b7df113a3ad3be/wrapt-1.15.0-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:41d07d029dd4157ae27beab04d22b8e261eddfc6ecd64ff7000b10dc8b3a5727"},
     {url = "https://mirrors.cloud.tencent.com/pypi/packages/fd/8a/db55250ad0b536901173d737781e3b5a7cc7063c46b232c2e3a82a33c032/wrapt-1.15.0-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:cdb4f085756c96a3af04e6eca7f08b1345e94b53af8921b25c72f096e704e145"},
     {url = "https://mirrors.cloud.tencent.com/pypi/packages/ff/f6/c044dec6bec4ce64fbc92614c5238dd432780b06293d2efbcab1a349629c/wrapt-1.15.0-cp37-cp37m-musllinux_1_1_aarch64.whl", hash = "sha256:b02f21c1e2074943312d03d243ac4388319f2456576b2c6023041c4d57cd7019"},
+]
+"xgboost 1.2.1" = [
+    {url = "https://mirrors.cloud.tencent.com/pypi/packages/04/f6/f0b7fb4dd9da6d46d77c79afbb9b96ca9969c14bd1be4947e6441ab9f346/xgboost-1.2.1-py3-none-manylinux2014_aarch64.whl", hash = "sha256:0b03f608b67df1a7d4f29abcb2952067790d61207073b033b1c99d2f3ddaef6c"},
+    {url = "https://mirrors.cloud.tencent.com/pypi/packages/35/cc/fd3d5fc6b6616a03385a0f6492cc77a253940d1026406ecc07597095e381/xgboost-1.2.1-py3-none-manylinux2010_x86_64.whl", hash = "sha256:e990258b13cdbfc8761c61bb196677b9de3f63173890d4448b533a570c8790e3"},
+    {url = "https://mirrors.cloud.tencent.com/pypi/packages/3e/14/e2169b47a6e97be1d443c97250eaf7d27934a9847d2ca5b5108273a47b87/xgboost-1.2.1-py3-none-macosx_10_13_x86_64.macosx_10_14_x86_64.macosx_10_15_x86_64.whl", hash = "sha256:618257aab3fffe0b5b5c88f27d21dc16a388ac351a0da73a7cea1d6c74fb9899"},
+    {url = "https://mirrors.cloud.tencent.com/pypi/packages/6f/93/23cb1690fca5281c33107548a1a473244e921519ff06ed71adfe3a864e93/xgboost-1.2.1-py3-none-win_amd64.whl", hash = "sha256:f687948261795cc945e3a0b7b40721bccaa600d8d34212d7a0d8564e7310a5c9"},
+    {url = "https://mirrors.cloud.tencent.com/pypi/packages/e1/4c/49a78eff2801f139c8bcc97f47d97b966e32e1ab55ad76b78db67381177e/xgboost-1.2.1.tar.gz", hash = "sha256:7f22e30363b55a996adfcecb8520ed50e5d816909e669c649e52abeede9a2a8a"},
 ]
 "xlrd 2.0.1" = [
     {url = "https://mirrors.cloud.tencent.com/pypi/packages/a6/0c/c2a72d51fe56e08a08acc85d13013558a2d793028ae7385448a6ccdfae64/xlrd-2.0.1-py2.py3-none-any.whl", hash = "sha256:6a33ee89877bd9abc1158129f6e94be74e2679636b8a205b43b85206c3f0bbdd"},
