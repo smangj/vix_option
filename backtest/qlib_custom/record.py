@@ -11,16 +11,18 @@ import warnings
 from pprint import pprint
 from typing import Union, List, Optional
 from qlib.data import D
+from qlib.data.dataset.utils import get_level_index
 import pandas as pd
-from qlib.backtest import backtest as normal_backtest
+from qlib.backtest import backtest as normal_backtest, get_exchange
 from qlib.contrib.evaluate import risk_analysis, indicator_analysis
+from qlib.config import C
 from qlib.log import get_module_logger
-from qlib.utils import flatten_dict
+from qlib.utils import flatten_dict, get_date_range
 from qlib.utils.time import Freq
 from qlib.workflow.record_temp import PortAnaRecord
 
-from .utils import gen_acct_pos_dfs, gen_orders_df
-from ..report import report, Values
+from backtest.qlib_custom.utils import gen_acct_pos_dfs, gen_orders_df
+from backtest.report import report, Values
 
 logger = get_module_logger("workflow", logging.INFO)
 
@@ -30,6 +32,144 @@ class HistFilePaths:
     position_hist_path: str
     account_hist_path: str
     orders_hist_path: str
+
+
+def long_short_backtest(
+    pred,
+    freq: str = "day",
+    topk=1,
+    deal_price=None,
+    shift=1,
+    open_cost=0,
+    close_cost=0,
+    trade_unit=None,
+    limit_threshold=None,
+    min_cost=0,
+    subscribe_fields=[],
+):
+    """
+    A backtest for long-short strategy
+
+    :param pred:        The trading signal produced on day `T`.
+    :param freq:        freq.
+    :param topk:       The short topk securities and long topk securities.
+    :param deal_price:  The price to deal the trading.
+    :param shift:       Whether to shift prediction by one day.  The trading day will be T+1 if shift==1.
+    :param open_cost:   open transaction cost.
+    :param close_cost:  close transaction cost.
+    :param trade_unit:  100 for China A.
+    :param limit_threshold: limit move 0.1 (10%) for example, long and short with same limit.
+    :param min_cost:    min transaction cost.
+    :param subscribe_fields: subscribe fields.
+    :return:            The result of backtest, it is represented by a dict.
+                        { "long": long_returns(excess),
+                        "short": short_returns(excess),
+                        "long_short": long_short_returns}
+    """
+    if get_level_index(pred, level="datetime") == 1:
+        pred = pred.swaplevel().sort_index()
+
+    if trade_unit is None:
+        trade_unit = C.trade_unit
+    if limit_threshold is None:
+        limit_threshold = C.limit_threshold
+    if deal_price is None:
+        deal_price = C.deal_price
+    if deal_price[0] != "$":
+        deal_price = "$" + deal_price
+
+    subscribe_fields = subscribe_fields.copy()
+    profit_str = f"Ref({deal_price}, -1)/{deal_price} - 1"
+    subscribe_fields.append(profit_str)
+
+    _pred_dates = pred.index.get_level_values(level="datetime")
+    predict_dates = D.calendar(start_time=_pred_dates.min(), end_time=_pred_dates.max())
+    trade_dates = np.append(
+        predict_dates[shift:],
+        get_date_range(predict_dates[-1], left_shift=1, right_shift=shift),
+    )
+
+    trade_exchange = get_exchange(
+        start_time=predict_dates[0],
+        end_time=trade_dates[-1],
+        freq=freq,
+        codes=list(pred.index.get_level_values("instrument").unique()),
+        deal_price=deal_price,
+        subscribe_fields=subscribe_fields,
+        limit_threshold=limit_threshold,
+        open_cost=open_cost,
+        close_cost=close_cost,
+        min_cost=min_cost,
+        trade_unit=trade_unit,
+    )
+
+    long_returns = {}
+    short_returns = {}
+    ls_returns = {}
+
+    for pdate, date in zip(predict_dates, trade_dates):
+        score = pred.loc(axis=0)[pdate, :]
+        score = score.reset_index().sort_values(by="score", ascending=False)
+
+        long_stocks = list(score.iloc[:topk]["instrument"])
+        short_stocks = list(score.iloc[-topk:]["instrument"])
+
+        score = score.set_index(["datetime", "instrument"]).sort_index()
+
+        long_profit = []
+        short_profit = []
+        all_profit = []
+
+        for stock in long_stocks:
+            if not trade_exchange.is_stock_tradable(
+                stock_id=stock, start_time=date, end_time=date
+            ):
+                continue
+            profit = trade_exchange.get_quote_info(
+                stock_id=stock, start_time=date, end_time=date, field=profit_str
+            )
+            if np.isnan(profit):
+                long_profit.append(0)
+            else:
+                long_profit.append(profit)
+
+        for stock in short_stocks:
+            if not trade_exchange.is_stock_tradable(
+                stock_id=stock, start_time=date, end_time=date
+            ):
+                continue
+            profit = trade_exchange.get_quote_info(
+                stock_id=stock, start_time=date, end_time=date, field=profit_str
+            )
+            if np.isnan(profit):
+                short_profit.append(0)
+            else:
+                short_profit.append(profit * -1)
+
+        for stock in list(score.loc(axis=0)[pdate, :].index.get_level_values(level=1)):
+            # exclude the suspend stock
+            if trade_exchange.check_stock_suspended(
+                stock_id=stock, start_time=date, end_time=date
+            ):
+                continue
+            profit = trade_exchange.get_quote_info(
+                stock_id=stock, start_time=date, end_time=date, field=profit_str
+            )
+            if np.isnan(profit):
+                all_profit.append(0)
+            else:
+                all_profit.append(profit)
+
+        long_returns[date] = np.mean(long_profit) - np.mean(all_profit)
+        short_returns[date] = np.mean(short_profit) + np.mean(all_profit)
+        ls_returns[date] = np.mean(short_profit) + np.mean(long_profit)
+
+    return dict(
+        zip(
+            ["long", "short", "long_short"],
+            map(pd.Series, [long_returns, short_returns, ls_returns]),
+        )
+    )
 
 
 class StandalonePortAnaRecord(PortAnaRecord):
@@ -494,3 +634,83 @@ class ScoreSign(_SimpleBacktestRecord):
     @property
     def name(self) -> str:
         return "score_sign"
+
+
+class LongShortBacktestRecord(_SimpleBacktestRecord):
+    def _generate_signal(self, score_df: pd.DataFrame, instrument: str) -> pd.DataFrame:
+        pass
+
+    def _generate(self, *args, **kwargs):
+        pred = self.load("pred.pkl")
+        label_df = self.load("label.pkl").dropna()
+        label_df.columns = ["label"]
+
+        dt_values = pred.index.get_level_values("datetime")
+
+        start_time = (
+            dt_values[0]
+            if self.backtest_config["start_time"] is None
+            else self.backtest_config["start_time"]
+        )
+        end_time = (
+            dt_values[-1]
+            if self.backtest_config["end_time"] is None
+            else self.backtest_config["end_time"]
+        )
+        time_mask = (dt_values >= pd.to_datetime(start_time)) & (
+            dt_values <= pd.to_datetime(end_time)
+        )
+        pred = pred.loc[time_mask]
+        pred_label = pd.concat([pred, label_df, self._data], axis=1, sort=True).reindex(
+            pred.index
+        )
+
+        result = long_short_backtest(
+            pred.loc[time_mask],
+            freq=self._freq,
+            topk=1,
+            shift=1,
+            open_cost=0,
+            close_cost=0,
+            min_cost=0,
+        )
+        with tempfile.TemporaryDirectory() as tmp_dir_path:
+            file_path = report(
+                [Values(k, np.cumprod(nv + 1).dropna()) for k, nv in result.items()],
+                output_dir=tmp_dir_path,
+                file_name=self.name + "_report",
+            )
+            self.recorder.log_artifact(local_path=file_path)
+            values_df = pd.DataFrame(result)
+            self._save_df(
+                df=values_df,
+                file_name=self.name
+                + "_"
+                + self._NET_VALUE_EXCEL_FORMAT.format(self._freq),
+                dir_path=tmp_dir_path,
+            )
+            self._save_df(
+                df=pred_label,
+                file_name="pred_label.xlsx",
+                dir_path=tmp_dir_path,
+            )
+
+    @property
+    def name(self) -> str:
+        return "LongShortBacktestRecord"
+
+
+if __name__ == "__main__":
+    import qlib
+    from qlib.workflow import R
+
+    qlib.init(provider_uri="data/qlib_data", region="us")
+
+    recorder = R.get_recorder(
+        recorder_id="ee16729a846348ceacbe20aedc76652f", experiment_name="gru_xt"
+    )
+
+    r = LongShortBacktestRecord(
+        recorder=recorder,
+    )
+    r.generate()
