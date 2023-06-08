@@ -207,8 +207,8 @@ class SimpleVixHandler(DataHandlerLP):
     def get_label_config(self):
         return ["Ref($close, -2)/Ref($close, -1) - 1"], ["LABEL0"]
 
-    @staticmethod
-    def get_features():
+    @classmethod
+    def get_features(cls):
         fields = [
             "$maturity",
             "$ln_VIX",

@@ -21,6 +21,7 @@ from qlib.utils import flatten_dict, get_date_range
 from qlib.utils.time import Freq
 from qlib.workflow.record_temp import PortAnaRecord
 
+from backtest.qlib_custom.data_handler import SimpleVixHandler
 from backtest.qlib_custom.utils import gen_acct_pos_dfs, gen_orders_df
 from backtest.report import report, Values
 
@@ -426,31 +427,17 @@ class _SimpleBacktestRecord(PortAnaRecord, abc.ABC):
             skip_existing,
             **kwargs,
         )
-        self._fields = [
-            "$close",
-            "$ln_VIX",
-            "$ln_V1",
-            "$ln_V2",
-            "$ln_V3",
-            "$ln_V4",
-            "$ln_V5",
-            "$ln_V6",
-            "$ln_SPY",
-            "$ln_TLT",
-            "$roll1",
-            "$roll2",
-            "$roll3",
-            "$roll4",
-            "$roll5",
-            "$roll6",
-        ]
+        self._fields, names = SimpleVixHandler.get_features()
+        self._fields.append("$close")
+        names.append("close")
         self._freq = "day"
         market_data_df = D.features(
             instruments=["VIX_1M", "VIX_2M", "VIX_3M", "VIX_4M", "VIX_5M", "VIX_6M"],
             fields=self._fields,
             freq=self._freq,
             disk_cache=1,
-        ).rename(columns={x: x[1:] for x in self._fields})
+        )
+        market_data_df.columns = names
         self._data = market_data_df.swaplevel().sort_index()
 
     def _save_df(self, df: pd.DataFrame, file_name: str, dir_path: str):
