@@ -47,10 +47,13 @@ def dynamicworkflow(
     i = 0
     while True:
 
-        with R.start(experiment_name=config["experiment_name"]):
-            record = R.get_recorder()
-            assert isinstance(record, MLflowRecorder)
-            h_path = Path(record.get_local_dir()).parent
+        try:
+            record = R.get_recorder(experiment_name=config["experiment_name"])
+        except:
+            with R.start(experiment_name=config["experiment_name"]):
+                record = R.get_recorder()
+        assert isinstance(record, MLflowRecorder)
+        h_path = Path(record.get_local_dir()).parent
         if not os.path.exists(os.path.join(h_path, "config.yaml")):
             import shutil
 
@@ -58,7 +61,7 @@ def dynamicworkflow(
             break
         else:
             i += 1
-            config["experiment_name"] = config["experiment_name"] + i
+            config["experiment_name"] = config["experiment_name"] + str(i)
 
     RollingBenchmark(config).run_all()
 
@@ -80,18 +83,17 @@ class RollingBenchmark:
 
         task = conf["task"]
 
-        with R.start(experiment_name=conf["experiment_name"]):
-            record = R.get_recorder()
-            assert isinstance(record, MLflowRecorder)
-            h_path = Path(
-                record.get_local_dir()
-            ).parent / "{}_handler_horizon{}.pkl".format(
-                conf["experiment_name"], self.horizon
-            )
-            if not h_path.exists():
-                h_conf = task["dataset"]["kwargs"]["handler"]
-                h = init_instance_by_config(h_conf)
-                h.to_pickle(h_path, dump_all=True)
+        record = R.get_recorder(experiment_name=self.COMB_EXP)
+        assert isinstance(record, MLflowRecorder)
+        h_path = Path(
+            record.get_local_dir()
+        ).parent / "{}_handler_horizon{}.pkl".format(
+            conf["experiment_name"], self.horizon
+        )
+        if not h_path.exists():
+            h_conf = task["dataset"]["kwargs"]["handler"]
+            h = init_instance_by_config(h_conf)
+            h.to_pickle(h_path, dump_all=True)
 
         task["dataset"]["kwargs"]["handler"] = "file://" + "/".join(h_path.parts)
         task["record"] = ["qlib.workflow.record_temp.SignalRecord"]
