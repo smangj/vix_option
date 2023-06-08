@@ -609,6 +609,21 @@ class RollSignal(_SimpleBacktestRecord):
         return "roll_signal_strategy"
 
 
+class MuSignal(_SimpleBacktestRecord):
+    def _generate_signal(self, score_df, instrument) -> pd.DataFrame:
+        xt = score_df.copy()
+        month = instrument.split("_")[1][0]
+        buy_signal = xt["mu" + str(month)] <= 0
+        sell_signal = xt["mu" + str(month)] > 0
+
+        xt["signal"] = 1 * buy_signal - 1 * sell_signal
+        return xt
+
+    @property
+    def name(self) -> str:
+        return "mu_signal_strategy"
+
+
 class ScoreSign(_SimpleBacktestRecord):
     def _generate_signal(self, score_df, instrument) -> pd.DataFrame:
         xt = score_df.copy()

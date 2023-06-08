@@ -44,6 +44,22 @@ def dynamicworkflow(
         experiment_name = config["experiment_name"]
 
     config["roll_config"]["rolling_exp"] = "rolling_" + experiment_name
+    i = 0
+    while True:
+
+        with R.start(experiment_name=config["experiment_name"]):
+            record = R.get_recorder()
+            assert isinstance(record, MLflowRecorder)
+            h_path = Path(record.get_local_dir()).parent
+        if not os.path.exists(os.path.join(h_path, "config.yaml")):
+            import shutil
+
+            shutil.copyfile(config_path, os.path.join(h_path, "config.yaml"))
+            break
+        else:
+            i += 1
+            config["experiment_name"] = config["experiment_name"] + i
+
     RollingBenchmark(config).run_all()
 
 
