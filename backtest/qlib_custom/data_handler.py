@@ -210,6 +210,7 @@ class SimpleVixHandler(DataHandlerLP):
     @staticmethod
     def get_features():
         fields = [
+            "$maturity",
             "$ln_VIX",
             "$ln_V1",
             "$ln_V2",
@@ -225,8 +226,15 @@ class SimpleVixHandler(DataHandlerLP):
             "$roll4",
             "$roll5",
             "$roll6",
+            "$ln_V1 - $ln_VIX",
+            "$ln_V2 - $ln_VIX",
+            "$ln_V3 - $ln_VIX",
+            "$ln_V4 - $ln_VIX",
+            "$ln_V5 - $ln_VIX",
+            "$ln_V6 - $ln_VIX",
         ]
         names = [
+            "maturity",
             "ln_VIX",
             "ln_V1",
             "ln_V2",
@@ -242,5 +250,11 @@ class SimpleVixHandler(DataHandlerLP):
             "roll4",
             "roll5",
             "roll6",
+            "mu1",
+            "mu2",
+            "mu3",
+            "mu4",
+            "mu5",
+            "mu6",
         ]
         return fields, names
