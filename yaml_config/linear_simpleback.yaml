@@ -54,13 +54,15 @@ task:
                 train: [2005-12-20, 2005-12-25]
                 valid: [2005-12-26, 2005-12-30]
                 test: [2005-12-31, 2023-08-01]
-    record: 
+    record:
         - class: SignalRecord
           module_path: qlib.workflow.record_temp
-          kwargs: 
+          kwargs:
             model: <MODEL>
             dataset: <DATASET>
-        - class: MuSignal
+        - class: MeanReversion
           module_path: backtest.qlib_custom.record
           kwargs:
             config: *port_analysis_config
+
+

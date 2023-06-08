@@ -123,7 +123,7 @@ def long_short_backtest(
 
         for stock in long_stocks:
             if not trade_exchange.is_stock_tradable(
-                stock_id=stock, start_time=date, end_time=date
+                    stock_id=stock, start_time=date, end_time=date
             ):
                 continue
             profit = trade_exchange.get_quote_info(
@@ -409,14 +409,14 @@ class _SimpleBacktestRecord(PortAnaRecord, abc.ABC):
     _NET_VALUE_EXCEL_FORMAT = "net_value_{}.xlsx"
 
     def __init__(
-        self,
-        recorder,
-        config=None,
-        risk_analysis_freq: Union[List, str] = None,
-        indicator_analysis_freq: Union[List, str] = None,
-        indicator_analysis_method=None,
-        skip_existing=False,
-        **kwargs,
+            self,
+            recorder,
+            config=None,
+            risk_analysis_freq: Union[List, str] = None,
+            indicator_analysis_freq: Union[List, str] = None,
+            indicator_analysis_method=None,
+            skip_existing=False,
+            **kwargs,
     ):
         super().__init__(
             recorder,
@@ -470,7 +470,7 @@ class _SimpleBacktestRecord(PortAnaRecord, abc.ABC):
             else self.backtest_config["end_time"]
         )
         time_mask = (dt_values >= pd.to_datetime(start_time)) & (
-            dt_values <= pd.to_datetime(end_time)
+                dt_values <= pd.to_datetime(end_time)
         )
         pred_label = pred_label.loc[time_mask]
 
@@ -487,12 +487,7 @@ class _SimpleBacktestRecord(PortAnaRecord, abc.ABC):
                 pred_label.loc[(slice(None), instrument), :], instrument
             )
             # 简单规则：
-            xt["trading_flag" + "_" + instrument] = (
-                xt["signal"]
-                .replace(0, np.nan)
-                .fillna(method="ffill")
-                .replace(np.nan, 0)
-            )
+            xt["trading_flag" + "_" + instrument] = xt["signal"]
 
             xt["next_ret"] = (xt["close"].shift(-1) / xt["close"]) - 1
             xt["daily_ret"] = xt["next_ret"] * xt["trading_flag" + "_" + instrument]
@@ -512,8 +507,8 @@ class _SimpleBacktestRecord(PortAnaRecord, abc.ABC):
             self._save_df(
                 df=values_df,
                 file_name=self.name
-                + "_"
-                + self._NET_VALUE_EXCEL_FORMAT.format(self._freq),
+                          + "_"
+                          + self._NET_VALUE_EXCEL_FORMAT.format(self._freq),
                 dir_path=tmp_dir_path,
             )
             self._save_df(
@@ -580,13 +575,19 @@ class MeanReversion(_SimpleBacktestRecord):
         std_times = 2
         position_num = 1
         buy_signal = xt["ln_V" + str(month)] <= (
-            xt["vix_ma"] - std_times * xt["vix_std"]
+                xt["vix_ma"] - std_times * xt["vix_std"]
         )
         sell_signal = xt["ln_V" + str(month)] >= (
-            xt["vix_ma"] + std_times * xt["vix_std"]
+                xt["vix_ma"] + std_times * xt["vix_std"]
         )
 
         xt["signal"] = position_num * buy_signal - position_num * sell_signal
+        xt["signal"] = (
+            xt["signal"]
+            .replace(0, np.nan)
+            .fillna(method="ffill")
+            .replace(np.nan, 0)
+        )
         return xt
 
     @property
@@ -622,6 +623,21 @@ class MuSignal(_SimpleBacktestRecord):
     @property
     def name(self) -> str:
         return "mu_signal_strategy"
+
+
+class MuBufferSignal(_SimpleBacktestRecord):
+    def _generate_signal(self, score_df, instrument) -> pd.DataFrame:
+        xt = score_df.copy()
+        month = instrument.split("_")[1][0]
+        buy_signal = xt["mu" + str(month)] <= -0.05
+        sell_signal = xt["mu" + str(month)] >= 0.05
+
+        xt["signal"] = 1 * buy_signal - 1 * sell_signal
+        return xt
+
+    @property
+    def name(self) -> str:
+        return "mu_buffer_signal_strategy"
 
 
 class ScoreSign(_SimpleBacktestRecord):
@@ -660,7 +676,7 @@ class LongShortBacktestRecord(_SimpleBacktestRecord):
             else self.backtest_config["end_time"]
         )
         time_mask = (dt_values >= pd.to_datetime(start_time)) & (
-            dt_values <= pd.to_datetime(end_time)
+                dt_values <= pd.to_datetime(end_time)
         )
         pred = pred.loc[time_mask]
         pred_label = pd.concat([pred, label_df, self._data], axis=1, sort=True).reindex(
@@ -687,8 +703,8 @@ class LongShortBacktestRecord(_SimpleBacktestRecord):
             self._save_df(
                 df=values_df,
                 file_name=self.name
-                + "_"
-                + self._NET_VALUE_EXCEL_FORMAT.format(self._freq),
+                          + "_"
+                          + self._NET_VALUE_EXCEL_FORMAT.format(self._freq),
                 dir_path=tmp_dir_path,
             )
             self._save_df(
