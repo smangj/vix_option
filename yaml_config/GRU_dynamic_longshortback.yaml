@@ -1,7 +1,7 @@
 qlib_init:
     provider_uri: "data/qlib_data"
     region: cn
-experiment_name: GRU_SimpleVixHandler_SimpleSignalStrategy
+experiment_name: GRU_SimpleVixHandler_LongShortBacktestRecord
 market: &market one_for_test
 benchmark: &benchmark TLT
 roll_config:
@@ -10,6 +10,8 @@ roll_config:
 data_handler_config: &data_handler_config
     start_time: 2005-12-20
     end_time: 2022-08-15
+    fit_start_time: 2005-12-20
+    fit_end_time: 2022-08-15
     instruments: *market
     infer_processors:
         - class: RobustZScoreNorm
