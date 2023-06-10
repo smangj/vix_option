@@ -1,6 +1,8 @@
 # vix_option
 
 ---
+## 使用须知
+- run data_process/convert_data.py to prepare data
 
 ## 环境配置
 
