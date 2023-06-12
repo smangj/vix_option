@@ -30,7 +30,7 @@ port_analysis_config: &port_analysis_config
                 - <MODEL> 
                 - <DATASET>
     backtest:
-        start_time: 2016-10-01
+        start_time: 2006-10-01
         end_time: 2022-12-15
         account: 100000000
         benchmark: *benchmark

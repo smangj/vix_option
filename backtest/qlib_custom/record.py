@@ -123,11 +123,11 @@ def long_short_backtest(
 
         for stock in long_stocks:
             if not trade_exchange.is_stock_tradable(
-                    stock_id=stock, start_time=date, end_time=date
+                    stock_id=stock, start_time=pdate, end_time=pdate
             ):
                 continue
             profit = trade_exchange.get_quote_info(
-                stock_id=stock, start_time=date, end_time=date, field=profit_str
+                stock_id=stock, start_time=pdate, end_time=pdate, field=profit_str
             )
             if np.isnan(profit):
                 long_profit.append(0)
@@ -136,11 +136,11 @@ def long_short_backtest(
 
         for stock in short_stocks:
             if not trade_exchange.is_stock_tradable(
-                stock_id=stock, start_time=date, end_time=date
+                stock_id=stock, start_time=pdate, end_time=pdate
             ):
                 continue
             profit = trade_exchange.get_quote_info(
-                stock_id=stock, start_time=date, end_time=date, field=profit_str
+                stock_id=stock, start_time=pdate, end_time=pdate, field=profit_str
             )
             if np.isnan(profit):
                 short_profit.append(0)
@@ -150,11 +150,11 @@ def long_short_backtest(
         for stock in list(score.loc(axis=0)[pdate, :].index.get_level_values(level=1)):
             # exclude the suspend stock
             if trade_exchange.check_stock_suspended(
-                stock_id=stock, start_time=date, end_time=date
+                stock_id=stock, start_time=pdate, end_time=pdate
             ):
                 continue
             profit = trade_exchange.get_quote_info(
-                stock_id=stock, start_time=date, end_time=date, field=profit_str
+                stock_id=stock, start_time=pdate, end_time=pdate, field=profit_str
             )
             if np.isnan(profit):
                 all_profit.append(0)
@@ -684,7 +684,7 @@ class LongShortBacktestRecord(_SimpleBacktestRecord):
         )
 
         result = long_short_backtest(
-            pred.loc[time_mask],
+            pred,
             freq=self._freq,
             topk=1,
             shift=1,
