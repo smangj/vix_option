@@ -1,7 +1,7 @@
 qlib_init:
     provider_uri: "data/qlib_data"
     region: cn
-experiment_name: XGB_SimpleVixHandler_SimpleSignalStrategy
+experiment_name: XGB_SimpleVixHandler_ScoreSign
 market: &market one_for_test
 benchmark: &benchmark TLT
 roll_config:
@@ -45,10 +45,8 @@ task:
             eval_metric: rmse
             colsample_bytree: 0.8879
             eta: 0.0421
-            max_depth: 8
             n_estimators: 647
             subsample: 0.8789
-            nthread: 20
     dataset:
         class: DatasetH
         module_path: qlib.data.dataset
