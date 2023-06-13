@@ -115,11 +115,8 @@ def long_short_backtest(
         long_stocks = list(score.iloc[:topk]["instrument"])
         short_stocks = list(score.iloc[-topk:]["instrument"])
 
-        score = score.set_index(["datetime", "instrument"]).sort_index()
-
         long_profit = []
         short_profit = []
-        all_profit = []
 
         for stock in long_stocks:
             if not trade_exchange.is_stock_tradable(
@@ -147,22 +144,8 @@ def long_short_backtest(
             else:
                 short_profit.append(profit * -1)
 
-        for stock in list(score.loc(axis=0)[pdate, :].index.get_level_values(level=1)):
-            # exclude the suspend stock
-            if trade_exchange.check_stock_suspended(
-                stock_id=stock, start_time=pdate, end_time=pdate
-            ):
-                continue
-            profit = trade_exchange.get_quote_info(
-                stock_id=stock, start_time=pdate, end_time=pdate, field=profit_str
-            )
-            if np.isnan(profit):
-                all_profit.append(0)
-            else:
-                all_profit.append(profit)
-
-        long_returns[date] = np.mean(long_profit) - np.mean(all_profit)
-        short_returns[date] = np.mean(short_profit) + np.mean(all_profit)
+        long_returns[date] = np.mean(long_profit)
+        short_returns[date] = np.mean(short_profit)
         ls_returns[date] = np.mean(short_profit) + np.mean(long_profit)
 
     return dict(
