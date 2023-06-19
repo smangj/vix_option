@@ -3,7 +3,7 @@
 # @Time     : 2023/6/15 10:48
 # @Author   : wsy
 # @email    : 631535207@qq.com
-import numpy as np
+import torch
 from torch import nn as nn
 
 
@@ -22,10 +22,10 @@ class _InstrumentsEmbedding(nn.Module):
 
     def forward(self, x):
 
-        x = x.reshape(len(x), self.d_feat, self.d_instru, -1)  # [N, F, I, T]
-
-        emb = self.instruments_embedding(range(self.d_instru))
-        after = np.concatenate(x, emb)
+        # 取x的第一维是instruments
+        maturity = x[:, :, 0] - 1
+        emb = self.instruments_embedding(maturity.long())
+        after = torch.cat((x[:, :, 1:], emb), dim=2)
 
         return self._forward(after)
 
@@ -46,7 +46,7 @@ class GRUModel(_InstrumentsEmbedding):
         super().__init__(d_feat, d_instru, embedding_dim)
 
         self.rnn = nn.GRU(
-            input_size=d_feat,
+            input_size=d_feat + embedding_dim - 1,
             hidden_size=hidden_size,
             num_layers=num_layers,
             batch_first=True,
