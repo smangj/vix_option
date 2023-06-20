@@ -57,3 +57,25 @@ class GRUModel(_InstrumentsEmbedding):
     def _forward(self, x):
         out, _ = self.rnn(x)
         return self.fc_out(out[:, -1, :]).squeeze()
+
+
+class GRUModelMultiOutput(nn.Module):
+    def __init__(
+        self, d_feat=6, hidden_size=64, num_layers=2, dropout=0.0, output_size=1
+    ):
+        super().__init__()
+
+        self.rnn = nn.GRU(
+            input_size=d_feat,
+            hidden_size=hidden_size,
+            num_layers=num_layers,
+            batch_first=True,
+            dropout=dropout,
+        )
+        self.fc_out = nn.Linear(hidden_size, output_size)
+
+        self.d_feat = d_feat
+
+    def forward(self, x):
+        out, _ = self.rnn(x)
+        return self.fc_out(out[:, -1, :]).squeeze()
