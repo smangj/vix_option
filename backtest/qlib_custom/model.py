@@ -645,7 +645,9 @@ class MultiOutputGRU(Model):
         )
         dl_test.config(fillna_type="ffill+bfill")
         test_loader = DataLoader(
-            dl_test, batch_size=(len(dl_test) / self.d_instru), num_workers=self.n_jobs
+            dl_test,
+            batch_size=int(len(dl_test) / self.d_instru),
+            num_workers=self.n_jobs,
         )
         self.GRU_model.eval()
         preds = []
