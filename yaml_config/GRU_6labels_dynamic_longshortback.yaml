@@ -1,7 +1,7 @@
 qlib_init:
     provider_uri: "data/qlib_data"
     region: cn
-experiment_name: GRU_SimpleVixHandler_LongShortBacktestRecord
+experiment_name: MultiOutputGRU_LongShortBacktestRecord
 market: &market trable
 benchmark: &benchmark TLT
 roll_config:
