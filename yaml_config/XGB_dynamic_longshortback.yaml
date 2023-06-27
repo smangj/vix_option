@@ -1,19 +1,23 @@
 qlib_init:
     provider_uri: "data/qlib_data"
     region: cn
-market: &market one_for_test
+experiment_name: XGB_SimpleVixHandler_LongShortBacktestRecord
+market: &market trable
 benchmark: &benchmark TLT
+roll_config:
+    step: 20
+    horizon: 0
 data_handler_config: &data_handler_config
     start_time: 2005-12-20
-    end_time: 2023-03-06
+    end_time: 2022-08-15
     fit_start_time: 2005-12-20
-    fit_end_time: 2011-12-31
+    fit_end_time: 2022-08-15
     instruments: *market
     infer_processors:
         - class: RobustZScoreNorm
           kwargs:
               fields_group: feature
-              clip_outlier: true
+              clip_outlier: True
     learn_processors:
         - class: DropnaLabel
     label: ["Ref($close, -1) / $close - 1"]
@@ -26,7 +30,7 @@ port_analysis_config: &port_analysis_config
                 - <MODEL> 
                 - <DATASET>
     backtest:
-        start_time: 2005-12-31
+        start_time: 2011-01-01
         end_time: 2022-12-15
         account: 100000000
         benchmark: *benchmark
@@ -37,11 +41,14 @@ port_analysis_config: &port_analysis_config
             min_cost: 0
 task:
     model:
-        class: SmLinearModel
+        class: XgbFix
         module_path: backtest.qlib_custom.model
         kwargs:
-            estimator: ols
-            fit_intercept: 1
+            eval_metric: rmse
+            colsample_bytree: 0.8879
+            eta: 0.0421
+            n_estimators: 647
+            subsample: 0.8789
     dataset:
         class: DatasetH
         module_path: qlib.data.dataset
@@ -51,18 +58,11 @@ task:
                 module_path: backtest.qlib_custom.data_handler
                 kwargs: *data_handler_config
             segments:
-                train: [2005-12-20, 2005-12-25]
-                valid: [2005-12-26, 2005-12-30]
-                test: [2005-12-31, 2023-08-01]
+                train: [2005-12-20, 2010-06-30]
+                valid: [2010-07-01, 2010-12-31]
+                test: [2011-01-01, 2022-08-15]
     record:
-        - class: SignalRecord
-          module_path: qlib.workflow.record_temp
-          kwargs:
-            model: <MODEL>
-            dataset: <DATASET>
-        - class: MeanReversion
+        - class: LongShortBacktestRecord
           module_path: backtest.qlib_custom.record
           kwargs:
             config: *port_analysis_config
-
-

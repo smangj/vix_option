@@ -1,19 +1,21 @@
 qlib_init:
     provider_uri: "data/qlib_data"
     region: cn
+experiment_name: GRU_SimpleVixHandler_SimpleSignalStrategy
 market: &market one_for_test
 benchmark: &benchmark TLT
+roll_config:
+    step: 20
+    horizon: 0
 data_handler_config: &data_handler_config
     start_time: 2005-12-20
-    end_time: 2023-03-06
-    fit_start_time: 2005-12-20
-    fit_end_time: 2011-12-31
+    end_time: 2022-08-15
     instruments: *market
     infer_processors:
-        - class: RobustZScoreNorm
+        - class: FilterCol
           kwargs:
               fields_group: feature
-              clip_outlier: true
+              col_list: ["ln_VIX", "ln_V1", "ln_SPY", "ln_TLT", "roll1", "mu1"]
     learn_processors:
         - class: DropnaLabel
     label: ["Ref($close, -1) / $close - 1"]
@@ -26,7 +28,7 @@ port_analysis_config: &port_analysis_config
                 - <MODEL> 
                 - <DATASET>
     backtest:
-        start_time: 2005-12-31
+        start_time: 2006-02-01
         end_time: 2022-12-15
         account: 100000000
         benchmark: *benchmark
@@ -37,32 +39,36 @@ port_analysis_config: &port_analysis_config
             min_cost: 0
 task:
     model:
-        class: SmLinearModel
-        module_path: backtest.qlib_custom.model
+        class: GRU
+        module_path: qlib.contrib.model.pytorch_gru_ts
         kwargs:
-            estimator: ols
-            fit_intercept: 1
+            d_feat: 6
+            hidden_size: 64
+            num_layers: 2
+            dropout: 0.0
+            n_epochs: 20
+            lr: 1e-3
+            early_stop: 10
+            batch_size: 32
+            metric: loss
+            loss: mse
+            n_jobs: 1
+            GPU: 0
     dataset:
-        class: DatasetH
+        class: TSDatasetH
         module_path: qlib.data.dataset
         kwargs:
+            step_len: 10
             handler:
                 class: SimpleVixHandler
                 module_path: backtest.qlib_custom.data_handler
                 kwargs: *data_handler_config
             segments:
-                train: [2005-12-20, 2005-12-25]
-                valid: [2005-12-26, 2005-12-30]
-                test: [2005-12-31, 2023-08-01]
+                train: [2005-12-20, 2006-06-30]
+                valid: [2006-07-01, 2016-09-30]
+                test: [2006-10-01, 2022-12-15]
     record:
-        - class: SignalRecord
-          module_path: qlib.workflow.record_temp
-          kwargs:
-            model: <MODEL>
-            dataset: <DATASET>
-        - class: MeanReversion
+        - class: ScoreSign
           module_path: backtest.qlib_custom.record
           kwargs:
             config: *port_analysis_config
-
-

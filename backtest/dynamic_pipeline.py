@@ -44,6 +44,25 @@ def dynamicworkflow(
         experiment_name = config["experiment_name"]
 
     config["roll_config"]["rolling_exp"] = "rolling_" + experiment_name
+    i = 0
+    while True:
+
+        try:
+            record = R.get_recorder(experiment_name=config["experiment_name"])
+        except:
+            with R.start(experiment_name=config["experiment_name"]):
+                record = R.get_recorder()
+        assert isinstance(record, MLflowRecorder)
+        h_path = Path(record.get_local_dir()).parent
+        if not os.path.exists(os.path.join(h_path, "config.yaml")):
+            import shutil
+
+            shutil.copyfile(config_path, os.path.join(h_path, "config.yaml"))
+            break
+        else:
+            i += 1
+            config["experiment_name"] = config["experiment_name"] + str(i)
+
     RollingBenchmark(config).run_all()
 
 
@@ -64,16 +83,17 @@ class RollingBenchmark:
 
         task = conf["task"]
 
-        with R.start(experiment_name=conf["experiment_name"]):
-            record = R.get_recorder()
-            assert isinstance(record, MLflowRecorder)
-            h_path = Path(record.get_local_dir()) / "{}_handler_horizon{}.pkl".format(
-                conf["experiment_name"], self.horizon
-            )
-            if not h_path.exists():
-                h_conf = task["dataset"]["kwargs"]["handler"]
-                h = init_instance_by_config(h_conf)
-                h.to_pickle(h_path, dump_all=True)
+        record = R.get_recorder(experiment_name=self.COMB_EXP)
+        assert isinstance(record, MLflowRecorder)
+        h_path = Path(
+            record.get_local_dir()
+        ).parent / "{}_handler_horizon{}.pkl".format(
+            conf["experiment_name"], self.horizon
+        )
+        if not h_path.exists():
+            h_conf = task["dataset"]["kwargs"]["handler"]
+            h = init_instance_by_config(h_conf)
+            h.to_pickle(h_path, dump_all=True)
 
         task["dataset"]["kwargs"]["handler"] = "file://" + "/".join(h_path.parts)
         task["record"] = ["qlib.workflow.record_temp.SignalRecord"]
@@ -101,9 +121,11 @@ class RollingBenchmark:
             artifacts_path={"pred": "pred.pkl", "label": "label.pkl"},
         )
         res = rc()
-        with R.start(experiment_name=self.COMB_EXP):
-            R.log_params(exp_name=self.rolling_exp)
-            R.save_objects(**{"pred.pkl": res["pred"], "label.pkl": res["label"]})
+        r = RecorderCollector(experiment=self.COMB_EXP)
+        assert len(r.experiment.info["recorders"]) == 1
+        recorder = R.get_recorder(experiment_name=self.COMB_EXP)
+        recorder.log_params(exp_name=self.rolling_exp)
+        recorder.save_objects(**{"pred.pkl": res["pred"], "label.pkl": res["label"]})
 
     def update_rolling_rec(self):
         """
