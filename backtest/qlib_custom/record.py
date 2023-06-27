@@ -146,7 +146,7 @@ def long_short_backtest(
 
         long_returns[date] = np.mean(long_profit)
         short_returns[date] = np.mean(short_profit)
-        ls_returns[date] = np.mean(short_profit) + np.mean(long_profit)
+        ls_returns[date] = 0.5 * np.mean(short_profit) + 0.5 * np.mean(long_profit)
 
     return dict(
         zip(
