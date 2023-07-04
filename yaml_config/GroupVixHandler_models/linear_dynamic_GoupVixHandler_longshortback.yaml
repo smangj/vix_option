@@ -1,0 +1,65 @@
+qlib_init:
+    provider_uri: "data/qlib_data"
+    region: cn
+experiment_name: SmLinearModel_GroupVixHandler_LongShortBacktestRecord
+market: &market trable
+benchmark: &benchmark TLT
+roll_config:
+    step: 20
+    horizon: 0
+data_handler_config: &data_handler_config
+    start_time: 2005-12-20
+    end_time: 2022-12-15
+    fit_start_time: 2005-12-20
+    fit_end_time: 2022-08-15
+    instruments: *market
+    infer_processors:
+        - class: RobustZScoreNorm
+          kwargs:
+              fields_group: feature
+              clip_outlier: True
+    learn_processors:
+        - class: DropnaLabel
+    label: ["Ref($close, -1) / $close - 1"]
+port_analysis_config: &port_analysis_config
+    strategy:
+        class: SimpleSignalStrategy
+        module_path: backtest.qlib_custom.strategy
+        kwargs:
+            signal:
+                - <MODEL> 
+                - <DATASET>
+    backtest:
+        start_time: 2006-10-01
+        end_time: 2022-12-15
+        account: 100000000
+        benchmark: *benchmark
+        exchange_kwargs:
+            deal_price: close
+            open_cost: 0
+            close_cost: 0
+            min_cost: 0
+task:
+    model:
+        class: SmLinearModel
+        module_path: backtest.qlib_custom.model
+        kwargs:
+            estimator: ols
+            fit_intercept: 1
+    dataset:
+        class: DatasetH
+        module_path: qlib.data.dataset
+        kwargs:
+            handler:
+                class: SimpleVixHandler
+                module_path: backtest.qlib_custom.data_handler
+                kwargs: *data_handler_config
+            segments:
+                train: [2005-12-20, 2006-06-30]
+                valid: [2006-07-01, 2006-09-30]
+                test: [2006-10-01, 2022-08-15]
+    record:
+        - class: LongShortBacktestRecord
+          module_path: backtest.qlib_custom.record
+          kwargs:
+            config: *port_analysis_config
