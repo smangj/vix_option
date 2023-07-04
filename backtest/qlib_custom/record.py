@@ -47,6 +47,7 @@ def long_short_backtest(
     limit_threshold=None,
     min_cost=0,
     subscribe_fields=[],
+    long_weight=0.5,
 ):
     """
     A backtest for long-short strategy
@@ -146,7 +147,9 @@ def long_short_backtest(
 
         long_returns[date] = np.mean(long_profit)
         short_returns[date] = np.mean(short_profit)
-        ls_returns[date] = 0.5 * np.mean(short_profit) + 0.5 * np.mean(long_profit)
+        ls_returns[date] = (1 - long_weight) * np.mean(
+            short_profit
+        ) + long_weight * np.mean(long_profit)
 
     return dict(
         zip(
@@ -635,6 +638,28 @@ class ScoreSign(_SimpleBacktestRecord):
 
 
 class LongShortBacktestRecord(_SimpleBacktestRecord):
+    def __init__(
+        self,
+        recorder,
+        config=None,
+        risk_analysis_freq: Union[List, str] = None,
+        indicator_analysis_freq: Union[List, str] = None,
+        indicator_analysis_method=None,
+        skip_existing=False,
+        **kwargs,
+    ):
+        self.short_weight = kwargs.pop("short_weight", 0.0)
+
+        super().__init__(
+            recorder,
+            config,
+            risk_analysis_freq,
+            indicator_analysis_freq,
+            indicator_analysis_method,
+            skip_existing,
+            **kwargs,
+        )
+
     def _generate_signal(self, score_df: pd.DataFrame, instrument: str) -> pd.DataFrame:
         pass
 
@@ -671,6 +696,7 @@ class LongShortBacktestRecord(_SimpleBacktestRecord):
             open_cost=0,
             close_cost=0,
             min_cost=0,
+            long_weight=(1.0 - self.short_weight) / 2,
         )
         with tempfile.TemporaryDirectory() as tmp_dir_path:
             file_path = report(
