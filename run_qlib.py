@@ -22,7 +22,14 @@ def main(name: str = "linear_dynamic_simpleback.yaml", work_flow: str = "dynamic
     else:
         raise NotImplementedError
 
-    func(os.path.join("yaml_config", name), experiment_name=name.split(".")[0])
+    file_path = os.path.join("yaml_config", name)
+    if os.path.isfile(file_path):
+        func(file_path, experiment_name=name.split(".")[0])
+    elif os.path.isdir(file_path):
+        for file in os.listdir(file_path):
+            func(os.path.join(file_path, file), experiment_name=file.split(".")[0])
+    else:
+        raise NotImplementedError
 
 
 if __name__ == "__main__":
