@@ -1,7 +1,7 @@
 qlib_init:
     provider_uri: "data/qlib_data"
     region: cn
-experiment_name: MultiOutputGRU_LongShortBacktestRecord
+experiment_name: SmLinearModel_SimpleVixHandler_LongShortBacktestRecord
 market: &market trable
 benchmark: &benchmark TLT
 roll_config:
@@ -9,37 +9,15 @@ roll_config:
     horizon: 0
 data_handler_config: &data_handler_config
     start_time: 2005-12-20
-    end_time: 2022-08-15
+    end_time: 2022-12-15
     fit_start_time: 2005-12-20
     fit_end_time: 2022-08-15
     instruments: *market
     infer_processors:
-        - class: FilterCol
+        - class: RobustZScoreNorm
           kwargs:
               fields_group: feature
-              col_list: [
-                  "ln_VIX",
-                  "ln_V1",
-                  "ln_V2",
-                  "ln_V3",
-                  "ln_V4",
-                  "ln_V5",
-                  "ln_V6",
-                  "ln_SPY",
-                  "ln_TLT",
-                  "roll1",
-                  "roll2",
-                  "roll3",
-                  "roll4",
-                  "roll5",
-                  "roll6",
-                  "mu1",
-                  "mu2",
-                  "mu3",
-                  "mu4",
-                  "mu5",
-                  "mu6",
-              ]
+              clip_outlier: True
     learn_processors:
         - class: DropnaLabel
     label: ["Ref($close, -1) / $close - 1"]
@@ -63,27 +41,15 @@ port_analysis_config: &port_analysis_config
             min_cost: 0
 task:
     model:
-        class: MultiOutputGRU
+        class: SmLinearModel
         module_path: backtest.qlib_custom.model
         kwargs:
-            d_feat: 21
-            d_instru: 6
-            hidden_size: 64
-            num_layers: 2
-            dropout: 0.0
-            n_epochs: 20
-            lr: 1e-3
-            early_stop: 10
-            batch_size: 32
-            metric: loss
-            loss: mse
-            n_jobs: 0
-            GPU: 0
+            estimator: ols
+            fit_intercept: 1
     dataset:
-        class: TSTabularDatasetH
-        module_path: backtest.qlib_custom.dataset
+        class: DatasetH
+        module_path: qlib.data.dataset
         kwargs:
-            step_len: 10
             handler:
                 class: SimpleVixHandler
                 module_path: backtest.qlib_custom.data_handler
@@ -97,4 +63,3 @@ task:
           module_path: backtest.qlib_custom.record
           kwargs:
             config: *port_analysis_config
-            short_weight: 0.1

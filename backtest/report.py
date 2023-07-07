@@ -119,6 +119,7 @@ def report(
             axistick_opts=opts.AxisTickOpts(is_show=True),
             splitline_opts=opts.SplitLineOpts(is_show=True),
         ),
+        toolbox_opts=opts.ToolboxOpts(is_show=True)
     )
     page = Page()
     page.add(table, line_chart)
