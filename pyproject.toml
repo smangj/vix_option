@@ -29,6 +29,7 @@ dependencies = [
     "pyqlib==0.9.1",
     "matplotlib==3.7.1",
     "yahooquery==2.3.1",
+    "optuna==3.2.0",
 ]
 requires-python = ">=3.8,<3.9"
 license = {text = "MIT"}

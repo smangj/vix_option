@@ -171,10 +171,28 @@ requires_python = ">=3.6"
 summary = "Extended pickling support for Python objects"
 
 [[package]]
+name = "cmaes"
+version = "0.9.1"
+requires_python = ">=3.7"
+summary = "Lightweight Covariance Matrix Adaptation Evolution Strategy (CMA-ES) implementation for Python 3."
+dependencies = [
+    "numpy",
+]
+
+[[package]]
 name = "colorama"
 version = "0.4.6"
 requires_python = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,!=3.6.*,>=2.7"
 summary = "Cross-platform colored terminal text."
+
+[[package]]
+name = "colorlog"
+version = "6.7.0"
+requires_python = ">=3.6"
+summary = "Add colours to the output of Python's logging module."
+dependencies = [
+    "colorama; sys_platform == \"win32\"",
+]
 
 [[package]]
 name = "comm"
@@ -1052,6 +1070,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "optuna"
+version = "3.2.0"
+requires_python = ">=3.7"
+summary = "A hyperparameter optimization framework"
+dependencies = [
+    "PyYAML",
+    "alembic>=1.5.0",
+    "cmaes>=0.9.1",
+    "colorlog",
+    "numpy",
+    "packaging>=20.0",
+    "sqlalchemy>=1.3.0",
+    "tqdm",
+]
+
+[[package]]
 name = "osqp"
 version = "0.6.2.post8"
 summary = "OSQP: The Operator Splitting QP Solver"
@@ -1913,7 +1947,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 [metadata]
 lock_version = "4.2"
 groups = ["default", "dev", "torch-default"]
-content_hash = "sha256:b3b23a8941aa797dda2691bd1fb9e8b9405ed6ef0947c98ef2fc24751c3b0ece"
+content_hash = "sha256:d4f41c6248dd8f267bfd0ba6e357277b97360f5f9e747d57cb920debefac8533"
 
 [metadata.files]
 "alembic 1.10.3" = [
@@ -2183,9 +2217,17 @@ content_hash = "sha256:b3b23a8941aa797dda2691bd1fb9e8b9405ed6ef0947c98ef2fc24751
     {url = "https://mirrors.cloud.tencent.com/pypi/packages/15/80/44286939ca215e88fa827b2aeb6fa3fd2b4a7af322485c7170d6f9fd96e0/cloudpickle-2.2.1-py3-none-any.whl", hash = "sha256:61f594d1f4c295fa5cd9014ceb3a1fc4a70b0de1164b94fbc2d854ccba056f9f"},
     {url = "https://mirrors.cloud.tencent.com/pypi/packages/5f/51/913ecca3970a2227cf4d5e8937df52cc28f465ac442216110b8e3323262d/cloudpickle-2.2.1.tar.gz", hash = "sha256:d89684b8de9e34a2a43b3460fbca07d09d6e25ce858df4d5a44240403b6178f5"},
 ]
+"cmaes 0.9.1" = [
+    {url = "https://mirrors.cloud.tencent.com/pypi/packages/11/a9/83c304855d801dda85c05e6fad0483161ebfba1500efde3de9652b50ac14/cmaes-0.9.1-py3-none-any.whl", hash = "sha256:6e2930b6a99dd94621bf62966c13d29e6a7f90a909b4e4266010d5f3a7fb74b8"},
+    {url = "https://mirrors.cloud.tencent.com/pypi/packages/d1/f9/35a3c4d887014b8464b4bccb364512fb0e87efb78bace58ec59f1efead63/cmaes-0.9.1.tar.gz", hash = "sha256:d122f8d46377f643a150c85ffc81c4e33909a34cfdcb522ee7a6fb17ea4f232c"},
+]
 "colorama 0.4.6" = [
     {url = "https://mirrors.cloud.tencent.com/pypi/packages/d1/d6/3965ed04c63042e047cb6a3e6ed1a63a35087b6a609aa3a15ed8ac56c221/colorama-0.4.6-py2.py3-none-any.whl", hash = "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6"},
     {url = "https://mirrors.cloud.tencent.com/pypi/packages/d8/53/6f443c9a4a8358a93a6792e2acffb9d9d5cb0a5cfd8802644b7b1c9a02e4/colorama-0.4.6.tar.gz", hash = "sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44"},
+]
+"colorlog 6.7.0" = [
+    {url = "https://mirrors.cloud.tencent.com/pypi/packages/58/43/a363c213224448f9e194d626221123ce00e3fb3d87c0c22aed52b620bdd1/colorlog-6.7.0-py2.py3-none-any.whl", hash = "sha256:0d33ca236784a1ba3ff9c532d4964126d8a2c44f1f0cb1d2b0728196f512f662"},
+    {url = "https://mirrors.cloud.tencent.com/pypi/packages/78/6b/4e5481ddcdb9c255b2715f54c863629f1543e97bc8c309d1c5c131ad14f2/colorlog-6.7.0.tar.gz", hash = "sha256:bd94bd21c1e13fac7bd3153f4bc3a7dc0eb0974b8bc2fdf1a989e474f6e582e5"},
 ]
 "comm 0.1.3" = [
     {url = "https://mirrors.cloud.tencent.com/pypi/packages/74/f3/b88d7e1dadf741550c56b70d7ce62673354fddb68e143d193ceb80224208/comm-0.1.3-py3-none-any.whl", hash = "sha256:16613c6211e20223f215fc6d3b266a247b6e2641bf4e0a3ad34cb1aff2aa3f37"},
@@ -3083,6 +3125,10 @@ content_hash = "sha256:b3b23a8941aa797dda2691bd1fb9e8b9405ed6ef0947c98ef2fc24751
 "openpyxl 3.1.2" = [
     {url = "https://mirrors.cloud.tencent.com/pypi/packages/42/e8/af028681d493814ca9c2ff8106fc62a4a32e4e0ae14602c2a98fc7b741c8/openpyxl-3.1.2.tar.gz", hash = "sha256:a6f5977418eff3b2d5500d54d9db50c8277a368436f4e4f8ddb1be3422870184"},
     {url = "https://mirrors.cloud.tencent.com/pypi/packages/6a/94/a59521de836ef0da54aaf50da6c4da8fb4072fb3053fa71f052fd9399e7a/openpyxl-3.1.2-py2.py3-none-any.whl", hash = "sha256:f91456ead12ab3c6c2e9491cf33ba6d08357d802192379bb482f1033ade496f5"},
+]
+"optuna 3.2.0" = [
+    {url = "https://mirrors.cloud.tencent.com/pypi/packages/97/97/12689d6988c822acd23103a6f1fc6a646f27809e2d1972b1219cef880873/optuna-3.2.0.tar.gz", hash = "sha256:683d8693643a761a41d251a6b8e13263b24acacf9fc46a9233d5f6aa3ce5c683"},
+    {url = "https://mirrors.cloud.tencent.com/pypi/packages/a0/8c/f72c6bc61b3c71149af95cd91e16149ea5b5aeae99e6d197f80e79a1035a/optuna-3.2.0-py3-none-any.whl", hash = "sha256:6140ca7cc1cc6751b5184c9f88cd7bbaaf6172b4bed1792552db9d8931979d77"},
 ]
 "osqp 0.6.2.post8" = [
     {url = "https://mirrors.cloud.tencent.com/pypi/packages/01/84/09ad72087f183db87350e05cb3e18f15f6be36d0fda48cb86df4b43dfd76/osqp-0.6.2.post8-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:2f8647e63bba38f57161d80dda251c06c290bb99e4767cc58a37727ee3c8b912"},
@@ -4038,16 +4084,6 @@ content_hash = "sha256:b3b23a8941aa797dda2691bd1fb9e8b9405ed6ef0947c98ef2fc24751
 "tomli 2.0.1" = [
     {url = "https://mirrors.cloud.tencent.com/pypi/packages/97/75/10a9ebee3fd790d20926a90a2547f0bf78f371b2f13aa822c759680ca7b9/tomli-2.0.1-py3-none-any.whl", hash = "sha256:939de3e7a6161af0c887ef91b7d41a53e7c5a1ca976325f429cb46ea9bc30ecc"},
     {url = "https://mirrors.cloud.tencent.com/pypi/packages/c0/3f/d7af728f075fb08564c5949a9c95e44352e23dee646869fa104a3b2060a3/tomli-2.0.1.tar.gz", hash = "sha256:de526c12914f0c550d15924c62d72abc48d6fe7364aa87328337a31007fe8a4f"},
-]
-"torch 1.7.1+cu110" = [
-    {url = "https://download.pytorch.org/whl/cu110/torch-1.7.1%2Bcu110-cp36-cp36m-linux_x86_64.whl", hash = "sha256:1f3092cc17805a60910d7e3eb926136358b9b7d2dbbd732cd413c3279737f87c"},
-    {url = "https://download.pytorch.org/whl/cu110/torch-1.7.1%2Bcu110-cp36-cp36m-win_amd64.whl", hash = "sha256:72b310be4302c4ce4b01da84e9364f48806b020112dcd3e06feaa283adce82a1"},
-    {url = "https://download.pytorch.org/whl/cu110/torch-1.7.1%2Bcu110-cp37-cp37m-linux_x86_64.whl", hash = "sha256:fe553195c62ce2f3f861ae03295c5dc126c7467e005b3cb9dae6c3be84697ab0"},
-    {url = "https://download.pytorch.org/whl/cu110/torch-1.7.1%2Bcu110-cp37-cp37m-win_amd64.whl", hash = "sha256:2aa7c4219181e31fae146e5e42e395128214487fc7d016bc263fc60b354d22d6"},
-    {url = "https://download.pytorch.org/whl/cu110/torch-1.7.1%2Bcu110-cp38-cp38-linux_x86_64.whl", hash = "sha256:709cec07bb34735bcf49ad1d631e4d90d29fa56fe23ac9768089c854367a1ac9"},
-    {url = "https://download.pytorch.org/whl/cu110/torch-1.7.1%2Bcu110-cp38-cp38-win_amd64.whl", hash = "sha256:3a13c7117df5f89739878dba3d3ba833deb0fcfe7a657fe346ebdba31daec00a"},
-    {url = "https://download.pytorch.org/whl/cu110/torch-1.7.1%2Bcu110-cp39-cp39-linux_x86_64.whl", hash = "sha256:3a393adc10cbcf22b3e666557a09c114bc716f78e640a33a53ca1ccc99056cd8"},
-    {url = "https://download.pytorch.org/whl/cu110/torch-1.7.1%2Bcu110-cp39-cp39-win_amd64.whl", hash = "sha256:bc1a73f18ff93192ee1aad4714b3b454eb7dee3a030b28a42b5f2f3e63ec9169"},
 ]
 "tornado 6.2" = [
     {url = "https://mirrors.cloud.tencent.com/pypi/packages/11/30/ac70f5c5f03cf1cd0ae8199c80382387a9fe57e8f68853d5c9527c0219e5/tornado-6.2-cp37-abi3-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:b8150f721c101abdef99073bf66d3903e292d851bee51910839831caba341a75"},
