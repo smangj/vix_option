@@ -5,10 +5,13 @@
 # @email    : 631535207@qq.com
 
 import optuna
+import os
+from pathlib import Path
 import fire
 import pandas as pd
 import qlib
 from qlib.workflow import R
+from qlib.config import C
 from qlib.workflow.task.collect import RecorderCollector
 from empyrical.stats import sharpe_ratio
 
@@ -65,8 +68,13 @@ def objective(trial, experiment_name, recorder_id: str = None):
 
 def main(
     experiment_name: str = "SmLinearModel_GroupVixHandler_LongShortBacktestRecord",
+    uri_folder="k-means",
 ):
-    qlib.init(provider_uri="data/qlib_data")
+    exp_manager = C["exp_manager"]
+    exp_manager["kwargs"]["uri"] = "file:" + str(
+        Path(os.getcwd()).resolve() / uri_folder
+    )
+    qlib.init(provider_uri="data/qlib_data", exp_manager=exp_manager)
 
     study = optuna.create_study(direction="maximize", storage="sqlite:///optuna.db")
     study.optimize(
