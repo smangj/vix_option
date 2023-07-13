@@ -1,7 +1,7 @@
 qlib_init:
     provider_uri: "data/qlib_data"
     region: cn
-experiment_name: SmLinearModel_GroupVixHandler_LongShortBacktestRecord
+experiment_name: SmLinearModel_GroupVix20230711Handler_LongShortBacktestRecord
 market: &market trable
 benchmark: &benchmark TLT
 roll_config:
@@ -19,6 +19,9 @@ data_handler_config: &data_handler_config
               fields_group: feature
               clip_outlier: True
     learn_processors:
+        - class: DropnaProcessor
+          kwargs:
+              fields_group: feature
         - class: DropnaLabel
     label: ["Ref($close, -1) / $close - 1"]
 port_analysis_config: &port_analysis_config
@@ -51,7 +54,7 @@ task:
         module_path: qlib.data.dataset
         kwargs:
             handler:
-                class: GroupVixHandler
+                class: GroupVixHandler20230711
                 module_path: backtest.qlib_custom.data_handler
                 kwargs: *data_handler_config
             segments:
@@ -63,4 +66,3 @@ task:
           module_path: backtest.qlib_custom.record
           kwargs:
             config: *port_analysis_config
-            short_weight: 0.1

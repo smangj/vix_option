@@ -473,3 +473,235 @@ class GroupVixHandler(DataHandlerLP):
             ],
             axis=1,
         )
+
+
+class GroupVixHandler20230711(DataHandlerLP):
+    windows = [5, 20, 60]
+    # 与features的衍生匹配
+    rolling_names = ["z-score", "MA", "std", "skew", "kurt"]
+    data_category = ["ln_V", "roll", "mu"]
+
+    def __init__(
+        self,
+        instruments="trable",
+        start_time=None,
+        end_time=None,
+        freq="day",
+        infer_processors=_DEFAULT_INFER_PROCESSORS,
+        learn_processors=_DEFAULT_LEARN_PROCESSORS,
+        fit_start_time=None,
+        fit_end_time=None,
+        process_type=DataHandlerLP.PTYPE_A,
+        filter_pipe=None,
+        inst_processor=None,
+        **kwargs,
+    ):
+        infer_processors = check_transform_proc(
+            infer_processors, fit_start_time, fit_end_time
+        )
+        learn_processors = check_transform_proc(
+            learn_processors, fit_start_time, fit_end_time
+        )
+
+        data_loader = {
+            "class": "QlibDataLoader",
+            "kwargs": {
+                "config": {
+                    "feature": self.get_features(),
+                    "label": kwargs.pop("label", self.get_label_config()),
+                },
+                "filter_pipe": filter_pipe,
+                "freq": freq,
+                "inst_processor": inst_processor,
+            },
+        }
+
+        super().__init__(
+            instruments=instruments,
+            start_time=start_time,
+            end_time=end_time,
+            data_loader=data_loader,
+            infer_processors=infer_processors,
+            learn_processors=learn_processors,
+            process_type=process_type,
+            **kwargs,
+        )
+
+    def get_label_config(self):
+        return ["Ref($close, -2)/Ref($close, -1) - 1"], ["LABEL0"]
+
+    @classmethod
+    def get_common_fields(cls):
+        fields = [
+            "$maturity",
+            "$ln_VIX",
+            "$ln_SPY",
+            "$ln_TLT",
+        ]
+        names = [
+            "maturity",
+            "ln_VIX",
+            "ln_SPY",
+            "ln_TLT",
+        ]
+        return fields, names
+
+    @classmethod
+    def get_features(cls):
+        fields, names = cls.get_common_fields()
+        person_fields = [
+            "$ln_V1",
+            "$roll1",
+            "$ln_V1 - $ln_VIX",
+            "$ln_V2",
+            "$roll2",
+            "$ln_V2 - $ln_V1",
+            "$ln_V3",
+            "$roll3",
+            "$ln_V3 - $ln_V2",
+            "$ln_V4",
+            "$roll4",
+            "$ln_V4 - $ln_V3",
+            "$ln_V5",
+            "$roll5",
+            "$ln_V5 - $ln_V4",
+            "$ln_V6",
+            "$roll6",
+            "$ln_V6 - $ln_V5",
+        ]
+        person_names = [
+            "ln_V1",
+            "roll1",
+            "mu1",
+            "ln_V2",
+            "roll2",
+            "mu2",
+            "ln_V3",
+            "roll3",
+            "mu3",
+            "ln_V4",
+            "roll4",
+            "mu4",
+            "ln_V5",
+            "roll5",
+            "mu5",
+            "ln_V6",
+            "roll6",
+            "mu6",
+        ]
+
+        fields += person_fields
+        names += person_names
+
+        rolling_features = fields[1:]
+        var_names = names[1:]
+
+        # z-score
+        fields += [
+            "Mean({}, {}) / Std({}, {})".format(x, y, x, y)
+            for x in person_fields
+            for y in cls.windows
+        ]
+        names += [
+            "{}_z-score{}".format(x, y) for x in person_names for y in cls.windows
+        ]
+        # rolling, 除了maturity
+        fields += [
+            "Mean({}, {})".format(x, y) for x in rolling_features for y in cls.windows
+        ]
+        names += ["{}_MA{}".format(x, y) for x in var_names for y in cls.windows]
+        fields += [
+            "Std({}, {})".format(x, y) for x in rolling_features for y in cls.windows
+        ]
+        names += ["{}_std{}".format(x, y) for x in var_names for y in cls.windows]
+        fields += [
+            "Skew({}, {})".format(x, y) for x in rolling_features for y in cls.windows
+        ]
+        names += ["{}_skew{}".format(x, y) for x in var_names for y in cls.windows]
+        fields += [
+            "Kurt({}, {})".format(x, y) for x in rolling_features for y in cls.windows
+        ]
+        names += ["{}_kurt{}".format(x, y) for x in var_names for y in cls.windows]
+        return fields, names
+
+    def setup_data(self, init_type: str = DataHandlerLP.IT_FIT_SEQ, **kwargs):
+        """
+        Set up the data in case of running initialization for multiple time
+
+        Parameters
+        ----------
+        init_type : str
+            The type `IT_*` listed above.
+        enable_cache : bool
+            default value is false:
+
+            - if `enable_cache` == True:
+
+                the processed data will be saved on disk, and handler will load the cached data from the disk directly
+                when we call `init` next time
+        """
+        # Setup data.
+        # _data may be with multiple column index level. The outer level indicates the feature set name
+        with TimeInspector.logt("Loading data"):
+            # make sure the fetch method is based on an index-sorted pd.DataFrame
+            _data = lazy_sort_index(
+                self.data_loader.load(self.instruments, self.start_time, self.end_time)
+            )
+
+        self._data = self._vix_process(_data)
+
+        with TimeInspector.logt("fit & process data"):
+            if init_type == DataHandlerLP.IT_FIT_IND:
+                self.fit()
+                self.process_data()
+            elif init_type == DataHandlerLP.IT_LS:
+                self.process_data()
+            elif init_type == DataHandlerLP.IT_FIT_SEQ:
+                self.fit_process_data()
+            else:
+                raise NotImplementedError("This type of input is not supported")
+
+    @classmethod
+    def _vix_process(cls, data: pd.DataFrame) -> pd.DataFrame:
+        _data = data.copy()
+        _data[("feature", "ln_V")] = _data[("feature", "ln_V1")]
+        _data[("feature", "roll")] = _data[("feature", "roll1")]
+        _data[("feature", "mu")] = _data[("feature", "mu1")]
+        for window in cls.windows:
+            for name in cls.rolling_names:
+                for category in cls.data_category:
+                    _data[
+                        ("feature", "{}_{}{}".format(category, name, window))
+                    ] = _data[("feature", "{}1_{}{}".format(category, name, window))]
+
+        for i in range(5):
+            mask = _data[("feature", "maturity")] == i + 2
+            for category in cls.data_category:
+                _data[("feature", "{}".format(category))].loc[mask] = _data.loc[mask][
+                    ("feature", "ln_V" + str(i + 2))
+                ]
+            for window in cls.windows:
+                for name in cls.rolling_names:
+                    for category in cls.data_category:
+                        _data[
+                            ("feature", "{}_{}{}".format(category, name, window))
+                        ].loc[mask] = _data.loc[mask][
+                            (
+                                "feature",
+                                "{}{}_{}{}".format(category, i + 2, name, window),
+                            )
+                        ]
+
+        drop_list = [
+            ("feature", "{}{}".format(x, i + 1))
+            for x in cls.data_category
+            for i in range(6)
+        ]
+        drop_list += [
+            ("feature", "{}{}_{}{}".format(x, i + 1, name, window))
+            for x in cls.data_category
+            for i in range(6)
+            for name in cls.rolling_names
+            for window in cls.windows
+        ]
+        return _data.drop(drop_list, axis=1)
