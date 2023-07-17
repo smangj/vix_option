@@ -1,7 +1,7 @@
 qlib_init:
     provider_uri: "data/qlib_data"
     region: cn
-experiment_name: SmLinearModel_GroupVix20230711Handler_LongShortBacktestRecord
+experiment_name: SmLinearModel_GroupVix20230711Handler_CSRankNorm_LongShortBacktestRecord
 market: &market trable
 benchmark: &benchmark TLT
 roll_config:

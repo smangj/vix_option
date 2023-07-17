@@ -1,7 +1,7 @@
 qlib_init:
     provider_uri: "data/qlib_data"
     region: cn
-experiment_name: XGB_GroupVixHandler20230711_LongShortBacktestRecord
+experiment_name: XGB_GroupVixHandler20230711_CSRankNorm_LongShortBacktestRecord
 market: &market trable
 benchmark: &benchmark TLT
 roll_config:
