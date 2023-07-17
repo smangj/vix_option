@@ -20,8 +20,8 @@ from qlib.log import get_module_logger
 from qlib.utils import flatten_dict, get_date_range
 from qlib.utils.time import Freq
 from qlib.workflow.record_temp import PortAnaRecord
+from qlib.utils import init_instance_by_config
 
-from backtest.qlib_custom.data_handler import SimpleVixHandler
 from backtest.qlib_custom.utils import gen_acct_pos_dfs, gen_orders_df
 from backtest.report import report, Values
 
@@ -404,6 +404,8 @@ class _SimpleBacktestRecord(PortAnaRecord, abc.ABC):
         skip_existing=False,
         **kwargs,
     ):
+        handler = kwargs.pop("handler")
+        handler = init_instance_by_config(handler)
         super().__init__(
             recorder,
             config,
@@ -413,7 +415,7 @@ class _SimpleBacktestRecord(PortAnaRecord, abc.ABC):
             skip_existing,
             **kwargs,
         )
-        self._fields, names = SimpleVixHandler.get_features()
+        self._fields, names = handler.get_features()
         self._fields.append("$close")
         names.append("close")
         self._freq = "day"
