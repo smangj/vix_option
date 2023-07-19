@@ -97,12 +97,8 @@ class RollingBenchmark:
             h = init_instance_by_config(h_conf)
             h.to_pickle(h_path, dump_all=True)
 
-        self._handler_path = (
-            "file://"
-            + os.path.join(*h_path.parts[0:-1])
-            + "/{}".format(h_path.parts[-1])
-        )
-        task["dataset"]["kwargs"]["handler"] = self._handler_path
+        self._handler_path = h_path
+        task["dataset"]["kwargs"]["handler"] = h_path
         task["record"] = ["qlib.workflow.record_temp.SignalRecord"]
         return task
 
@@ -158,9 +154,9 @@ class RollingBenchmark:
     def run_all(self):
         # the results will be  save in mlruns.
         # 1) each rolling task is saved in rolling_models
-        self.train_rolling_tasks()
+        self.basic_task()
         # 2) combined rolling tasks and evaluation results are saved in rolling
-        self.ens_rolling()
+        # self.ens_rolling()
         self.update_rolling_rec()
 
 
