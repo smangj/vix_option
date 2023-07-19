@@ -49,7 +49,8 @@ def dynamicworkflow(
 
         try:
             record = R.get_recorder(experiment_name=config["experiment_name"])
-        except:
+        except Exception as e:
+            print(e)
             with R.start(experiment_name=config["experiment_name"]):
                 record = R.get_recorder()
         assert isinstance(record, MLflowRecorder)
@@ -77,6 +78,7 @@ class RollingBenchmark:
         self.horizon = config["roll_config"]["horizon"]
         self.rolling_exp = config["roll_config"]["rolling_exp"]
         self.COMB_EXP = config["experiment_name"]
+        self._handler_path = None
 
     def basic_task(self):
         conf = deepcopy_basic_type(self._config)
@@ -95,7 +97,8 @@ class RollingBenchmark:
             h = init_instance_by_config(h_conf)
             h.to_pickle(h_path, dump_all=True)
 
-        task["dataset"]["kwargs"]["handler"] = "file://" + "/".join(h_path.parts)
+        self._handler_path = "file://" + "/".join(h_path.parts)
+        task["dataset"]["kwargs"]["handler"] = self._handler_path
         task["record"] = ["qlib.workflow.record_temp.SignalRecord"]
         return task
 
@@ -140,6 +143,7 @@ class RollingBenchmark:
                     record,
                     recorder=rec,
                     default_module="qlib.workflow.record_temp",
+                    try_kwargs={"handler": self._handler_path},
                 )
                 r.generate()
 
@@ -154,3 +158,17 @@ class RollingBenchmark:
         # 2) combined rolling tasks and evaluation results are saved in rolling
         self.ens_rolling()
         self.update_rolling_rec()
+
+
+if __name__ == "__main__":
+
+    qlib.init(provider_uri="data/qlib_data", region="us")
+    config = {}
+    config["roll_config"] = {}
+    config["roll_config"]["step"] = 20
+    config["roll_config"]["horizon"] = 0
+    config["roll_config"][
+        "rolling_exp"
+    ] = "rolling_GRU_SimpleVixHandler_SimpleSignalStrategy"
+    config["experiment_name"] = "GRU_SimpleVixHandler_SimpleSignalStrategy"
+    RollingBenchmark(config).ens_rolling()
