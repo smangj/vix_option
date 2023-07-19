@@ -415,18 +415,19 @@ class _SimpleBacktestRecord(PortAnaRecord, abc.ABC):
             skip_existing,
             **kwargs,
         )
-        self._fields, names = handler.get_features()
-        self._fields.append("$close")
-        names.append("close")
+
         self._freq = "day"
         market_data_df = D.features(
             instruments=["VIX_1M", "VIX_2M", "VIX_3M", "VIX_4M", "VIX_5M", "VIX_6M"],
-            fields=self._fields,
+            fields=["$close"],
             freq=self._freq,
             disk_cache=1,
         )
-        market_data_df.columns = names
-        self._data = market_data_df.swaplevel().sort_index()
+        market_data_df.columns = ["close"]
+        market_data_df = pd.merge(
+            market_data_df.swaplevel(), handler._data, left_index=True, right_index=True
+        )
+        self._data = market_data_df.sort_index()
 
     def _save_df(self, df: pd.DataFrame, file_name: str, dir_path: str):
         file_path = os.path.join(dir_path, file_name)
@@ -651,6 +652,94 @@ class LongShortBacktestRecord(_SimpleBacktestRecord):
         **kwargs,
     ):
         self.short_weight = kwargs.pop("short_weight", 0.0)
+
+        super().__init__(
+            recorder,
+            config,
+            risk_analysis_freq,
+            indicator_analysis_freq,
+            indicator_analysis_method,
+            skip_existing,
+            **kwargs,
+        )
+
+    def _generate_signal(self, score_df: pd.DataFrame, instrument: str) -> pd.DataFrame:
+        pass
+
+    def _generate(self, *args, **kwargs):
+        pred = self.load("pred.pkl")
+        label_df = self.load("label.pkl").dropna()
+        label_df.columns = ["label"]
+
+        dt_values = pred.index.get_level_values("datetime")
+
+        start_time = (
+            dt_values[0]
+            if self.backtest_config["start_time"] is None
+            else self.backtest_config["start_time"]
+        )
+        end_time = (
+            dt_values[-1]
+            if self.backtest_config["end_time"] is None
+            else self.backtest_config["end_time"]
+        )
+        time_mask = (dt_values >= pd.to_datetime(start_time)) & (
+            dt_values <= pd.to_datetime(end_time)
+        )
+        pred = pred.loc[time_mask]
+        pred_label = pd.concat([pred, label_df, self._data], axis=1, sort=True).reindex(
+            pred.index
+        )
+
+        result = long_short_backtest(
+            pred,
+            freq=self._freq,
+            topk=1,
+            shift=1,
+            open_cost=0,
+            close_cost=0,
+            min_cost=0,
+            long_weight=(1.0 - self.short_weight) / 2,
+        )
+        with tempfile.TemporaryDirectory() as tmp_dir_path:
+            file_path = report(
+                [Values(k, np.cumprod(nv + 1).dropna()) for k, nv in result.items()],
+                output_dir=tmp_dir_path,
+                file_name=self.name + "_report",
+            )
+            self.recorder.log_artifact(local_path=file_path)
+            values_df = pd.DataFrame(
+                {k: np.cumprod(nv + 1).dropna() for k, nv in result.items()}
+            )
+            self._save_df(
+                df=values_df,
+                file_name=self.name
+                + "_"
+                + self._NET_VALUE_EXCEL_FORMAT.format(self._freq),
+                dir_path=tmp_dir_path,
+            )
+            self._save_df(
+                df=pred_label,
+                file_name="pred_label.xlsx",
+                dir_path=tmp_dir_path,
+            )
+
+    @property
+    def name(self) -> str:
+        return "LongShortBacktestRecord"
+
+
+class JiaQiRecord(_SimpleBacktestRecord):
+    def __init__(
+        self,
+        recorder,
+        config=None,
+        risk_analysis_freq: Union[List, str] = None,
+        indicator_analysis_freq: Union[List, str] = None,
+        indicator_analysis_method=None,
+        skip_existing=False,
+        **kwargs,
+    ):
 
         super().__init__(
             recorder,
