@@ -404,7 +404,17 @@ class _SimpleBacktestRecord(PortAnaRecord, abc.ABC):
         skip_existing=False,
         **kwargs,
     ):
-        handler = kwargs.pop("handler")
+        handler = kwargs.pop("handler", None)
+        if handler is None:
+            handler = {
+                "class": "VixHandler",
+                "module_path": "backtest.qlib_custom.data_handler",
+                "kwargs": {
+                    "start_time": "2005-12-20",
+                    "end_time": "2023-03-06",
+                    "instruments": "trable",
+                },
+            }
         handler = init_instance_by_config(handler)
         super().__init__(
             recorder,
@@ -424,8 +434,10 @@ class _SimpleBacktestRecord(PortAnaRecord, abc.ABC):
             disk_cache=1,
         )
         market_data_df.columns = ["close"]
+        features = handler._data
+        features.columns = features.columns.get_level_values(1)
         market_data_df = pd.merge(
-            market_data_df.swaplevel(), handler._data, left_index=True, right_index=True
+            market_data_df.swaplevel(), features, left_index=True, right_index=True
         )
         self._data = market_data_df.sort_index()
 
@@ -740,7 +752,6 @@ class JiaQiRecord(_SimpleBacktestRecord):
         skip_existing=False,
         **kwargs,
     ):
-
         super().__init__(
             recorder,
             config,
