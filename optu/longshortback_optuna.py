@@ -15,7 +15,7 @@ from qlib.config import C
 from qlib.workflow.task.collect import RecorderCollector
 from empyrical.stats import sharpe_ratio
 
-from backtest.qlib_custom.record import long_short_backtest
+from backtest.qlib_custom._dfbacktest import LongShortBacktest
 
 
 def recorder_for_longshortback(experiment_name: str, recorder_id: str = None):
@@ -50,15 +50,13 @@ def objective(trial, experiment_name, recorder_id: str = None):
     pred = recorder_for_longshortback(experiment_name, recorder_id)
 
     w = trial.suggest_float("short_strategy_weight", 0, 1)
-    result = long_short_backtest(
-        pred,
+    back = LongShortBacktest(tabular_df=pred, topk=1, long_weight=(1.0 - w) / 2)
+    result = back.run_backtest(
         freq="day",
-        topk=1,
         shift=1,
         open_cost=0,
         close_cost=0,
         min_cost=0,
-        long_weight=(1.0 - w) / 2,
     )
 
     sharp = sharpe_ratio(result["long_short"])

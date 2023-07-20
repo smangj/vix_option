@@ -11,17 +11,16 @@ import warnings
 from pprint import pprint
 from typing import Union, List, Optional
 from qlib.data import D
-from qlib.data.dataset.utils import get_level_index
 import pandas as pd
-from qlib.backtest import backtest as normal_backtest, get_exchange
+from qlib.backtest import backtest as normal_backtest
 from qlib.contrib.evaluate import risk_analysis, indicator_analysis
-from qlib.config import C
 from qlib.log import get_module_logger
-from qlib.utils import flatten_dict, get_date_range
+from qlib.utils import flatten_dict
 from qlib.utils.time import Freq
 from qlib.workflow.record_temp import PortAnaRecord
 from qlib.utils import init_instance_by_config
 
+from backtest.qlib_custom._dfbacktest import long_short_backtest, LongShortBacktest
 from backtest.qlib_custom.utils import gen_acct_pos_dfs, gen_orders_df
 from backtest.report import report, Values
 
@@ -33,130 +32,6 @@ class HistFilePaths:
     position_hist_path: str
     account_hist_path: str
     orders_hist_path: str
-
-
-def long_short_backtest(
-    pred,
-    freq: str = "day",
-    topk=1,
-    deal_price=None,
-    shift=1,
-    open_cost=0,
-    close_cost=0,
-    trade_unit=None,
-    limit_threshold=None,
-    min_cost=0,
-    subscribe_fields=[],
-    long_weight=0.5,
-):
-    """
-    A backtest for long-short strategy
-
-    :param pred:        The trading signal produced on day `T`.
-    :param freq:        freq.
-    :param topk:       The short topk securities and long topk securities.
-    :param deal_price:  The price to deal the trading.
-    :param shift:       Whether to shift prediction by one day.  The trading day will be T+1 if shift==1.
-    :param open_cost:   open transaction cost.
-    :param close_cost:  close transaction cost.
-    :param trade_unit:  100 for China A.
-    :param limit_threshold: limit move 0.1 (10%) for example, long and short with same limit.
-    :param min_cost:    min transaction cost.
-    :param subscribe_fields: subscribe fields.
-    :return:            The result of backtest, it is represented by a dict.
-                        { "long": long_returns(excess),
-                        "short": short_returns(excess),
-                        "long_short": long_short_returns}
-    """
-    if get_level_index(pred, level="datetime") == 1:
-        pred = pred.swaplevel().sort_index()
-
-    if trade_unit is None:
-        trade_unit = C.trade_unit
-    if limit_threshold is None:
-        limit_threshold = C.limit_threshold
-    if deal_price is None:
-        deal_price = C.deal_price
-    if deal_price[0] != "$":
-        deal_price = "$" + deal_price
-
-    subscribe_fields = subscribe_fields.copy()
-    profit_str = f"Ref({deal_price}, -1)/{deal_price} - 1"
-    subscribe_fields.append(profit_str)
-
-    _pred_dates = pred.index.get_level_values(level="datetime")
-    predict_dates = D.calendar(start_time=_pred_dates.min(), end_time=_pred_dates.max())
-    trade_dates = np.append(
-        predict_dates[shift:],
-        get_date_range(predict_dates[-1], left_shift=1, right_shift=shift),
-    )
-
-    trade_exchange = get_exchange(
-        start_time=predict_dates[0],
-        end_time=trade_dates[-1],
-        freq=freq,
-        codes=list(pred.index.get_level_values("instrument").unique()),
-        deal_price=deal_price,
-        subscribe_fields=subscribe_fields,
-        limit_threshold=limit_threshold,
-        open_cost=open_cost,
-        close_cost=close_cost,
-        min_cost=min_cost,
-        trade_unit=trade_unit,
-    )
-
-    long_returns = {}
-    short_returns = {}
-    ls_returns = {}
-
-    for pdate, date in zip(predict_dates, trade_dates):
-        score = pred.loc(axis=0)[pdate, :]
-        score = score.reset_index().sort_values(by="score", ascending=False)
-
-        long_stocks = list(score.iloc[:topk]["instrument"])
-        short_stocks = list(score.iloc[-topk:]["instrument"])
-
-        long_profit = []
-        short_profit = []
-
-        for stock in long_stocks:
-            if not trade_exchange.is_stock_tradable(
-                stock_id=stock, start_time=pdate, end_time=pdate
-            ):
-                continue
-            profit = trade_exchange.get_quote_info(
-                stock_id=stock, start_time=pdate, end_time=pdate, field=profit_str
-            )
-            if np.isnan(profit):
-                long_profit.append(0)
-            else:
-                long_profit.append(profit)
-
-        for stock in short_stocks:
-            if not trade_exchange.is_stock_tradable(
-                stock_id=stock, start_time=pdate, end_time=pdate
-            ):
-                continue
-            profit = trade_exchange.get_quote_info(
-                stock_id=stock, start_time=pdate, end_time=pdate, field=profit_str
-            )
-            if np.isnan(profit):
-                short_profit.append(0)
-            else:
-                short_profit.append(profit * -1)
-
-        long_returns[date] = np.mean(long_profit)
-        short_returns[date] = np.mean(short_profit)
-        ls_returns[date] = (1 - long_weight) * np.mean(
-            short_profit
-        ) + long_weight * np.mean(long_profit)
-
-    return dict(
-        zip(
-            ["long", "short", "long_short"],
-            map(pd.Series, [long_returns, short_returns, ls_returns]),
-        )
-    )
 
 
 class StandalonePortAnaRecord(PortAnaRecord):
@@ -703,16 +578,17 @@ class LongShortBacktestRecord(_SimpleBacktestRecord):
             pred.index
         )
 
-        result = long_short_backtest(
-            pred,
+        back = LongShortBacktest(
+            tabular_df=pred, topk=1, long_weight=(1.0 - self.short_weight) / 2
+        )
+        result = back.run_backtest(
             freq=self._freq,
-            topk=1,
             shift=1,
             open_cost=0,
             close_cost=0,
             min_cost=0,
-            long_weight=(1.0 - self.short_weight) / 2,
         )
+
         with tempfile.TemporaryDirectory() as tmp_dir_path:
             file_path = report(
                 [Values(k, np.cumprod(nv + 1).dropna()) for k, nv in result.items()],
@@ -790,6 +666,7 @@ class JiaQiRecord(_SimpleBacktestRecord):
             pred.index
         )
 
+        # back = LongShortBacktest()
         result = long_short_backtest(
             pred,
             freq=self._freq,
