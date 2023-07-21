@@ -4,7 +4,6 @@
 # @Author   : wsy
 # @email    : 631535207@qq.com
 import abc
-import typing
 
 import numpy as np
 import pandas as pd
@@ -14,6 +13,7 @@ from qlib.config import C
 from qlib.data import D
 from qlib.data.dataset import get_level_index
 from qlib.utils import get_date_range
+import cvxpy as cp
 
 
 class _DfBacktest(abc.ABC):
@@ -112,7 +112,10 @@ class _DfBacktest(abc.ABC):
         ls_returns = {}
         for pdate, date in zip(predict_dates, trade_dates):
 
-            long_stocks, short_stocks = self._generate_position(pdate)
+            print(pdate)
+            stocks = self._generate_position(pdate)
+            long_stocks = {k: v for k, v in stocks.items() if v > 0}
+            short_stocks = {k: v for k, v in stocks.items() if v < 0}
             long_profit = 0
             short_profit = 0
 
@@ -127,7 +130,7 @@ class _DfBacktest(abc.ABC):
                 if np.isnan(profit):
                     long_profit += 0
                 else:
-                    long_profit += profit
+                    long_profit += w * profit
 
             for stock, w in short_stocks.items():
                 if not trade_exchange.is_stock_tradable(
@@ -140,7 +143,7 @@ class _DfBacktest(abc.ABC):
                 if np.isnan(profit):
                     short_profit += 0
                 else:
-                    short_profit += profit * -1
+                    short_profit += w * profit
 
             long_returns[date] = long_profit
             short_returns[date] = short_profit
@@ -154,7 +157,8 @@ class _DfBacktest(abc.ABC):
         )
 
     @abc.abstractmethod
-    def _generate_position(self, date) -> typing.Tuple[typing.Dict, typing.Dict]:
+    def _generate_position(self, date) -> dict:
+        """{instrument: weight}"""
         raise NotImplementedError
 
 
@@ -164,7 +168,7 @@ class LongShortBacktest(_DfBacktest):
         self.topk = topk
         self.long_weight = long_weight
 
-    def _generate_position(self, date) -> typing.Tuple[typing.Dict, typing.Dict]:
+    def _generate_position(self, date) -> dict:
         long_position = {}
         short_position = {}
         score = self.data.loc(axis=0)[date, :]
@@ -176,7 +180,9 @@ class LongShortBacktest(_DfBacktest):
         short_stocks = list(score.iloc[-self.topk :]["instrument"])
         for stock in short_stocks:
             short_position[stock] = 1 / len(short_stocks)
-        return long_position, short_position
+
+        long_position.update(short_position)
+        return long_position
 
     def run_backtest(
         self,
@@ -189,7 +195,7 @@ class LongShortBacktest(_DfBacktest):
         limit_threshold=None,
         min_cost=0,
         subscribe_fields=[],
-    ):
+    ) -> dict:
         result = super(LongShortBacktest, self).run_backtest(
             freq,
             deal_price,
@@ -209,11 +215,44 @@ class LongShortBacktest(_DfBacktest):
 
 
 class CvxpyBacktest(_DfBacktest):
-    def _generate_position(self, date) -> typing.Tuple[typing.Dict, typing.Dict]:
-        long_position = {}
-        short_position = {}
-        # todo
-        return long_position, short_position
+    def __init__(self, tabular_df: pd.DataFrame):
+        super().__init__(tabular_df)
+        self.rolling_cov = None
+
+    def _generate_position(self, date) -> dict:
+        self.cal_sigma()
+        sigma = self.rolling_cov.loc(axis=0)[date, :]
+        if sigma.isna().any().any():
+            return pd.Series(0, index=sigma.columns).to_dict()
+        date_data = self.data.loc(axis=0)[date, :]
+        weight = self.mvo(date_data["mu"].values, sigma.values)
+        return pd.Series(weight, index=sigma.columns).to_dict()
+
+    def mvo(self, mu, sigma, Gamma=50, maxrisk=0.3):
+        w = cp.Variable(len(sigma))
+        risk = w @ sigma @ w.T
+        objective = cp.Maximize(cp.sum(w * mu) - Gamma * risk)
+        constraints = [
+            cp.max(cp.abs(w)) <= 1,
+            cp.sum(cp.abs(w)) <= 3,
+            cp.abs(cp.sum(w)) <= 2,
+            risk <= maxrisk**2 / 252,
+        ]
+        prob = cp.Problem(objective, constraints)
+        prob.solve()
+
+        return w.value
+
+    def cal_sigma(self):
+        if self.rolling_cov is not None:
+            return self.rolling_cov
+        else:
+            ts_data = self.data.reset_index().pivot(
+                index="datetime", columns="instrument", values="return"
+            )
+            window_size = 20
+            self.rolling_cov = ts_data.rolling(window=window_size).cov()
+            return self.rolling_cov
 
 
 def long_short_backtest(

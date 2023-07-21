@@ -20,7 +20,10 @@ from qlib.utils.time import Freq
 from qlib.workflow.record_temp import PortAnaRecord
 from qlib.utils import init_instance_by_config
 
-from backtest.qlib_custom._dfbacktest import long_short_backtest, LongShortBacktest
+from backtest.qlib_custom._dfbacktest import (
+    LongShortBacktest,
+    CvxpyBacktest,
+)
 from backtest.qlib_custom.utils import gen_acct_pos_dfs, gen_orders_df
 from backtest.report import report, Values
 
@@ -279,18 +282,6 @@ class _SimpleBacktestRecord(PortAnaRecord, abc.ABC):
         skip_existing=False,
         **kwargs,
     ):
-        handler = kwargs.pop("handler", None)
-        if handler is None:
-            handler = {
-                "class": "VixHandler",
-                "module_path": "backtest.qlib_custom.data_handler",
-                "kwargs": {
-                    "start_time": "2005-12-20",
-                    "end_time": "2023-03-06",
-                    "instruments": "trable",
-                },
-            }
-        handler = init_instance_by_config(handler)
         super().__init__(
             recorder,
             config,
@@ -300,21 +291,32 @@ class _SimpleBacktestRecord(PortAnaRecord, abc.ABC):
             skip_existing,
             **kwargs,
         )
-
+        self._fields = [
+            "$close",
+            "$ln_VIX",
+            "$ln_V1",
+            "$ln_V2",
+            "$ln_V3",
+            "$ln_V4",
+            "$ln_V5",
+            "$ln_V6",
+            "$ln_SPY",
+            "$ln_TLT",
+            "$roll1",
+            "$roll2",
+            "$roll3",
+            "$roll4",
+            "$roll5",
+            "$roll6",
+        ]
         self._freq = "day"
         market_data_df = D.features(
             instruments=["VIX_1M", "VIX_2M", "VIX_3M", "VIX_4M", "VIX_5M", "VIX_6M"],
-            fields=["$close"],
+            fields=self._fields,
             freq=self._freq,
             disk_cache=1,
-        )
-        market_data_df.columns = ["close"]
-        features = handler._data
-        features.columns = features.columns.get_level_values(1)
-        market_data_df = pd.merge(
-            market_data_df.swaplevel(), features, left_index=True, right_index=True
-        )
-        self._data = market_data_df.sort_index()
+        ).rename(columns={x: x[1:] for x in self._fields})
+        self._data = market_data_df.swaplevel().sort_index()
 
     def _save_df(self, df: pd.DataFrame, file_name: str, dir_path: str):
         file_path = os.path.join(dir_path, file_name)
@@ -527,7 +529,142 @@ class ScoreSign(_SimpleBacktestRecord):
         return "score_sign"
 
 
-class LongShortBacktestRecord(_SimpleBacktestRecord):
+class _DfBacktestRecord(PortAnaRecord, abc.ABC):
+    """
+    调用_DfBacktest回测并保存相关结果
+    """
+
+    _NET_VALUE_EXCEL_FORMAT = "net_value_{}.xlsx"
+
+    def __init__(
+        self,
+        recorder,
+        config=None,
+        risk_analysis_freq: Union[List, str] = None,
+        indicator_analysis_freq: Union[List, str] = None,
+        indicator_analysis_method=None,
+        skip_existing=False,
+        **kwargs,
+    ):
+        handler = kwargs.pop("handler", None)
+        if handler is None:
+            handler = {
+                "class": "VixHandler",
+                "module_path": "backtest.qlib_custom.data_handler",
+                "kwargs": {
+                    "start_time": "2005-12-20",
+                    "end_time": "2023-03-06",
+                    "instruments": "trable",
+                },
+            }
+        handler = init_instance_by_config(handler)
+        super().__init__(
+            recorder,
+            config,
+            risk_analysis_freq,
+            indicator_analysis_freq,
+            indicator_analysis_method,
+            skip_existing,
+            **kwargs,
+        )
+
+        self._freq = "day"
+        market_data_df = D.features(
+            instruments=["VIX_1M", "VIX_2M", "VIX_3M", "VIX_4M", "VIX_5M", "VIX_6M"],
+            fields=["$close / Ref($close, 1) - 1"],
+            freq=self._freq,
+            disk_cache=1,
+        )
+        market_data_df.columns = ["return"]
+        features = handler._data
+        features.columns = features.columns.get_level_values(1)
+        market_data_df = pd.merge(
+            market_data_df.swaplevel(), features, left_index=True, right_index=True
+        )
+        self._data = market_data_df.sort_index()
+
+    def _save_df(self, df: pd.DataFrame, file_name: str, dir_path: str):
+        file_path = os.path.join(dir_path, file_name)
+        df.to_excel(file_path, index=True)
+        pprint(file_path)
+        self.save(local_path=file_path)
+
+    @abc.abstractmethod
+    def _generate(self, *args, **kwargs):
+
+        raise NotImplementedError
+
+    def _process_data(self):
+        "time_mask and merge self._data"
+        pred = self.load("pred.pkl")
+        label_df = self.load("label.pkl").dropna()
+        label_df.columns = ["label"]
+
+        dt_values = pred.index.get_level_values("datetime")
+
+        start_time = (
+            dt_values[0]
+            if self.backtest_config["start_time"] is None
+            else self.backtest_config["start_time"]
+        )
+        end_time = (
+            dt_values[-1]
+            if self.backtest_config["end_time"] is None
+            else self.backtest_config["end_time"]
+        )
+        time_mask = (dt_values >= pd.to_datetime(start_time)) & (
+            dt_values <= pd.to_datetime(end_time)
+        )
+        pred = pred.loc[time_mask]
+        pred_label = pd.concat([pred, label_df, self._data], axis=1, sort=True).reindex(
+            pred.index
+        )
+        return pred, pred_label
+
+    def _save(self, result: dict, data: pd.DataFrame):
+        with tempfile.TemporaryDirectory() as tmp_dir_path:
+            file_path = report(
+                [Values(k, np.cumprod(nv + 1).dropna()) for k, nv in result.items()],
+                output_dir=tmp_dir_path,
+                file_name=self.name + "_report",
+            )
+            self.recorder.log_artifact(local_path=file_path)
+            values_df = pd.DataFrame(
+                {k: np.cumprod(nv + 1).dropna() for k, nv in result.items()}
+            )
+            self._save_df(
+                df=values_df,
+                file_name=self.name
+                + "_"
+                + self._NET_VALUE_EXCEL_FORMAT.format(self._freq),
+                dir_path=tmp_dir_path,
+            )
+            self._save_df(
+                df=data,
+                file_name="pred_label.xlsx",
+                dir_path=tmp_dir_path,
+            )
+
+    def list(self):
+
+        full_list = super().list()
+
+        for _freq in self.all_freq:
+            indicators_files = [
+                self._NET_VALUE_EXCEL_FORMAT.format(_freq),
+            ]
+            for _file in indicators_files:
+                if _file not in full_list:
+                    full_list.append(_file)
+
+        return full_list
+
+    @property
+    def name(self) -> str:
+        return "empty"
+
+
+class LongShortBacktestRecord(_DfBacktestRecord):
     def __init__(
         self,
         recorder,
@@ -550,33 +687,8 @@ class LongShortBacktestRecord(_SimpleBacktestRecord):
             **kwargs,
         )
 
-    def _generate_signal(self, score_df: pd.DataFrame, instrument: str) -> pd.DataFrame:
-        pass
-
     def _generate(self, *args, **kwargs):
-        pred = self.load("pred.pkl")
-        label_df = self.load("label.pkl").dropna()
-        label_df.columns = ["label"]
-
-        dt_values = pred.index.get_level_values("datetime")
-
-        start_time = (
-            dt_values[0]
-            if self.backtest_config["start_time"] is None
-            else self.backtest_config["start_time"]
-        )
-        end_time = (
-            dt_values[-1]
-            if self.backtest_config["end_time"] is None
-            else self.backtest_config["end_time"]
-        )
-        time_mask = (dt_values >= pd.to_datetime(start_time)) & (
-            dt_values <= pd.to_datetime(end_time)
-        )
-        pred = pred.loc[time_mask]
-        pred_label = pd.concat([pred, label_df, self._data], axis=1, sort=True).reindex(
-            pred.index
-        )
+        pred, pred_label = self._process_data()
 
         back = LongShortBacktest(
             tabular_df=pred, topk=1, long_weight=(1.0 - self.short_weight) / 2
@@ -589,35 +701,14 @@ class LongShortBacktestRecord(_SimpleBacktestRecord):
             min_cost=0,
         )
 
-        with tempfile.TemporaryDirectory() as tmp_dir_path:
-            file_path = report(
-                [Values(k, np.cumprod(nv + 1).dropna()) for k, nv in result.items()],
-                output_dir=tmp_dir_path,
-                file_name=self.name + "_report",
-            )
-            self.recorder.log_artifact(local_path=file_path)
-            values_df = pd.DataFrame(
-                {k: np.cumprod(nv + 1).dropna() for k, nv in result.items()}
-            )
-            self._save_df(
-                df=values_df,
-                file_name=self.name
-                + "_"
-                + self._NET_VALUE_EXCEL_FORMAT.format(self._freq),
-                dir_path=tmp_dir_path,
-            )
-            self._save_df(
-                df=pred_label,
-                file_name="pred_label.xlsx",
-                dir_path=tmp_dir_path,
-            )
+        self._save(result, pred_label)
 
     @property
     def name(self) -> str:
         return "LongShortBacktestRecord"
 
 
-class JiaQiRecord(_SimpleBacktestRecord):
+class JiaQiRecord(_DfBacktestRecord):
     def __init__(
         self,
         recorder,
@@ -638,71 +729,23 @@ class JiaQiRecord(_SimpleBacktestRecord):
             **kwargs,
         )
 
-    def _generate_signal(self, score_df: pd.DataFrame, instrument: str) -> pd.DataFrame:
-        pass
-
     def _generate(self, *args, **kwargs):
-        pred = self.load("pred.pkl")
-        label_df = self.load("label.pkl").dropna()
-        label_df.columns = ["label"]
+        pred, pred_label = self._process_data()
 
-        dt_values = pred.index.get_level_values("datetime")
-
-        start_time = (
-            dt_values[0]
-            if self.backtest_config["start_time"] is None
-            else self.backtest_config["start_time"]
-        )
-        end_time = (
-            dt_values[-1]
-            if self.backtest_config["end_time"] is None
-            else self.backtest_config["end_time"]
-        )
-        time_mask = (dt_values >= pd.to_datetime(start_time)) & (
-            dt_values <= pd.to_datetime(end_time)
-        )
-        pred = pred.loc[time_mask]
-        pred_label = pd.concat([pred, label_df, self._data], axis=1, sort=True).reindex(
-            pred.index
-        )
-
-        # back = LongShortBacktest()
-        result = long_short_backtest(
-            pred,
+        back = CvxpyBacktest(pred_label)
+        result = back.run_backtest(
             freq=self._freq,
-            topk=1,
             shift=1,
             open_cost=0,
             close_cost=0,
             min_cost=0,
-            long_weight=(1.0 - self.short_weight) / 2,
         )
-        with tempfile.TemporaryDirectory() as tmp_dir_path:
-            file_path = report(
-                [Values(k, np.cumprod(nv + 1).dropna()) for k, nv in result.items()],
-                output_dir=tmp_dir_path,
-                file_name=self.name + "_report",
-            )
-            self.recorder.log_artifact(local_path=file_path)
-            values_df = pd.DataFrame(
-                {k: np.cumprod(nv + 1).dropna() for k, nv in result.items()}
-            )
-            self._save_df(
-                df=values_df,
-                file_name=self.name
-                + "_"
-                + self._NET_VALUE_EXCEL_FORMAT.format(self._freq),
-                dir_path=tmp_dir_path,
-            )
-            self._save_df(
-                df=pred_label,
-                file_name="pred_label.xlsx",
-                dir_path=tmp_dir_path,
-            )
+
+        self._save(result, pred_label)
 
     @property
     def name(self) -> str:
-        return "LongShortBacktestRecord"
+        return "JiaQiRecord"
 
 
 if __name__ == "__main__":
