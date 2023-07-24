@@ -1,0 +1,56 @@
+diff --git a/backtest/qlib_custom/record.py b/backtest/qlib_custom/record.py
+index 382091b..b8fa414 100644
+--- a/backtest/qlib_custom/record.py
++++ b/backtest/qlib_custom/record.py
+@@ -47,6 +47,7 @@ def long_short_backtest(
+     limit_threshold=None,
+     min_cost=0,
+     subscribe_fields=[],
++    long_weight = 0.5,
+ ):
+     """
+     A backtest for long-short strategy
+@@ -146,7 +147,7 @@ def long_short_backtest(
+ 
+         long_returns[date] = np.mean(long_profit)
+         short_returns[date] = np.mean(short_profit)
+-        ls_returns[date] = 0.5 * np.mean(short_profit) + 0.5 * np.mean(long_profit)
++        ls_returns[date] = (1 - long_weight) * np.mean(short_profit) + long_weight * np.mean(long_profit)
+ 
+     return dict(
+         zip(
+@@ -671,6 +672,7 @@ class LongShortBacktestRecord(_SimpleBacktestRecord):
+             open_cost=0,
+             close_cost=0,
+             min_cost=0,
++            long_weight=(1 - kwargs["short_weight"]) / 2,
+         )
+         with tempfile.TemporaryDirectory() as tmp_dir_path:
+             file_path = report(
+diff --git a/yaml_config/GroupVixHandler_models/GRU_dynamic_GroupVixHandler_longshortback.yaml b/yaml_config/GroupVixHandler_models/GRU_dynamic_GroupVixHandler_longshortback.yaml
+index 40f7e5a..c4d9c31 100644
+--- a/yaml_config/GroupVixHandler_models/GRU_dynamic_GroupVixHandler_longshortback.yaml
++++ b/yaml_config/GroupVixHandler_models/GRU_dynamic_GroupVixHandler_longshortback.yaml
+@@ -74,3 +74,4 @@ task:
+           module_path: backtest.qlib_custom.record
+           kwargs:
+             config: *port_analysis_config
++            short_weight: 0.1
+diff --git a/yaml_config/GroupVixHandler_models/XGB_dynamic_GroupVixHandler_longshortback.yaml b/yaml_config/GroupVixHandler_models/XGB_dynamic_GroupVixHandler_longshortback.yaml
+index bc48a64..500610d 100644
+--- a/yaml_config/GroupVixHandler_models/XGB_dynamic_GroupVixHandler_longshortback.yaml
++++ b/yaml_config/GroupVixHandler_models/XGB_dynamic_GroupVixHandler_longshortback.yaml
+@@ -66,3 +66,4 @@ task:
+           module_path: backtest.qlib_custom.record
+           kwargs:
+             config: *port_analysis_config
++            short_weight: 0.1
+diff --git a/yaml_config/GroupVixHandler_models/linear_dynamic_GoupVixHandler_longshortback.yaml b/yaml_config/GroupVixHandler_models/linear_dynamic_GoupVixHandler_longshortback.yaml
+index 549ad70..bcc8c22 100644
+--- a/yaml_config/GroupVixHandler_models/linear_dynamic_GoupVixHandler_longshortback.yaml
++++ b/yaml_config/GroupVixHandler_models/linear_dynamic_GoupVixHandler_longshortback.yaml
+@@ -63,3 +63,4 @@ task:
+           module_path: backtest.qlib_custom.record
+           kwargs:
+             config: *port_analysis_config
++            short_weight: 0.1

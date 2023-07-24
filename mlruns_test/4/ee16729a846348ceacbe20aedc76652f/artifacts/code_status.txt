@@ -1,0 +1,36 @@
+On branch dev_backtest_wsy
+Your branch is up to date with 'origin/dev_wsy'.
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	1-6M_trading_days.csv
+	"Trading Signals In VIX Futures\346\200\235\347\273\264\345\257\274\345\233\276.xmind"
+	Untitled.ipynb
+	Xt.csv
+	contrast.csv
+	contrast_20230323.csv
+	corr_contrast.csv
+	cross_strategy.csv
+	data/VX data check(1).docx
+	data/alldata.csv
+	data/qlib_data/
+	data/qlib_data_csv/
+	data/qlib_data_csv2/
+	data_familiar.ipynb
+	gru.ipynb
+	ln_V1_vix_reversion_strategy.csv
+	mlruns/
+	qlib_dataset.py
+	qlib_scripts/data_load_analysis.ipynb
+	qlib_scripts/mlruns/
+	qlib_scripts/run.py
+	qlib_scripts/workflow_config_gru_Alpha158.yaml
+	qlib_scripts/workflow_config_gru_Alpha360.yaml
+	result_view.ipynb
+	roll_signal_strategy.csv
+	vix_reversion_strategy.csv
+	vix_reversion_strategy_before_class.csv
+	vt(30)_nature_days.csv
+	vt_nature_days.csv
+
+nothing added to commit but untracked files present (use "git add" to track)
