@@ -252,7 +252,8 @@ class CvxpyBacktest(_DfBacktest):
                 index="datetime", columns="instrument", values="return"
             )
             window_size = 20
-            self.rolling_cov = ts_data.ewm(alpha=0.94, min_periods=window_size).cov()
+            self.rolling_cov = ts_data.ewm(span=window_size).cov()
+            # self.rolling_cov = ts_data.rolling(window=window_size).cov()
             return self.rolling_cov
 
 
