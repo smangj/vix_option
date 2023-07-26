@@ -222,9 +222,10 @@ class CvxpyBacktest(_DfBacktest):
     def _generate_position(self, date) -> dict:
         self.cal_sigma()
         sigma = self.rolling_cov.loc(axis=0)[date, :]
-        if sigma.isna().any().any():
-            return pd.Series(0, index=sigma.columns).to_dict()
         date_data = self.data.loc(axis=0)[date, :]
+        if sigma.isna().any().any() or date_data["mu"].isna().any():
+            return pd.Series(0, index=sigma.columns).to_dict()
+
         weight = self.mvo(date_data["mu"].values, sigma.values)
         return pd.Series(weight, index=sigma.columns).to_dict()
 
@@ -251,7 +252,7 @@ class CvxpyBacktest(_DfBacktest):
                 index="datetime", columns="instrument", values="return"
             )
             window_size = 20
-            self.rolling_cov = ts_data.rolling(window=window_size).cov()
+            self.rolling_cov = ts_data.ewm(alpha=0.94, min_periods=window_size).cov()
             return self.rolling_cov
 
 
