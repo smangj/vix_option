@@ -7,6 +7,7 @@ from qlib.workflow import R
 from pathlib import Path
 
 from backtest.qlib_custom.record import LongShortBacktestRecord, JiaQiRecord
+from utils.time import timing_decorator
 
 
 def test_LongShortBacktestRecord(qlib_init):
@@ -20,6 +21,7 @@ def test_LongShortBacktestRecord(qlib_init):
     r.generate()
 
 
+@timing_decorator
 def test_JiaQiRecord(qlib_init):
     recorder = R.get_recorder(
         recorder_id="084e905ffbf34e69b74f2efc2cca2afb", experiment_id="8"
@@ -33,4 +35,3 @@ def test_JiaQiRecord(qlib_init):
         handler=h_path,
     )
     r.generate()
-    print("haha")

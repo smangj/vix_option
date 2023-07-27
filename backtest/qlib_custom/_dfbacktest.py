@@ -112,7 +112,6 @@ class _DfBacktest(abc.ABC):
         ls_returns = {}
         for pdate, date in zip(predict_dates, trade_dates):
 
-            print(pdate)
             stocks = self._generate_position(pdate)
             long_stocks = {k: v for k, v in stocks.items() if v > 0}
             short_stocks = {k: v for k, v in stocks.items() if v < 0}
@@ -238,7 +237,8 @@ class CvxpyBacktest(_DfBacktest):
         constraints = [
             cp.max(cp.abs(w)) <= 1,
             cp.sum(cp.abs(w)) <= 3,
-            cp.abs(cp.sum(w)) <= 2,
+            # cp.abs(cp.sum(w)) <= 2,
+            cp.sum(w) == 1,
             risk <= maxrisk**2 / 252,
         ]
         prob = cp.Problem(objective, constraints)
