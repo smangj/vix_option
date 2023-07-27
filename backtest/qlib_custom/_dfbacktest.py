@@ -226,7 +226,9 @@ class CvxpyBacktest(_DfBacktest):
         if sigma.isna().any().any() or date_data["mu"].isna().any():
             return pd.Series(0, index=sigma.columns).to_dict()
 
-        weight = self.mvo(date_data["mu"].values, sigma.values)
+        # 乘数月收益率转化为日
+        multi = 20
+        weight = self.mvo(-date_data["mu"].values / multi, sigma.values)
         return pd.Series(weight, index=sigma.columns).to_dict()
 
     def mvo(self, mu, sigma, Gamma=50, maxrisk=0.3):

@@ -22,11 +22,11 @@ def test_LongShortBacktestRecord(qlib_init):
 
 def test_JiaQiRecord(qlib_init):
     recorder = R.get_recorder(
-        recorder_id="67ad416857fd45ce88a311d9c18a8f5b", experiment_id="43"
+        recorder_id="084e905ffbf34e69b74f2efc2cca2afb", experiment_id="8"
     )
     h_path = (
         Path(recorder.get_local_dir()).parent
-        / "GRU_GroupVixHandler_LongShortBacktestRecord1_handler_horizon0.pkl"
+        / "GRU_GroupVixHandler20230711_LongShortBacktestRecord_handler_horizon0.pkl"
     )
     r = JiaQiRecord(
         recorder=recorder,

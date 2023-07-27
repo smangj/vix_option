@@ -1,0 +1,13 @@
+diff --git a/pyproject.toml b/pyproject.toml
+index 29ac67f..99ee8a7 100644
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -23,7 +23,7 @@ dependencies = [
+     "scikit-learn==0.23.2",
+     "openpyxl==3.1.2",
+     "pyfolio==0.9.2",
+-    "torch==1.7.1",
++    "torch==1.7.1+cu110",
+     "xgboost==1.2.1",
+     "pyecharts==2.0.1",
+     "pyqlib==0.9.1",
