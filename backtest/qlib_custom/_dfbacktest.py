@@ -14,6 +14,8 @@ from qlib.data import D
 from qlib.data.dataset import get_level_index
 from qlib.utils import get_date_range
 import cvxpy as cp
+from itertools import chain
+from joblib import Parallel, delayed, cpu_count
 
 
 class _DfBacktest(abc.ABC):
@@ -107,12 +109,43 @@ class _DfBacktest(abc.ABC):
             close_cost,
             min_cost,
         )
-        long_returns = {}
-        short_returns = {}
-        ls_returns = {}
-        for pdate, date in zip(predict_dates, trade_dates):
 
+        batch_size = 252
+
+        def batched_zip(list1, list2, batch_size):
+            assert len(list1) == len(list2)
+            for batch_start in range(0, len(list1), batch_size):
+                batch_end = batch_start + batch_size
+                batch1 = list1[batch_start : min(batch_end, len(list1) - 1)]
+                batch2 = list2[batch_start : min(batch_end, len(list1) - 1)]
+                yield batch1, batch2
+
+        results = Parallel(n_jobs=cpu_count())(
+            delayed(self._gen_profit)(pdate, date, trade_exchange, profit_str)
+            for pdate, date in batched_zip(predict_dates, trade_dates, batch_size)
+        )
+
+        date, long_returns, short_returns, ls_returns = zip(*results)
+
+        return dict(
+            zip(
+                ["long", "short", "long_short"],
+                map(
+                    lambda x: pd.Series(
+                        index=chain.from_iterable(date), data=chain.from_iterable(x)
+                    ).sort_index(),
+                    [long_returns, short_returns, ls_returns],
+                ),
+            )
+        )
+
+    def _gen_profit(self, pdates, dates, trade_exchange, profit_str):
+        long_profits = []
+        short_profits = []
+        ls_profits = []
+        for pdate, date in zip(pdates, dates):
             stocks = self._generate_position(pdate)
+            print(date)
             long_stocks = {k: v for k, v in stocks.items() if v > 0}
             short_stocks = {k: v for k, v in stocks.items() if v < 0}
             long_profit = 0
@@ -144,16 +177,11 @@ class _DfBacktest(abc.ABC):
                 else:
                     short_profit += w * profit
 
-            long_returns[date] = long_profit
-            short_returns[date] = short_profit
-            ls_returns[date] = long_profit + short_profit
+            long_profits.append(long_profit)
+            short_profits.append(short_profit)
+            ls_profits.append(long_profit + short_profit)
 
-        return dict(
-            zip(
-                ["long", "short", "long_short"],
-                map(pd.Series, [long_returns, short_returns, ls_returns]),
-            )
-        )
+        return dates, long_profits, short_profits, ls_profits
 
     @abc.abstractmethod
     def _generate_position(self, date) -> dict:
@@ -216,29 +244,29 @@ class LongShortBacktest(_DfBacktest):
 class CvxpyBacktest(_DfBacktest):
     def __init__(self, tabular_df: pd.DataFrame):
         super().__init__(tabular_df)
-        self.rolling_cov = None
+        self.rolling_cov = self.cal_sigma()
 
     def _generate_position(self, date) -> dict:
-        self.cal_sigma()
         sigma = self.rolling_cov.loc(axis=0)[date, :]
         date_data = self.data.loc(axis=0)[date, :]
-        if sigma.isna().any().any() or date_data["mu"].isna().any():
+        pred = date_data["score"]
+        # 乘数月收益率转化为日
+        # multi = 20
+        # pred = -date_data["mu"].values
+        if sigma.isna().any().any() or pred.isna().any():
             return pd.Series(0, index=sigma.columns).to_dict()
 
-        # 乘数月收益率转化为日
-        multi = 20
-        weight = self.mvo(-date_data["mu"].values / multi, sigma.values)
+        weight = self.mvo(pred.values, sigma.values)
         return pd.Series(weight, index=sigma.columns).to_dict()
 
     def mvo(self, mu, sigma, Gamma=50, maxrisk=0.3):
         w = cp.Variable(len(sigma))
         risk = w @ sigma @ w.T
-        objective = cp.Maximize(cp.sum(w * mu) - Gamma * risk)
+        objective = cp.Maximize(cp.sum(cp.multiply(w, mu)) - Gamma * risk)
         constraints = [
             cp.max(cp.abs(w)) <= 1,
             cp.sum(cp.abs(w)) <= 3,
-            # cp.abs(cp.sum(w)) <= 2,
-            cp.sum(w) == 1,
+            cp.abs(cp.sum(w)) <= 2,
             risk <= maxrisk**2 / 252,
         ]
         prob = cp.Problem(objective, constraints)
@@ -247,16 +275,13 @@ class CvxpyBacktest(_DfBacktest):
         return w.value
 
     def cal_sigma(self):
-        if self.rolling_cov is not None:
-            return self.rolling_cov
-        else:
-            ts_data = self.data.reset_index().pivot(
-                index="datetime", columns="instrument", values="return"
-            )
-            window_size = 20
-            self.rolling_cov = ts_data.ewm(span=window_size).cov()
-            # self.rolling_cov = ts_data.rolling(window=window_size).cov()
-            return self.rolling_cov
+        ts_data = self.data.reset_index().pivot(
+            index="datetime", columns="instrument", values="return"
+        )
+        window_size = 20
+        rolling_cov = ts_data.ewm(span=window_size).cov()
+        # self.rolling_cov = ts_data.rolling(window=window_size).cov()
+        return rolling_cov
 
 
 def long_short_backtest(
