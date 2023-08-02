@@ -63,4 +63,7 @@ task:
           module_path: backtest.qlib_custom.record
           kwargs:
             config: *port_analysis_config
-            short_weight: 0.1
+        - class: JiaQiRecord
+          module_path: backtest.qlib_custom.record
+          kwargs:
+            config: *port_analysis_config

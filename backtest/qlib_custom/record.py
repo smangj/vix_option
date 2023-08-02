@@ -585,9 +585,10 @@ class _DfBacktestRecord(PortAnaRecord, abc.ABC):
 
     def _save_df(self, df: pd.DataFrame, file_name: str, dir_path: str):
         file_path = os.path.join(dir_path, file_name)
-        df.to_excel(file_path, index=True)
-        pprint(file_path)
-        self.save(local_path=file_path)
+        if not os.path.exists(file_path):
+            df.to_excel(file_path, index=True)
+            pprint(file_path)
+            self.save(local_path=file_path)
 
     @abc.abstractmethod
     def _generate(self, *args, **kwargs):
