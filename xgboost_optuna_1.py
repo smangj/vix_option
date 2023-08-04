@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
 import optuna
@@ -21,6 +22,7 @@ from qlib.utils import init_instance_by_config
 from qlib.workflow.cli import sys_config
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
+from scipy.stats import kurtosis
 from xgboost import plot_importance
 from matplotlib import pyplot as plt
 from optuna.visualization import plot_contour
@@ -34,7 +36,7 @@ import scienceplots
 
 
 def op_data(name: str = "linear_xt_one_for_test.yaml", uri_folder="mlruns"):
-    file_path = os.path.join("../yaml_config", name)
+    file_path = os.path.join("yaml_config", name)
     with open(file_path) as fp:
         config = yaml.safe_load(fp)
         # config the `sys` section
@@ -50,7 +52,7 @@ def op_data(name: str = "linear_xt_one_for_test.yaml", uri_folder="mlruns"):
 #def objective_GRU(trial):
 
 
-def objective_xgboost_reg(trial):
+def objective_xgboost_reg_1(trial):
     optuna_data = op_data().dropna()
     data = optuna_data.iloc[:, :-1]
     target = optuna_data.iloc[:, -1:]
@@ -73,9 +75,11 @@ def objective_xgboost_reg(trial):
     # model = xgb.XGBRegressor(tree_method='gpu_hist')
     model.fit(train_x, train_y, eval_set=[(test_x, test_y)], early_stopping_rounds=30)
     preds = model.predict(test_x)
-    rmse = mean_squared_error(test_y, preds, squared=False)
+    sub = (((preds.T - test_y.T) ** 4).sum(axis=1)) ** 0.25
+    # kurtosis_pred=kurtosis(preds)
+    # rmse = mean_squared_error(test_y, preds, squared=False)
     # rmse = sum(-1 * (preds > 0).astype('float64') * test_y)  # pred to better than index but worse than index
-    return rmse
+    return sub
 
 
 def xgb_features_importance():
@@ -99,7 +103,7 @@ if __name__ == "__main__":
     # feature_sel = xgb_features_importance()
     # print(feature_sel)
     study = optuna.create_study(direction="minimize")
-    study.optimize(objective_xgboost_reg, n_trials=100, timeout=600)
+    study.optimize(objective_xgboost_reg_1, n_trials=100, timeout=600)
     plot_optimization_history(study).show()
     plot_intermediate_values(study).show()
     plot_param_importances(study).show()
