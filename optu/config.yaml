@@ -1,0 +1,44 @@
+qlib_init:
+    provider_uri: "data/qlib_data"
+    region: cn
+market: &market trable
+data_handler_config: &data_handler_config
+    start_time: 2005-12-20
+    end_time: 2022-08-15
+    fit_start_time: 2005-12-20
+    fit_end_time: 2022-08-15
+    instruments: *market
+    infer_processors:
+        - class: RobustZScoreNorm
+          kwargs:
+              fields_group: feature
+              clip_outlier: True
+    learn_processors:
+        - class: DropnaProcessor
+          kwargs:
+              fields_group: feature
+        - class: DropnaLabel
+    label: ["Ref($close, -1) / $close - 1"]
+
+model:
+    class: XgbFix
+    module_path: backtest.qlib_custom.model
+    kwargs:
+        eval_metric: rmse
+        colsample_bytree: [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+        eta: 0.0421
+        n_estimators: 647
+        subsample: [0.4, 0.5, 0.6, 0.7, 0.8, 1.0]
+dataset:
+    class: DatasetH
+    module_path: qlib.data.dataset
+    kwargs:
+        handler:
+            class: GroupVixHandler20230711
+            module_path: backtest.qlib_custom.data_handler
+            kwargs: *data_handler_config
+        segments:
+            train: [2005-12-20, 2010-06-30]
+            valid: [2010-07-01, 2010-12-31]
+            test: [2011-01-01, 2022-08-15]
+
