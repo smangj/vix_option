@@ -1,0 +1,6 @@
+artifact_location: file:C:\Users\63153\smangj_program\vix_option\mlruns_test/43
+creation_time: 1688460717767
+experiment_id: '43'
+last_update_time: 1688460717767
+lifecycle_stage: active
+name: GRU_GroupVixHandler_LongShortBacktestRecord

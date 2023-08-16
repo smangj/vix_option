@@ -11,17 +11,19 @@ import warnings
 from pprint import pprint
 from typing import Union, List, Optional
 from qlib.data import D
-from qlib.data.dataset.utils import get_level_index
 import pandas as pd
-from qlib.backtest import backtest as normal_backtest, get_exchange
+from qlib.backtest import backtest as normal_backtest
 from qlib.contrib.evaluate import risk_analysis, indicator_analysis
-from qlib.config import C
 from qlib.log import get_module_logger
-from qlib.utils import flatten_dict, get_date_range
+from qlib.utils import flatten_dict
 from qlib.utils.time import Freq
 from qlib.workflow.record_temp import PortAnaRecord
 from qlib.utils import init_instance_by_config
 
+from backtest.qlib_custom._dfbacktest import (
+    LongShortBacktest,
+    CvxpyBacktest,
+)
 from backtest.qlib_custom.utils import gen_acct_pos_dfs, gen_orders_df
 from backtest.report import report, Values
 
@@ -33,130 +35,6 @@ class HistFilePaths:
     position_hist_path: str
     account_hist_path: str
     orders_hist_path: str
-
-
-def long_short_backtest(
-    pred,
-    freq: str = "day",
-    topk=1,
-    deal_price=None,
-    shift=1,
-    open_cost=0,
-    close_cost=0,
-    trade_unit=None,
-    limit_threshold=None,
-    min_cost=0,
-    subscribe_fields=[],
-    long_weight=0.5,
-):
-    """
-    A backtest for long-short strategy
-
-    :param pred:        The trading signal produced on day `T`.
-    :param freq:        freq.
-    :param topk:       The short topk securities and long topk securities.
-    :param deal_price:  The price to deal the trading.
-    :param shift:       Whether to shift prediction by one day.  The trading day will be T+1 if shift==1.
-    :param open_cost:   open transaction cost.
-    :param close_cost:  close transaction cost.
-    :param trade_unit:  100 for China A.
-    :param limit_threshold: limit move 0.1 (10%) for example, long and short with same limit.
-    :param min_cost:    min transaction cost.
-    :param subscribe_fields: subscribe fields.
-    :return:            The result of backtest, it is represented by a dict.
-                        { "long": long_returns(excess),
-                        "short": short_returns(excess),
-                        "long_short": long_short_returns}
-    """
-    if get_level_index(pred, level="datetime") == 1:
-        pred = pred.swaplevel().sort_index()
-
-    if trade_unit is None:
-        trade_unit = C.trade_unit
-    if limit_threshold is None:
-        limit_threshold = C.limit_threshold
-    if deal_price is None:
-        deal_price = C.deal_price
-    if deal_price[0] != "$":
-        deal_price = "$" + deal_price
-
-    subscribe_fields = subscribe_fields.copy()
-    profit_str = f"Ref({deal_price}, -1)/{deal_price} - 1"
-    subscribe_fields.append(profit_str)
-
-    _pred_dates = pred.index.get_level_values(level="datetime")
-    predict_dates = D.calendar(start_time=_pred_dates.min(), end_time=_pred_dates.max())
-    trade_dates = np.append(
-        predict_dates[shift:],
-        get_date_range(predict_dates[-1], left_shift=1, right_shift=shift),
-    )
-
-    trade_exchange = get_exchange(
-        start_time=predict_dates[0],
-        end_time=trade_dates[-1],
-        freq=freq,
-        codes=list(pred.index.get_level_values("instrument").unique()),
-        deal_price=deal_price,
-        subscribe_fields=subscribe_fields,
-        limit_threshold=limit_threshold,
-        open_cost=open_cost,
-        close_cost=close_cost,
-        min_cost=min_cost,
-        trade_unit=trade_unit,
-    )
-
-    long_returns = {}
-    short_returns = {}
-    ls_returns = {}
-
-    for pdate, date in zip(predict_dates, trade_dates):
-        score = pred.loc(axis=0)[pdate, :]
-        score = score.reset_index().sort_values(by="score", ascending=False)
-
-        long_stocks = list(score.iloc[:topk]["instrument"])
-        short_stocks = list(score.iloc[-topk:]["instrument"])
-
-        long_profit = []
-        short_profit = []
-
-        for stock in long_stocks:
-            if not trade_exchange.is_stock_tradable(
-                stock_id=stock, start_time=pdate, end_time=pdate
-            ):
-                continue
-            profit = trade_exchange.get_quote_info(
-                stock_id=stock, start_time=pdate, end_time=pdate, field=profit_str
-            )
-            if np.isnan(profit):
-                long_profit.append(0)
-            else:
-                long_profit.append(profit)
-
-        for stock in short_stocks:
-            if not trade_exchange.is_stock_tradable(
-                stock_id=stock, start_time=pdate, end_time=pdate
-            ):
-                continue
-            profit = trade_exchange.get_quote_info(
-                stock_id=stock, start_time=pdate, end_time=pdate, field=profit_str
-            )
-            if np.isnan(profit):
-                short_profit.append(0)
-            else:
-                short_profit.append(profit * -1)
-
-        long_returns[date] = np.mean(long_profit)
-        short_returns[date] = np.mean(short_profit)
-        ls_returns[date] = (1 - long_weight) * np.mean(
-            short_profit
-        ) + long_weight * np.mean(long_profit)
-
-    return dict(
-        zip(
-            ["long", "short", "long_short"],
-            map(pd.Series, [long_returns, short_returns, ls_returns]),
-        )
-    )
 
 
 class StandalonePortAnaRecord(PortAnaRecord):
@@ -404,8 +282,6 @@ class _SimpleBacktestRecord(PortAnaRecord, abc.ABC):
         skip_existing=False,
         **kwargs,
     ):
-        handler = kwargs.pop("handler")
-        handler = init_instance_by_config(handler)
         super().__init__(
             recorder,
             config,
@@ -415,17 +291,31 @@ class _SimpleBacktestRecord(PortAnaRecord, abc.ABC):
             skip_existing,
             **kwargs,
         )
-        self._fields, names = handler.get_features()
-        self._fields.append("$close")
-        names.append("close")
+        self._fields = [
+            "$close",
+            "$ln_VIX",
+            "$ln_V1",
+            "$ln_V2",
+            "$ln_V3",
+            "$ln_V4",
+            "$ln_V5",
+            "$ln_V6",
+            "$ln_SPY",
+            "$ln_TLT",
+            "$roll1",
+            "$roll2",
+            "$roll3",
+            "$roll4",
+            "$roll5",
+            "$roll6",
+        ]
         self._freq = "day"
         market_data_df = D.features(
             instruments=["VIX_1M", "VIX_2M", "VIX_3M", "VIX_4M", "VIX_5M", "VIX_6M"],
             fields=self._fields,
             freq=self._freq,
             disk_cache=1,
-        )
-        market_data_df.columns = names
+        ).rename(columns={x: x[1:] for x in self._fields})
         self._data = market_data_df.swaplevel().sort_index()
 
     def _save_df(self, df: pd.DataFrame, file_name: str, dir_path: str):
@@ -639,7 +529,13 @@ class ScoreSign(_SimpleBacktestRecord):
         return "score_sign"
 
 
-class LongShortBacktestRecord(_SimpleBacktestRecord):
+class _DfBacktestRecord(PortAnaRecord, abc.ABC):
+    """
+    调用_DfBacktest回测并保存相关结果
+    """
+
+    _NET_VALUE_EXCEL_FORMAT = "net_value_{}.xlsx"
+
     def __init__(
         self,
         recorder,
@@ -650,8 +546,18 @@ class LongShortBacktestRecord(_SimpleBacktestRecord):
         skip_existing=False,
         **kwargs,
     ):
-        self.short_weight = kwargs.pop("short_weight", 0.0)
-
+        handler = kwargs.pop("handler", None)
+        if handler is None:
+            handler = {
+                "class": "VixHandler",
+                "module_path": "backtest.qlib_custom.data_handler",
+                "kwargs": {
+                    "start_time": "2005-12-20",
+                    "end_time": "2023-03-06",
+                    "instruments": "trable",
+                },
+            }
+        handler = init_instance_by_config(handler)
         super().__init__(
             recorder,
             config,
@@ -662,10 +568,35 @@ class LongShortBacktestRecord(_SimpleBacktestRecord):
             **kwargs,
         )
 
-    def _generate_signal(self, score_df: pd.DataFrame, instrument: str) -> pd.DataFrame:
-        pass
+        self._freq = "day"
+        market_data_df = D.features(
+            instruments=["VIX_1M", "VIX_2M", "VIX_3M", "VIX_4M", "VIX_5M", "VIX_6M"],
+            fields=["$close / Ref($close, 1) - 1"],
+            freq=self._freq,
+            disk_cache=1,
+        )
+        market_data_df.columns = ["return"]
+        features = handler._data
+        features.columns = features.columns.get_level_values(1)
+        market_data_df = pd.merge(
+            market_data_df.swaplevel(), features, left_index=True, right_index=True
+        )
+        self._data = market_data_df.sort_index()
 
+    def _save_df(self, df: pd.DataFrame, file_name: str, dir_path: str):
+        file_path = os.path.join(dir_path, file_name)
+        if not os.path.exists(file_path):
+            df.to_excel(file_path, index=True)
+            pprint(file_path)
+            self.save(local_path=file_path)
+
+    @abc.abstractmethod
     def _generate(self, *args, **kwargs):
+
+        raise NotImplementedError
+
+    def _process_data(self):
+        "time_mask and merge self._data"
         pred = self.load("pred.pkl")
         label_df = self.load("label.pkl").dropna()
         label_df.columns = ["label"]
@@ -689,17 +620,9 @@ class LongShortBacktestRecord(_SimpleBacktestRecord):
         pred_label = pd.concat([pred, label_df, self._data], axis=1, sort=True).reindex(
             pred.index
         )
+        return pred, pred_label
 
-        result = long_short_backtest(
-            pred,
-            freq=self._freq,
-            topk=1,
-            shift=1,
-            open_cost=0,
-            close_cost=0,
-            min_cost=0,
-            long_weight=(1.0 - self.short_weight) / 2,
-        )
+    def _save(self, result: dict, data: pd.DataFrame):
         with tempfile.TemporaryDirectory() as tmp_dir_path:
             file_path = report(
                 [Values(k, np.cumprod(nv + 1).dropna()) for k, nv in result.items()],
@@ -718,14 +641,112 @@ class LongShortBacktestRecord(_SimpleBacktestRecord):
                 dir_path=tmp_dir_path,
             )
             self._save_df(
-                df=pred_label,
+                df=data,
                 file_name="pred_label.xlsx",
                 dir_path=tmp_dir_path,
             )
 
+    def list(self):
+
+        full_list = super().list()
+
+        for _freq in self.all_freq:
+            indicators_files = [
+                self._NET_VALUE_EXCEL_FORMAT.format(_freq),
+            ]
+            for _file in indicators_files:
+                if _file not in full_list:
+                    full_list.append(_file)
+
+        return full_list
+
+    @property
+    def name(self) -> str:
+        return "empty"
+
+
+class LongShortBacktestRecord(_DfBacktestRecord):
+    def __init__(
+        self,
+        recorder,
+        config=None,
+        risk_analysis_freq: Union[List, str] = None,
+        indicator_analysis_freq: Union[List, str] = None,
+        indicator_analysis_method=None,
+        skip_existing=False,
+        **kwargs,
+    ):
+        self.short_weight = kwargs.pop("short_weight", 0.0)
+
+        super().__init__(
+            recorder,
+            config,
+            risk_analysis_freq,
+            indicator_analysis_freq,
+            indicator_analysis_method,
+            skip_existing,
+            **kwargs,
+        )
+
+    def _generate(self, *args, **kwargs):
+        pred, pred_label = self._process_data()
+
+        back = LongShortBacktest(
+            tabular_df=pred, topk=1, long_weight=(1.0 - self.short_weight) / 2
+        )
+        result = back.run_backtest(
+            freq=self._freq,
+            shift=1,
+            open_cost=0,
+            close_cost=0,
+            min_cost=0,
+        )
+
+        self._save(result, pred_label)
+
     @property
     def name(self) -> str:
         return "LongShortBacktestRecord"
+
+
+class JiaQiRecord(_DfBacktestRecord):
+    def __init__(
+        self,
+        recorder,
+        config=None,
+        risk_analysis_freq: Union[List, str] = None,
+        indicator_analysis_freq: Union[List, str] = None,
+        indicator_analysis_method=None,
+        skip_existing=False,
+        **kwargs,
+    ):
+        super().__init__(
+            recorder,
+            config,
+            risk_analysis_freq,
+            indicator_analysis_freq,
+            indicator_analysis_method,
+            skip_existing,
+            **kwargs,
+        )
+
+    def _generate(self, *args, **kwargs):
+        pred, pred_label = self._process_data()
+
+        back = CvxpyBacktest(pred_label)
+        result = back.run_backtest(
+            freq=self._freq,
+            shift=1,
+            open_cost=0,
+            close_cost=0,
+            min_cost=0,
+        )
+
+        self._save(result, pred_label)
+
+    @property
+    def name(self) -> str:
+        return "JiaQiRecord"
 
 
 if __name__ == "__main__":

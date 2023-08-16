@@ -1,0 +1,17 @@
+On branch dev_wsy
+Your branch is up to date with 'origin/dev_wsy'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+	modified:   pyproject.toml
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+
+	data/qlib_data/
+	mlruns/
+	smangj_autodl/
+
+no changes added to commit (use "git add" and/or "git commit -a")

@@ -97,8 +97,8 @@ class RollingBenchmark:
             h = init_instance_by_config(h_conf)
             h.to_pickle(h_path, dump_all=True)
 
-        self._handler_path = "file://" + "/".join(h_path.parts)
-        task["dataset"]["kwargs"]["handler"] = self._handler_path
+        self._handler_path = h_path
+        task["dataset"]["kwargs"]["handler"] = h_path
         task["record"] = ["qlib.workflow.record_temp.SignalRecord"]
         return task
 

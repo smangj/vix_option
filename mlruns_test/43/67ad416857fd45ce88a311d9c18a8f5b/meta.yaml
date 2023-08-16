@@ -1,0 +1,15 @@
+artifact_uri: file:C:\Users\63153\smangj_program\vix_option\mlruns_test/43/67ad416857fd45ce88a311d9c18a8f5b/artifacts
+end_time: 1688460718441
+entry_point_name: ''
+experiment_id: '43'
+lifecycle_stage: active
+run_id: 67ad416857fd45ce88a311d9c18a8f5b
+run_name: mlflow_recorder
+run_uuid: 67ad416857fd45ce88a311d9c18a8f5b
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1688460718077
+status: 3
+tags: []
+user_id: '63153'

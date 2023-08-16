@@ -678,7 +678,7 @@ class GroupVixHandler20230711(DataHandlerLP):
             mask = _data[("feature", "maturity")] == i + 2
             for category in cls.data_category:
                 _data[("feature", "{}".format(category))].loc[mask] = _data.loc[mask][
-                    ("feature", "ln_V" + str(i + 2))
+                    ("feature", "{}".format(category) + str(i + 2))
                 ]
             for window in cls.windows:
                 for name in cls.rolling_names:

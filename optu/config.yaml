@@ -1,0 +1,52 @@
+qlib_init:
+    provider_uri: "data/qlib_data"
+    region: cn
+market: &market trable
+data_handler_config: &data_handler_config
+    start_time: 2005-12-20
+    end_time: 2022-08-15
+    fit_start_time: 2005-12-20
+    fit_end_time: 2022-08-15
+    instruments: *market
+    infer_processors:
+        - class: RobustZScoreNorm
+          kwargs:
+              fields_group: feature
+              clip_outlier: True
+    learn_processors:
+        - class: DropnaProcessor
+          kwargs:
+              fields_group: feature
+        - class: DropnaLabel
+    label: ["Ref($close, -1) / $close - 1"]
+
+model:
+    class: GRU
+    module_path: qlib.contrib.model.pytorch_gru_ts
+    kwargs:
+        d_feat: 88
+        hidden_size: [32, 64, 128]
+        num_layers: [1, 2, 3]
+        dropout: [0, 0.2]
+        n_epochs: 20
+        lr: [1e-4, 1e-3, 1e-2, 1e-1, 1]
+        early_stop: [10, 20, 30, 40, 50]
+        batch_size: [16, 32, 64, 128, 256]
+        metric: loss
+        loss: mse
+        n_jobs: 0
+        GPU: 0
+dataset:
+    class: TSDatasetH
+    module_path: qlib.data.dataset
+    kwargs:
+        step_len: 10
+        handler:
+            class: GroupVixHandler20230711
+            module_path: backtest.qlib_custom.data_handler
+            kwargs: *data_handler_config
+        segments:
+            train: [2005-12-20, 2021-06-30]
+            valid: [2021-07-01, 2021-12-31]
+            test: [2022-01-01, 2022-08-15]
+

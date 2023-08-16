@@ -777,6 +777,11 @@ requires_python = ">=3.7"
 summary = "Jupyter interactive widgets for JupyterLab"
 
 [[package]]
+name = "kaleido"
+version = "0.2.1"
+summary = "Static image export for web-based visualization libraries with zero dependencies"
+
+[[package]]
 name = "kiwisolver"
 version = "1.4.4"
 requires_python = ">=3.7"
@@ -1186,7 +1191,7 @@ summary = "A small Python package for determining appropriate platform-specific 
 
 [[package]]
 name = "plotly"
-version = "5.14.1"
+version = "5.16.0"
 requires_python = ">=3.6"
 summary = "An open-source, interactive data visualization library for Python"
 dependencies = [
@@ -1947,7 +1952,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 [metadata]
 lock_version = "4.2"
 groups = ["default", "dev", "torch-default"]
-content_hash = "sha256:d4f41c6248dd8f267bfd0ba6e357277b97360f5f9e747d57cb920debefac8533"
+content_hash = "sha256:90408bc007ceadcf6da0ea94296826eeb6438e004bd3c6795dcde010302b32fd"
 
 [metadata.files]
 "alembic 1.10.3" = [
@@ -2672,6 +2677,14 @@ content_hash = "sha256:d4f41c6248dd8f267bfd0ba6e357277b97360f5f9e747d57cb920debe
     {url = "https://mirrors.cloud.tencent.com/pypi/packages/46/98/e7ce879b7b5d4871b80e291be967d22e5e66fa43474c476a95fe6231f50d/jupyterlab_widgets-3.0.7-py3-none-any.whl", hash = "sha256:c73f8370338ec19f1bec47254752d6505b03601cbd5a67e6a0b184532f73a459"},
     {url = "https://mirrors.cloud.tencent.com/pypi/packages/d4/68/ef3070afff437dc92562241294467112566d3b402d85bb9b32e3fd65352a/jupyterlab_widgets-3.0.7.tar.gz", hash = "sha256:c3a50ed5bf528a0c7a869096503af54702f86dda1db469aee1c92dc0c01b43ca"},
 ]
+"kaleido 0.2.1" = [
+    {url = "https://mirrors.cloud.tencent.com/pypi/packages/45/8e/4297556be5a07b713bb42dde0f748354de9a6918dee251c0e6bdcda341e7/kaleido-0.2.1-py2.py3-none-macosx_11_0_arm64.whl", hash = "sha256:bb9a5d1f710357d5d432ee240ef6658a6d124c3e610935817b4b42da9c787c05"},
+    {url = "https://mirrors.cloud.tencent.com/pypi/packages/88/89/4b6f8bb3f9ab036fd4ad1cb2d628ab5c81db32ac9aa0641d7b180073ba43/kaleido-0.2.1-py2.py3-none-win32.whl", hash = "sha256:ecc72635860be616c6b7161807a65c0dbd9b90c6437ac96965831e2e24066552"},
+    {url = "https://mirrors.cloud.tencent.com/pypi/packages/a1/2b/680662678a57afab1685f0c431c2aba7783ce4344f06ec162074d485d469/kaleido-0.2.1-py2.py3-none-manylinux2014_aarch64.whl", hash = "sha256:845819844c8082c9469d9c17e42621fbf85c2b237ef8a86ec8a8527f98b6512a"},
+    {url = "https://mirrors.cloud.tencent.com/pypi/packages/ae/b3/a0f0f4faac229b0011d8c4a7ee6da7c2dca0b6fd08039c95920846f23ca4/kaleido-0.2.1-py2.py3-none-manylinux1_x86_64.whl", hash = "sha256:aa21cf1bf1c78f8fa50a9f7d45e1003c387bd3d6fe0a767cfbbf344b95bdc3a8"},
+    {url = "https://mirrors.cloud.tencent.com/pypi/packages/e0/f7/0ccaa596ec341963adbb4f839774c36d5659e75a0812d946732b927d480e/kaleido-0.2.1-py2.py3-none-macosx_10_11_x86_64.whl", hash = "sha256:ca6f73e7ff00aaebf2843f73f1d3bacde1930ef5041093fe76b83a15785049a7"},
+    {url = "https://mirrors.cloud.tencent.com/pypi/packages/f7/9a/0408b02a4bcb3cf8b338a2b074ac7d1b2099e2b092b42473def22f7b625f/kaleido-0.2.1-py2.py3-none-win_amd64.whl", hash = "sha256:4670985f28913c2d063c5734d125ecc28e40810141bdb0a46f15b76c1d45f23c"},
+]
 "kiwisolver 1.4.4" = [
     {url = "https://mirrors.cloud.tencent.com/pypi/packages/03/93/11790e8e81b89acd3a1c8a6b501f8a05b1c41beee0990582699cdda29557/kiwisolver-1.4.4-cp37-cp37m-win_amd64.whl", hash = "sha256:03baab2d6b4a54ddbb43bba1a3a2d1627e82d205c5cf8f4c924dc49284b87166"},
     {url = "https://mirrors.cloud.tencent.com/pypi/packages/08/14/2ee2b7013f6c7f92f76ee9e8368736410c24f404e70b0f882758493bdeec/kiwisolver-1.4.4-cp37-cp37m-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:02f79693ec433cb4b5f51694e8477ae83b3205768a6fb48ffba60549080e295b"},
@@ -3294,9 +3307,9 @@ content_hash = "sha256:d4f41c6248dd8f267bfd0ba6e357277b97360f5f9e747d57cb920debe
     {url = "https://mirrors.cloud.tencent.com/pypi/packages/15/04/3f882b46b454ab374ea75425c6f931e499150ec1385a73e55b3f45af615a/platformdirs-3.2.0.tar.gz", hash = "sha256:d5b638ca397f25f979350ff789db335903d7ea010ab28903f57b27e1b16c2b08"},
     {url = "https://mirrors.cloud.tencent.com/pypi/packages/b2/f3/4fb5fae710fc9f22a42cd90dc0547da18ec83e2e139294ab94f04c449cf5/platformdirs-3.2.0-py3-none-any.whl", hash = "sha256:ebe11c0d7a805086e99506aa331612429a72ca7cd52a1f0d277dc4adc20cb10e"},
 ]
-"plotly 5.14.1" = [
-    {url = "https://mirrors.cloud.tencent.com/pypi/packages/15/5c/786e4572cf3217ba1707eeb99fe4bdb8fb138237690fa21641e341b1970c/plotly-5.14.1-py2.py3-none-any.whl", hash = "sha256:a63f3ad9e4cc2e02902a738e5e3e7f3d1307f2732ac71a6c28f1238ed3052826"},
-    {url = "https://mirrors.cloud.tencent.com/pypi/packages/dd/24/4f307b6e54892a4b91c58a1ee5826325529231d885df8aaa0f1863191f8d/plotly-5.14.1.tar.gz", hash = "sha256:bcac86d7fcba3eff7260c1eddc36ca34dae2aded10a0709808446565e0e53b93"},
+"plotly 5.16.0" = [
+    {url = "https://mirrors.cloud.tencent.com/pypi/packages/ae/d3/4054e9e7b94571de786d2c34bfc8ee8e847d792f7cf9f294f5ea5ef9d2a8/plotly-5.16.0.tar.gz", hash = "sha256:13dc052665dcb4d9eefd89847c0b144984e99aca5c8008f9885d2583b77d8b7d"},
+    {url = "https://mirrors.cloud.tencent.com/pypi/packages/d6/54/a8759957b778094233d7058c8ddbe368504b448ffe9c26a85f7bfd53584e/plotly-5.16.0-py2.py3-none-any.whl", hash = "sha256:046ba0cd9f6b251780e0d93313016ec5e2cb69d9a68da818cd7110e6c77a4011"},
 ]
 "pluggy 1.0.0" = [
     {url = "https://mirrors.cloud.tencent.com/pypi/packages/9e/01/f38e2ff29715251cf25532b9082a1589ab7e4f571ced434f98d0139336dc/pluggy-1.0.0-py2.py3-none-any.whl", hash = "sha256:74134bbf457f031a36d68416e1509f34bd5ccc019f0bcc952c7b909d06b37bd3"},
@@ -4084,6 +4097,16 @@ content_hash = "sha256:d4f41c6248dd8f267bfd0ba6e357277b97360f5f9e747d57cb920debe
 "tomli 2.0.1" = [
     {url = "https://mirrors.cloud.tencent.com/pypi/packages/97/75/10a9ebee3fd790d20926a90a2547f0bf78f371b2f13aa822c759680ca7b9/tomli-2.0.1-py3-none-any.whl", hash = "sha256:939de3e7a6161af0c887ef91b7d41a53e7c5a1ca976325f429cb46ea9bc30ecc"},
     {url = "https://mirrors.cloud.tencent.com/pypi/packages/c0/3f/d7af728f075fb08564c5949a9c95e44352e23dee646869fa104a3b2060a3/tomli-2.0.1.tar.gz", hash = "sha256:de526c12914f0c550d15924c62d72abc48d6fe7364aa87328337a31007fe8a4f"},
+]
+"torch 1.7.1+cu110" = [
+    {url = "https://download.pytorch.org/whl/cu110/torch-1.7.1%2Bcu110-cp36-cp36m-linux_x86_64.whl", hash = "sha256:1f3092cc17805a60910d7e3eb926136358b9b7d2dbbd732cd413c3279737f87c"},
+    {url = "https://download.pytorch.org/whl/cu110/torch-1.7.1%2Bcu110-cp36-cp36m-win_amd64.whl", hash = "sha256:72b310be4302c4ce4b01da84e9364f48806b020112dcd3e06feaa283adce82a1"},
+    {url = "https://download.pytorch.org/whl/cu110/torch-1.7.1%2Bcu110-cp37-cp37m-linux_x86_64.whl", hash = "sha256:fe553195c62ce2f3f861ae03295c5dc126c7467e005b3cb9dae6c3be84697ab0"},
+    {url = "https://download.pytorch.org/whl/cu110/torch-1.7.1%2Bcu110-cp37-cp37m-win_amd64.whl", hash = "sha256:2aa7c4219181e31fae146e5e42e395128214487fc7d016bc263fc60b354d22d6"},
+    {url = "https://download.pytorch.org/whl/cu110/torch-1.7.1%2Bcu110-cp38-cp38-linux_x86_64.whl", hash = "sha256:709cec07bb34735bcf49ad1d631e4d90d29fa56fe23ac9768089c854367a1ac9"},
+    {url = "https://download.pytorch.org/whl/cu110/torch-1.7.1%2Bcu110-cp38-cp38-win_amd64.whl", hash = "sha256:3a13c7117df5f89739878dba3d3ba833deb0fcfe7a657fe346ebdba31daec00a"},
+    {url = "https://download.pytorch.org/whl/cu110/torch-1.7.1%2Bcu110-cp39-cp39-linux_x86_64.whl", hash = "sha256:3a393adc10cbcf22b3e666557a09c114bc716f78e640a33a53ca1ccc99056cd8"},
+    {url = "https://download.pytorch.org/whl/cu110/torch-1.7.1%2Bcu110-cp39-cp39-win_amd64.whl", hash = "sha256:bc1a73f18ff93192ee1aad4714b3b454eb7dee3a030b28a42b5f2f3e63ec9169"},
 ]
 "tornado 6.2" = [
     {url = "https://mirrors.cloud.tencent.com/pypi/packages/11/30/ac70f5c5f03cf1cd0ae8199c80382387a9fe57e8f68853d5c9527c0219e5/tornado-6.2-cp37-abi3-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:b8150f721c101abdef99073bf66d3903e292d851bee51910839831caba341a75"},
