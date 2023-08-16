@@ -3,7 +3,6 @@
 # @Time     : 2023/8/14 14:56
 # @Author   : wsy
 # @email    : 631535207@qq.com
-import abc
 
 import pandas as pd
 import qlib
@@ -27,7 +26,7 @@ from utils.path import check_and_mkdirs
 CONFIG_PATH = os.path.join("optu", "config.yaml")
 
 
-class ModelOptu(abc.ABC):
+class ModelOptu:
     def __init__(self):
         with open(CONFIG_PATH) as fp:
             self.config = yaml.safe_load(fp)
@@ -37,28 +36,6 @@ class ModelOptu(abc.ABC):
             self.config.get("dataset"), accept_types=Dataset
         )
 
-    def prepare_model(self, trial):
-        raise NotImplementedError
-
-    def objective(self, trial):
-
-        model = self.prepare_model(trial)
-        auto_filter_kwargs(model.fit)(self.dataset)
-
-        preds = model.predict(self.dataset)
-        y_test = self.dataset.prepare(segments="test", col_set="label").iloc[:, 0]
-        # loss = (((preds.T - test_y.T) ** 4).sum(axis=1)) ** 0.25
-        loss = self.loss(preds, y_test)
-        # kurtosis_pred=kurtosis(preds)
-        # rmse = mean_squared_error(test_y, preds, squared=False)
-        # rmse = sum(-1 * (preds > 0).astype('float64') * test_y)  # pred to better than index but worse than index
-        return loss
-
-    def loss(self, pred, label):
-        raise NotImplementedError
-
-
-class XGBOptu(ModelOptu):
     def prepare_model(self, trial):
         param = copy.deepcopy(self.config["model"])
         for k, v in param["kwargs"].items():
@@ -72,6 +49,22 @@ class XGBOptu(ModelOptu):
         model: Model = init_instance_by_config(param, accept_types=Model)
         return model
 
+    def objective(self, trial):
+
+        model = self.prepare_model(trial)
+        auto_filter_kwargs(model.fit)(self.dataset)
+
+        preds = model.predict(self.dataset)
+        y_test = self.dataset.handler.fetch(
+            self.dataset.segments["test"], col_set="label"
+        ).iloc[:, 0]
+        # loss = (((preds.T - test_y.T) ** 4).sum(axis=1)) ** 0.25
+        loss = self.loss(preds, y_test)
+        # kurtosis_pred=kurtosis(preds)
+        # rmse = mean_squared_error(test_y, preds, squared=False)
+        # rmse = sum(-1 * (preds > 0).astype('float64') * test_y)  # pred to better than index but worse than index
+        return loss
+
     def loss(self, pred, label):
         return (((pred - label) ** 2).mean()) ** 0.5
 
@@ -80,10 +73,10 @@ if __name__ == "__main__":
     storage_name = "sqlite:///data/optuna.db"
     outputs_path = "outputs/optuna"
     study = optuna.create_study(direction="minimize", storage=storage_name)
-    optu = XGBOptu()
-    study.optimize(optu.objective, n_trials=100, timeout=600)
+    optu = ModelOptu()
+    study.optimize(optu.objective, n_trials=100)
     time = datetime.now().strftime("%Y%m%d-%H%M%S")
-    study_path = os.path.join(outputs_path, time + optu.__class__.__name__)
+    study_path = os.path.join(outputs_path, time + optu.config["model"]["class"])
     check_and_mkdirs(study_path)
     # plot_optimization_history(study).show()
     # plot_intermediate_values(study).show()
