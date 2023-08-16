@@ -30,6 +30,8 @@ dependencies = [
     "matplotlib==3.7.1",
     "yahooquery==2.3.1",
     "optuna==3.2.0",
+    "plotly==5.16.0",
+    "kaleido==0.2.1",
 ]
 requires-python = ">=3.8,<3.9"
 license = {text = "MIT"}

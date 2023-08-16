@@ -4,13 +4,25 @@
 # @Author   : wsy
 # @email    : 631535207@qq.com
 import abc
+
+import pandas as pd
 import qlib
 from qlib.utils import init_instance_by_config, auto_filter_kwargs
 from qlib.data.dataset import Dataset
 from qlib.model.base import Model
+from datetime import datetime
 import ruamel.yaml as yaml
 import os
+import copy
 import optuna
+from optuna.visualization import (
+    plot_intermediate_values,
+    plot_optimization_history,
+    plot_param_importances,
+    plot_parallel_coordinate,
+)
+
+from utils.path import check_and_mkdirs
 
 CONFIG_PATH = os.path.join("optu", "config.yaml")
 
@@ -48,27 +60,34 @@ class ModelOptu(abc.ABC):
 
 class XGBOptu(ModelOptu):
     def prepare_model(self, trial):
-        param = self.config["model"]
+        param = copy.deepcopy(self.config["model"])
         for k, v in param["kwargs"].items():
             if isinstance(v, list):
                 if len(v) == 2:
                     param["kwargs"][k] = trial.suggest_float(k, v[0], v[1])
+                    # a = "float"
+                    # getattr(trial, 'trial.suggest_' + a)(k, v[0], v[1])
                 else:
                     param["kwargs"][k] = trial.suggest_categorical(k, v)
         model: Model = init_instance_by_config(param, accept_types=Model)
         return model
 
     def loss(self, pred, label):
-        return (((pred - label) ** 4).sum()) ** 0.25
+        return (((pred - label) ** 2).mean()) ** 0.5
 
 
 if __name__ == "__main__":
-    study = optuna.create_study(direction="minimize")
+    storage_name = "sqlite:///data/optuna.db"
+    outputs_path = "outputs/optuna"
+    study = optuna.create_study(direction="minimize", storage=storage_name)
     optu = XGBOptu()
     study.optimize(optu.objective, n_trials=100, timeout=600)
+    time = datetime.now().strftime("%Y%m%d-%H%M%S")
+    study_path = os.path.join(outputs_path, time + optu.__class__.__name__)
+    check_and_mkdirs(study_path)
     # plot_optimization_history(study).show()
     # plot_intermediate_values(study).show()
-    # plot_param_importances(study).show()
+
     # plot_parallel_coordinate(study).show()
     print("Number of finished trials: ", len(study.trials))
     print("Best trial:")
@@ -77,3 +96,18 @@ if __name__ == "__main__":
     print("  Params: ")
     for key, value in trial.params.items():
         print("    {}: {}".format(key, value))
+
+    pd.Series(trial.params).to_csv(os.path.join(study_path, "best_trial.csv"))
+
+    plot_param_importances(study).write_image(
+        os.path.join(study_path, "importances.jpeg")
+    )
+    plot_optimization_history(study).write_image(
+        os.path.join(study_path, "history.jpeg")
+    )
+    plot_intermediate_values(study).write_image(
+        os.path.join(study_path, "intermediate_values.jpeg")
+    )
+    plot_parallel_coordinate(study).write_image(
+        os.path.join(study_path, "parallel_coordinate.jpeg")
+    )
