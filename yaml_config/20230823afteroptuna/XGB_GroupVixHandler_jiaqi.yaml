@@ -1,7 +1,7 @@
 qlib_init:
     provider_uri: "data/qlib_data"
     region: cn
-experiment_name: XGB_GroupVixHandler_LongShortBacktestRecord
+experiment_name: XGB_GroupVixHandler_jiaqi
 market: &market trable
 benchmark: &benchmark TLT
 roll_config:
@@ -13,6 +13,7 @@ data_handler_config: &data_handler_config
     fit_start_time: 2005-12-20
     fit_end_time: 2022-08-15
     instruments: *market
+    infer_processors: []
     learn_processors:
         - class: DropnaProcessor
           kwargs:
