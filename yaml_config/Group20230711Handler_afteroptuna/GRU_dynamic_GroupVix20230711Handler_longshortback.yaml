@@ -1,7 +1,7 @@
 qlib_init:
     provider_uri: "data/qlib_data"
     region: cn
-experiment_name: GRU_GroupVixHandler_LongShortBacktestRecord
+experiment_name: GRU_GroupVixHandler20230711_LongShortBacktestRecord
 market: &market trable
 benchmark: &benchmark TLT
 roll_config:
@@ -19,6 +19,9 @@ data_handler_config: &data_handler_config
               fields_group: feature
               clip_outlier: True
     learn_processors:
+        - class: DropnaProcessor
+          kwargs:
+              fields_group: feature
         - class: DropnaLabel
     label: ["Ref($close, -1) / $close - 1"]
 port_analysis_config: &port_analysis_config
@@ -44,14 +47,14 @@ task:
         class: GRU
         module_path: qlib.contrib.model.pytorch_gru_ts
         kwargs:
-            d_feat: 17
+            d_feat: 88
             hidden_size: 64
-            num_layers: 2
-            dropout: 0.
+            num_layers: 1
+            dropout: 0.062633
             n_epochs: 20
-            lr: 1e-3
-            early_stop: 10
-            batch_size: 32
+            lr: 1e-2
+            early_stop: 20
+            batch_size: 16
             metric: loss
             loss: mse
             n_jobs: 0
@@ -62,7 +65,7 @@ task:
         kwargs:
             step_len: 10
             handler:
-                class: GroupVixHandler
+                class: GroupVixHandler20230711
                 module_path: backtest.qlib_custom.data_handler
                 kwargs: *data_handler_config
             segments:
@@ -76,5 +79,3 @@ task:
             config: *port_analysis_config
         - class: JiaQiRecord
           module_path: backtest.qlib_custom.record
-          kwargs:
-            config: *port_analysis_config

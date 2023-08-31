@@ -78,6 +78,9 @@ if __name__ == "__main__":
     time = datetime.now().strftime("%Y%m%d-%H%M%S")
     study_path = os.path.join(outputs_path, time + optu.config["model"]["class"])
     check_and_mkdirs(study_path)
+    import shutil
+
+    shutil.copyfile(CONFIG_PATH, os.path.join(study_path, "config.yaml"))
     # plot_optimization_history(study).show()
     # plot_intermediate_values(study).show()
 

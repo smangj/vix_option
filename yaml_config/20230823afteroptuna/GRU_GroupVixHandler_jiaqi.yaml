@@ -1,7 +1,7 @@
 qlib_init:
     provider_uri: "data/qlib_data"
     region: cn
-experiment_name: GRU_GroupVixHandler_LongShortBacktestRecord
+experiment_name: GRU_GroupVixHandler_jiaqi
 market: &market trable
 benchmark: &benchmark TLT
 roll_config:
@@ -13,12 +13,11 @@ data_handler_config: &data_handler_config
     fit_start_time: 2005-12-20
     fit_end_time: 2022-08-15
     instruments: *market
-    infer_processors:
-        - class: RobustZScoreNorm
+    infer_processors: []
+    learn_processors:
+        - class: DropnaProcessor
           kwargs:
               fields_group: feature
-              clip_outlier: True
-    learn_processors:
         - class: DropnaLabel
     label: ["Ref($close, -1) / $close - 1"]
 port_analysis_config: &port_analysis_config
@@ -45,9 +44,9 @@ task:
         module_path: qlib.contrib.model.pytorch_gru_ts
         kwargs:
             d_feat: 17
-            hidden_size: 64
+            hidden_size: 128
             num_layers: 2
-            dropout: 0.
+            dropout: 0.0
             n_epochs: 20
             lr: 1e-3
             early_stop: 10
