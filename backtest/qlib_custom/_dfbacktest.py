@@ -206,7 +206,7 @@ class LongShortBacktest(_DfBacktest):
             long_position[stock] = 1 / len(long_stocks)
         short_stocks = list(score.iloc[-self.topk :]["instrument"])
         for stock in short_stocks:
-            short_position[stock] = 1 / len(short_stocks)
+            short_position[stock] = -1 / len(short_stocks)
 
         long_position.update(short_position)
         return long_position
