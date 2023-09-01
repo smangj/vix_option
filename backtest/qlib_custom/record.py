@@ -23,6 +23,7 @@ from qlib.utils import init_instance_by_config
 from backtest.qlib_custom._dfbacktest import (
     LongShortBacktest,
     CvxpyBacktest,
+    DfBacktestResult,
 )
 from backtest.qlib_custom.utils import gen_acct_pos_dfs, gen_orders_df
 from backtest.report import report, Values
@@ -622,17 +623,23 @@ class _DfBacktestRecord(PortAnaRecord, abc.ABC):
         )
         return pred, pred_label
 
-    def _save(self, result: dict, data: pd.DataFrame):
+    def _save(self, result: DfBacktestResult, data: pd.DataFrame):
         with tempfile.TemporaryDirectory() as tmp_dir_path:
+
             file_path = report(
-                [Values(k, np.cumprod(nv + 1).dropna()) for k, nv in result.items()],
+                [
+                    Values("long", np.cumprod(result.long_returns + 1).dropna()),
+                    Values("short", np.cumprod(result.short_returns + 1).dropna()),
+                    Values("ls", np.cumprod(result.ls_returns + 1).dropna()),
+                ],
                 output_dir=tmp_dir_path,
                 file_name=self.name + "_report",
             )
             self.recorder.log_artifact(local_path=file_path)
-            values_df = pd.DataFrame(
-                {k: np.cumprod(nv + 1).dropna() for k, nv in result.items()}
-            )
+            values_df = result.position.copy()
+            values_df["long"] = np.cumprod(result.long_returns + 1).dropna()
+            values_df["short"] = np.cumprod(result.short_returns + 1).dropna()
+            values_df["ls"] = np.cumprod(result.ls_returns + 1).dropna()
             self._save_df(
                 df=values_df,
                 file_name=self.name

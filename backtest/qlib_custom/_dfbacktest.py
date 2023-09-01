@@ -4,6 +4,7 @@
 # @Author   : wsy
 # @email    : 631535207@qq.com
 import abc
+from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
@@ -16,6 +17,22 @@ from qlib.utils import get_date_range
 import cvxpy as cp
 from itertools import chain
 from joblib import Parallel, delayed, cpu_count
+
+
+@dataclass
+class DfBacktestResult:
+    dates: list
+    long_returns: pd.Series
+    short_returns: pd.Series
+    ls_returns: pd.Series
+    position: pd.DataFrame
+
+    def to_df(self):
+        # return pd.DataFrame(index=self.dates, {"long": self.long_returns,
+        #                                        "short": self.short_returns,
+        #                                        "long_short": self.ls_returns,
+        #                                        "position": self.position})
+        pass
 
 
 class _DfBacktest(abc.ABC):
@@ -78,7 +95,7 @@ class _DfBacktest(abc.ABC):
         limit_threshold=None,
         min_cost=0,
         subscribe_fields=[],
-    ):
+    ) -> DfBacktestResult:
 
         # deal date
         _pred_dates = self.data.index.get_level_values(level="datetime")
@@ -125,24 +142,28 @@ class _DfBacktest(abc.ABC):
             for pdate, date in batched_zip(predict_dates, trade_dates, batch_size)
         )
 
-        date, long_returns, short_returns, ls_returns = zip(*results)
+        date, long_returns, short_returns, ls_returns, position = zip(*results)
+        [date, long_returns, short_returns, ls_returns, position] = map(
+            list,
+            map(
+                chain.from_iterable,
+                [date, long_returns, short_returns, ls_returns, position],
+            ),
+        )
 
-        return dict(
-            zip(
-                ["long", "short", "long_short"],
-                map(
-                    lambda x: pd.Series(
-                        index=chain.from_iterable(date), data=chain.from_iterable(x)
-                    ).sort_index(),
-                    [long_returns, short_returns, ls_returns],
-                ),
-            )
+        return DfBacktestResult(
+            dates=date,
+            long_returns=pd.Series(index=date, data=long_returns),
+            short_returns=pd.Series(index=date, data=short_returns),
+            ls_returns=pd.Series(index=date, data=ls_returns),
+            position=pd.DataFrame(position, index=date),
         )
 
     def _gen_profit(self, pdates, dates, trade_exchange, profit_str):
         long_profits = []
         short_profits = []
         ls_profits = []
+        position = []
         for pdate, date in zip(pdates, dates):
             stocks = self._generate_position(pdate)
             print(date)
@@ -180,8 +201,9 @@ class _DfBacktest(abc.ABC):
             long_profits.append(long_profit)
             short_profits.append(short_profit)
             ls_profits.append(long_profit + short_profit)
+            position.append(stocks)
 
-        return dates, long_profits, short_profits, ls_profits
+        return dates, long_profits, short_profits, ls_profits, position
 
     @abc.abstractmethod
     def _generate_position(self, date) -> dict:
@@ -222,7 +244,7 @@ class LongShortBacktest(_DfBacktest):
         limit_threshold=None,
         min_cost=0,
         subscribe_fields=[],
-    ) -> dict:
+    ) -> DfBacktestResult:
         result = super(LongShortBacktest, self).run_backtest(
             freq,
             deal_price,
@@ -235,9 +257,9 @@ class LongShortBacktest(_DfBacktest):
             subscribe_fields,
         )
 
-        result["long_short"] = (1 - self.long_weight) * result[
-            "short"
-        ] + self.long_weight * result["long"]
+        result.ls_returns = (
+            1 - self.long_weight
+        ) * result.short_returns + self.long_weight * result.long_returns
         return result
 
 
