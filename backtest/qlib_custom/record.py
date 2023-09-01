@@ -625,31 +625,33 @@ class _DfBacktestRecord(PortAnaRecord, abc.ABC):
 
     def _save(self, result: DfBacktestResult, data: pd.DataFrame):
         with tempfile.TemporaryDirectory() as tmp_dir_path:
-
+            nv = {
+                "long": np.cumprod(result.long_returns + 1).dropna(),
+                "short": np.cumprod(result.short_returns + 1).dropna(),
+                "ls": np.cumprod(result.ls_returns + 1).dropna(),
+            }
             file_path = report(
-                [
-                    Values("long", np.cumprod(result.long_returns + 1).dropna()),
-                    Values("short", np.cumprod(result.short_returns + 1).dropna()),
-                    Values("ls", np.cumprod(result.ls_returns + 1).dropna()),
-                ],
+                [Values(k, v) for k, v in nv.items()],
                 output_dir=tmp_dir_path,
                 file_name=self.name + "_report",
             )
             self.recorder.log_artifact(local_path=file_path)
-            values_df = result.position.copy()
-            values_df["long"] = np.cumprod(result.long_returns + 1).dropna()
-            values_df["short"] = np.cumprod(result.short_returns + 1).dropna()
-            values_df["ls"] = np.cumprod(result.ls_returns + 1).dropna()
+            values_df = result.position.stack()
+            values_df.name = "position"
+            values_df.index.names = data.index.names
+            save_df = pd.merge(
+                data, values_df, left_index=True, right_index=True, how="outer"
+            )
             self._save_df(
-                df=values_df,
+                df=pd.DataFrame(nv),
                 file_name=self.name
                 + "_"
                 + self._NET_VALUE_EXCEL_FORMAT.format(self._freq),
                 dir_path=tmp_dir_path,
             )
             self._save_df(
-                df=data,
-                file_name="pred_label.xlsx",
+                df=save_df,
+                file_name=self.name + "_" + "pred_label_position.xlsx",
                 dir_path=tmp_dir_path,
             )
 
