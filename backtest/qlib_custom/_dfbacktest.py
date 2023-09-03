@@ -44,16 +44,16 @@ class _DfBacktest(abc.ABC):
         self.data = tabular_df
 
     def _generate_exchange(
-        self,
-        trade_unit,
-        limit_threshold,
-        deal_price,
-        subscribe_fields,
-        shift,
-        freq,
-        open_cost,
-        close_cost,
-        min_cost,
+            self,
+            trade_unit,
+            limit_threshold,
+            deal_price,
+            subscribe_fields,
+            shift,
+            freq,
+            open_cost,
+            close_cost,
+            min_cost,
     ) -> Exchange:
         if trade_unit is None:
             trade_unit = C.trade_unit
@@ -85,16 +85,16 @@ class _DfBacktest(abc.ABC):
         return trade_exchange
 
     def run_backtest(
-        self,
-        freq: str = "day",
-        deal_price=None,
-        shift=1,
-        open_cost=0,
-        close_cost=0,
-        trade_unit=None,
-        limit_threshold=None,
-        min_cost=0,
-        subscribe_fields=[],
+            self,
+            freq: str = "day",
+            deal_price=None,
+            shift=1,
+            open_cost=0,
+            close_cost=0,
+            trade_unit=None,
+            limit_threshold=None,
+            min_cost=0,
+            subscribe_fields=[],
     ) -> DfBacktestResult:
 
         # deal date
@@ -133,8 +133,8 @@ class _DfBacktest(abc.ABC):
             assert len(list1) == len(list2)
             for batch_start in range(0, len(list1), batch_size):
                 batch_end = batch_start + batch_size
-                batch1 = list1[batch_start : min(batch_end, len(list1) - 1)]
-                batch2 = list2[batch_start : min(batch_end, len(list1) - 1)]
+                batch1 = list1[batch_start: min(batch_end, len(list1) - 1)]
+                batch2 = list2[batch_start: min(batch_end, len(list1) - 1)]
                 yield batch1, batch2
 
         results = Parallel(n_jobs=cpu_count())(
@@ -174,7 +174,7 @@ class _DfBacktest(abc.ABC):
 
             for stock, w in long_stocks.items():
                 if not trade_exchange.is_stock_tradable(
-                    stock_id=stock, start_time=pdate, end_time=pdate
+                        stock_id=stock, start_time=pdate, end_time=pdate
                 ):
                     continue
                 profit = trade_exchange.get_quote_info(
@@ -187,7 +187,7 @@ class _DfBacktest(abc.ABC):
 
             for stock, w in short_stocks.items():
                 if not trade_exchange.is_stock_tradable(
-                    stock_id=stock, start_time=pdate, end_time=pdate
+                        stock_id=stock, start_time=pdate, end_time=pdate
                 ):
                     continue
                 profit = trade_exchange.get_quote_info(
@@ -226,7 +226,7 @@ class LongShortBacktest(_DfBacktest):
         long_stocks = list(score.iloc[: self.topk]["instrument"])
         for stock in long_stocks:
             long_position[stock] = 1 / len(long_stocks)
-        short_stocks = list(score.iloc[-self.topk :]["instrument"])
+        short_stocks = list(score.iloc[-self.topk:]["instrument"])
         for stock in short_stocks:
             short_position[stock] = -1 / len(short_stocks)
 
@@ -234,16 +234,16 @@ class LongShortBacktest(_DfBacktest):
         return long_position
 
     def run_backtest(
-        self,
-        freq: str = "day",
-        deal_price=None,
-        shift=1,
-        open_cost=0,
-        close_cost=0,
-        trade_unit=None,
-        limit_threshold=None,
-        min_cost=0,
-        subscribe_fields=[],
+            self,
+            freq: str = "day",
+            deal_price=None,
+            shift=1,
+            open_cost=0,
+            close_cost=0,
+            trade_unit=None,
+            limit_threshold=None,
+            min_cost=0,
+            subscribe_fields=[],
     ) -> DfBacktestResult:
         result = super(LongShortBacktest, self).run_backtest(
             freq,
@@ -258,28 +258,15 @@ class LongShortBacktest(_DfBacktest):
         )
 
         result.ls_returns = (
-            1 - self.long_weight
-        ) * result.short_returns + self.long_weight * result.long_returns
+                                    1 - self.long_weight
+                            ) * result.short_returns + self.long_weight * result.long_returns
         return result
 
 
-class CvxpyBacktest(_DfBacktest):
+class _MvoBacktest(_DfBacktest):
     def __init__(self, tabular_df: pd.DataFrame):
         super().__init__(tabular_df)
         self.rolling_cov = self.cal_sigma()
-
-    def _generate_position(self, date) -> dict:
-        sigma = self.rolling_cov.loc(axis=0)[date, :]
-        date_data = self.data.loc(axis=0)[date, :]
-        pred = date_data["score"]
-        # 乘数月收益率转化为日
-        # multi = 20
-        # pred = -date_data["mu"].values
-        if sigma.isna().any().any() or pred.isna().any():
-            return pd.Series(0, index=sigma.columns).to_dict()
-
-        weight = self.mvo(pred.values, sigma.values)
-        return pd.Series(weight, index=sigma.columns).to_dict()
 
     def mvo(self, mu, sigma, Gamma=50, maxrisk=0.3):
         w = cp.Variable(len(sigma))
@@ -289,7 +276,7 @@ class CvxpyBacktest(_DfBacktest):
             cp.max(cp.abs(w)) <= 1,
             cp.sum(cp.abs(w)) <= 3,
             cp.abs(cp.sum(w)) <= 2,
-            risk <= maxrisk**2 / 252,
+            risk <= maxrisk ** 2 / 252,
         ]
         prob = cp.Problem(objective, constraints)
         prob.solve()
@@ -306,19 +293,50 @@ class CvxpyBacktest(_DfBacktest):
         return rolling_cov
 
 
+class CvxpyBacktest(_MvoBacktest):
+
+    def _generate_position(self, date) -> dict:
+        sigma = self.rolling_cov.loc(axis=0)[date, :]
+        date_data = self.data.loc(axis=0)[date, :]
+        pred = date_data["score"]
+        # 乘数月收益率转化为日
+        # multi = 20
+        # pred = -date_data["mu"].values
+        if sigma.isna().any().any() or pred.isna().any():
+            return pd.Series(0, index=sigma.columns).to_dict()
+
+        weight = self.mvo(pred.values, sigma.values)
+        return pd.Series(weight, index=sigma.columns).to_dict()
+
+
+class MuBacktest(_MvoBacktest):
+
+    def _generate_position(self, date) -> dict:
+        sigma = self.rolling_cov.loc(axis=0)[date, :]
+        date_data = self.data.loc(axis=0)[date, :]
+        # 乘数月收益率转化为日
+        multi = 20
+        pred = -date_data["mu"] / multi
+        if sigma.isna().any().any() or pred.isna().any():
+            return pd.Series(0, index=sigma.columns).to_dict()
+
+        weight = self.mvo(pred.values, sigma.values)
+        return pd.Series(weight, index=sigma.columns).to_dict()
+
+
 def long_short_backtest(
-    pred,
-    freq: str = "day",
-    topk=1,
-    deal_price=None,
-    shift=1,
-    open_cost=0,
-    close_cost=0,
-    trade_unit=None,
-    limit_threshold=None,
-    min_cost=0,
-    subscribe_fields=[],
-    long_weight=0.5,
+        pred,
+        freq: str = "day",
+        topk=1,
+        deal_price=None,
+        shift=1,
+        open_cost=0,
+        close_cost=0,
+        trade_unit=None,
+        limit_threshold=None,
+        min_cost=0,
+        subscribe_fields=[],
+        long_weight=0.5,
 ):
     """
     A backtest for long-short strategy
@@ -392,7 +410,7 @@ def long_short_backtest(
 
         for stock in long_stocks:
             if not trade_exchange.is_stock_tradable(
-                stock_id=stock, start_time=pdate, end_time=pdate
+                    stock_id=stock, start_time=pdate, end_time=pdate
             ):
                 continue
             profit = trade_exchange.get_quote_info(
@@ -405,7 +423,7 @@ def long_short_backtest(
 
         for stock in short_stocks:
             if not trade_exchange.is_stock_tradable(
-                stock_id=stock, start_time=pdate, end_time=pdate
+                    stock_id=stock, start_time=pdate, end_time=pdate
             ):
                 continue
             profit = trade_exchange.get_quote_info(
