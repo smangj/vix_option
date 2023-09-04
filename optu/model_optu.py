@@ -74,13 +74,16 @@ if __name__ == "__main__":
     outputs_path = "outputs/optuna"
     study = optuna.create_study(direction="minimize", storage=storage_name)
     optu = ModelOptu()
-    study.optimize(optu.objective, n_trials=100)
+
     time = datetime.now().strftime("%Y%m%d-%H%M%S")
     study_path = os.path.join(outputs_path, time + optu.config["model"]["class"])
     check_and_mkdirs(study_path)
     import shutil
 
     shutil.copyfile(CONFIG_PATH, os.path.join(study_path, "config.yaml"))
+
+    study.optimize(optu.objective, n_trials=100)
+
     # plot_optimization_history(study).show()
     # plot_intermediate_values(study).show()
 

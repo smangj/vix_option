@@ -23,6 +23,7 @@ from qlib.utils import init_instance_by_config
 from backtest.qlib_custom._dfbacktest import (
     LongShortBacktest,
     CvxpyBacktest,
+    DfBacktestResult, MuBacktest,
 )
 from backtest.qlib_custom.utils import gen_acct_pos_dfs, gen_orders_df
 from backtest.report import report, Values
@@ -50,15 +51,15 @@ class StandalonePortAnaRecord(PortAnaRecord):
     _ORDERS_HIST_EXCEL_FORMAT = "orders_{}.xlsx"
 
     def __init__(
-        self,
-        recorder,
-        config=None,
-        risk_analysis_freq: Union[List, str] = None,
-        indicator_analysis_freq: Union[List, str] = None,
-        indicator_analysis_method=None,
-        skip_existing=False,
-        artifact_sub_path: Optional[str] = None,
-        **kwargs,
+            self,
+            recorder,
+            config=None,
+            risk_analysis_freq: Union[List, str] = None,
+            indicator_analysis_freq: Union[List, str] = None,
+            indicator_analysis_method=None,
+            skip_existing=False,
+            artifact_sub_path: Optional[str] = None,
+            **kwargs,
     ):
         """
 
@@ -103,8 +104,8 @@ class StandalonePortAnaRecord(PortAnaRecord):
 
         with tempfile.TemporaryDirectory() as dir_path:
             for _freq, (
-                report_normal,
-                positions_normal,
+                    report_normal,
+                    positions_normal,
             ) in portfolio_metric_dict.items():
                 self.save(**{f"report_normal_{_freq}.pkl": report_normal})
                 self.save(**{f"positions_normal_{_freq}.pkl": positions_normal})
@@ -273,14 +274,14 @@ class _SimpleBacktestRecord(PortAnaRecord, abc.ABC):
     _NET_VALUE_EXCEL_FORMAT = "net_value_{}.xlsx"
 
     def __init__(
-        self,
-        recorder,
-        config=None,
-        risk_analysis_freq: Union[List, str] = None,
-        indicator_analysis_freq: Union[List, str] = None,
-        indicator_analysis_method=None,
-        skip_existing=False,
-        **kwargs,
+            self,
+            recorder,
+            config=None,
+            risk_analysis_freq: Union[List, str] = None,
+            indicator_analysis_freq: Union[List, str] = None,
+            indicator_analysis_method=None,
+            skip_existing=False,
+            **kwargs,
     ):
         super().__init__(
             recorder,
@@ -348,7 +349,7 @@ class _SimpleBacktestRecord(PortAnaRecord, abc.ABC):
             else self.backtest_config["end_time"]
         )
         time_mask = (dt_values >= pd.to_datetime(start_time)) & (
-            dt_values <= pd.to_datetime(end_time)
+                dt_values <= pd.to_datetime(end_time)
         )
         pred_label = pred_label.loc[time_mask]
 
@@ -385,8 +386,8 @@ class _SimpleBacktestRecord(PortAnaRecord, abc.ABC):
             self._save_df(
                 df=values_df,
                 file_name=self.name
-                + "_"
-                + self._NET_VALUE_EXCEL_FORMAT.format(self._freq),
+                          + "_"
+                          + self._NET_VALUE_EXCEL_FORMAT.format(self._freq),
                 dir_path=tmp_dir_path,
             )
             self._save_df(
@@ -453,10 +454,10 @@ class MeanReversion(_SimpleBacktestRecord):
         std_times = 2
         position_num = 1
         buy_signal = xt["ln_V" + str(month)] <= (
-            xt["vix_ma"] - std_times * xt["vix_std"]
+                xt["vix_ma"] - std_times * xt["vix_std"]
         )
         sell_signal = xt["ln_V" + str(month)] >= (
-            xt["vix_ma"] + std_times * xt["vix_std"]
+                xt["vix_ma"] + std_times * xt["vix_std"]
         )
 
         xt["signal"] = position_num * buy_signal - position_num * sell_signal
@@ -537,14 +538,14 @@ class _DfBacktestRecord(PortAnaRecord, abc.ABC):
     _NET_VALUE_EXCEL_FORMAT = "net_value_{}.xlsx"
 
     def __init__(
-        self,
-        recorder,
-        config=None,
-        risk_analysis_freq: Union[List, str] = None,
-        indicator_analysis_freq: Union[List, str] = None,
-        indicator_analysis_method=None,
-        skip_existing=False,
-        **kwargs,
+            self,
+            recorder,
+            config=None,
+            risk_analysis_freq: Union[List, str] = None,
+            indicator_analysis_freq: Union[List, str] = None,
+            indicator_analysis_method=None,
+            skip_existing=False,
+            **kwargs,
     ):
         handler = kwargs.pop("handler", None)
         if handler is None:
@@ -614,7 +615,7 @@ class _DfBacktestRecord(PortAnaRecord, abc.ABC):
             else self.backtest_config["end_time"]
         )
         time_mask = (dt_values >= pd.to_datetime(start_time)) & (
-            dt_values <= pd.to_datetime(end_time)
+                dt_values <= pd.to_datetime(end_time)
         )
         pred = pred.loc[time_mask]
         pred_label = pd.concat([pred, label_df, self._data], axis=1, sort=True).reindex(
@@ -622,27 +623,40 @@ class _DfBacktestRecord(PortAnaRecord, abc.ABC):
         )
         return pred, pred_label
 
-    def _save(self, result: dict, data: pd.DataFrame):
+    def _save(self, result: DfBacktestResult, data: pd.DataFrame):
         with tempfile.TemporaryDirectory() as tmp_dir_path:
+            nv = {
+                "long": np.cumprod(result.long_returns + 1).dropna(),
+                "short": np.cumprod(result.short_returns + 1).dropna(),
+                "ls": np.cumprod(result.ls_returns + 1).dropna(),
+            }
             file_path = report(
-                [Values(k, np.cumprod(nv + 1).dropna()) for k, nv in result.items()],
+                [Values(k, v) for k, v in nv.items()],
                 output_dir=tmp_dir_path,
                 file_name=self.name + "_report",
             )
             self.recorder.log_artifact(local_path=file_path)
-            values_df = pd.DataFrame(
-                {k: np.cumprod(nv + 1).dropna() for k, nv in result.items()}
-            )
+            # values_df = result.position.stack()
+            # values_df.name = "position"
+            # values_df.index.names = data.index.names
+            # save_df = pd.merge(
+            #     data, values_df, left_index=True, right_index=True, how="outer"
+            # )
             self._save_df(
-                df=values_df,
+                df=pd.DataFrame(nv),
                 file_name=self.name
-                + "_"
-                + self._NET_VALUE_EXCEL_FORMAT.format(self._freq),
+                          + "_"
+                          + self._NET_VALUE_EXCEL_FORMAT.format(self._freq),
                 dir_path=tmp_dir_path,
             )
             self._save_df(
                 df=data,
                 file_name="pred_label.xlsx",
+                dir_path=tmp_dir_path,
+            )
+            self._save_df(
+                df=result.position,
+                file_name=self.name + "_" + "position.xlsx",
                 dir_path=tmp_dir_path,
             )
 
@@ -667,14 +681,14 @@ class _DfBacktestRecord(PortAnaRecord, abc.ABC):
 
 class LongShortBacktestRecord(_DfBacktestRecord):
     def __init__(
-        self,
-        recorder,
-        config=None,
-        risk_analysis_freq: Union[List, str] = None,
-        indicator_analysis_freq: Union[List, str] = None,
-        indicator_analysis_method=None,
-        skip_existing=False,
-        **kwargs,
+            self,
+            recorder,
+            config=None,
+            risk_analysis_freq: Union[List, str] = None,
+            indicator_analysis_freq: Union[List, str] = None,
+            indicator_analysis_method=None,
+            skip_existing=False,
+            **kwargs,
     ):
         self.short_weight = kwargs.pop("short_weight", 0.0)
 
@@ -711,14 +725,14 @@ class LongShortBacktestRecord(_DfBacktestRecord):
 
 class JiaQiRecord(_DfBacktestRecord):
     def __init__(
-        self,
-        recorder,
-        config=None,
-        risk_analysis_freq: Union[List, str] = None,
-        indicator_analysis_freq: Union[List, str] = None,
-        indicator_analysis_method=None,
-        skip_existing=False,
-        **kwargs,
+            self,
+            recorder,
+            config=None,
+            risk_analysis_freq: Union[List, str] = None,
+            indicator_analysis_freq: Union[List, str] = None,
+            indicator_analysis_method=None,
+            skip_existing=False,
+            **kwargs,
     ):
         super().__init__(
             recorder,
@@ -747,6 +761,46 @@ class JiaQiRecord(_DfBacktestRecord):
     @property
     def name(self) -> str:
         return "JiaQiRecord"
+
+
+class JiaQiBenchRecord(_DfBacktestRecord):
+    def __init__(
+            self,
+            recorder,
+            config=None,
+            risk_analysis_freq: Union[List, str] = None,
+            indicator_analysis_freq: Union[List, str] = None,
+            indicator_analysis_method=None,
+            skip_existing=False,
+            **kwargs,
+    ):
+        super().__init__(
+            recorder,
+            config,
+            risk_analysis_freq,
+            indicator_analysis_freq,
+            indicator_analysis_method,
+            skip_existing,
+            **kwargs,
+        )
+
+    def _generate(self, *args, **kwargs):
+        pred, pred_label = self._process_data()
+
+        back = MuBacktest(pred_label)
+        result = back.run_backtest(
+            freq=self._freq,
+            shift=1,
+            open_cost=0,
+            close_cost=0,
+            min_cost=0,
+        )
+
+        self._save(result, pred_label)
+
+    @property
+    def name(self) -> str:
+        return "JiaQiBenchRecord"
 
 
 if __name__ == "__main__":
