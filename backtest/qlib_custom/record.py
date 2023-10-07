@@ -765,6 +765,8 @@ class JiaQiRecord(_DfBacktestRecord):
 
 
 class JiaQiBenchRecord(_DfBacktestRecord):
+    depend_cls = None
+
     def __init__(
         self,
         recorder,
