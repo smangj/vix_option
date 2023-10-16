@@ -3,13 +3,14 @@
 # @Time     : 2023/5/23 9:33
 # @Author   : wsy
 # @email    : 631535207@qq.com
+from qlib.model.ens.ensemble import RollingEnsemble
 import ruamel.yaml as yaml
 from qlib.workflow.cli import sys_config
 import qlib
 import os
 from qlib.config import C
 from pathlib import Path
-from qlib.model.trainer import TrainerR, TrainerRM
+from qlib.model.trainer import TrainerR, TrainerRM, _log_task_info
 from qlib.workflow.task.manage import TaskManager
 from qlib.utils import init_instance_by_config
 from qlib.utils.data import deepcopy_basic_type
@@ -17,7 +18,6 @@ from qlib.workflow import R
 from qlib.workflow.recorder import MLflowRecorder
 from qlib.workflow.task.gen import task_generator, RollingGen
 from qlib.workflow.task.collect import RecorderCollector
-from qlib.model.ens.group import RollingGroup
 
 
 def dynamicworkflow(
@@ -71,6 +71,7 @@ def dynamicworkflow(
 class RollingBenchmark:
     """
     roll_train_pipeline
+    for one model!!
     """
 
     def __init__(self, config: dict) -> None:
@@ -81,7 +82,7 @@ class RollingBenchmark:
 
         self.COMB_EXP = config.get("experiment_name")
         self.rolling_exp = self.COMB_EXP + "_rolling_exp"
-        self._handler_path = {}
+        self._handler_path = None
 
         if self.rolling_type is None or self.rolling_type == "expanding":
             self.rolling_type = RollingGen.ROLL_EX
@@ -100,51 +101,21 @@ class RollingBenchmark:
     def basic_task(self):
         conf = deepcopy_basic_type(self._config)
 
-        tasks = conf["task"]
+        task = conf["task"]
 
-        # 兼容多task和单task
-        if isinstance(tasks, list):
-            for task in tasks:
-                # try:
-                #     record = R.get_recorder(experiment_name=self.COMB_EXP)
-                # except Exception as e:
-                #     print(e)
-                #     with R.start(experiment_name=self.COMB_EXP):
-                #         record = R.get_recorder()
-                # assert isinstance(record, MLflowRecorder)
-                h_path = Path.cwd() / "{}_handler_horizon{}.pkl".format(
-                    task["name"], self.horizon
-                )
-                if not h_path.exists():
-                    h_conf = task["dataset"]["kwargs"]["handler"]
-                    h = init_instance_by_config(h_conf)
-                    h.to_pickle(h_path, dump_all=True)
+        h_path = Path.cwd() / "{}_handler_horizon{}.pkl".format(
+            task["name"], self.horizon
+        )
+        if not h_path.exists():
+            h_conf = task["dataset"]["kwargs"]["handler"]
+            h = init_instance_by_config(h_conf)
+            h.to_pickle(h_path, dump_all=True)
 
-                self._handler_path[task["name"]] = h_path
-                task["dataset"]["kwargs"]["handler"] = h_path
-                task["record"] = ["qlib.workflow.record_temp.SignalRecord"]
-        else:
-            try:
-                record = R.get_recorder(experiment_name=self.COMB_EXP)
-            except Exception as e:
-                print(e)
-                with R.start(experiment_name=self.COMB_EXP):
-                    record = R.get_recorder()
-            assert isinstance(record, MLflowRecorder)
-            h_path = Path(
-                record.get_local_dir()
-            ).parent / "{}_handler_horizon{}.pkl".format(
-                conf["experiment_name"], self.horizon
-            )
-            if not h_path.exists():
-                h_conf = tasks["dataset"]["kwargs"]["handler"]
-                h = init_instance_by_config(h_conf)
-                h.to_pickle(h_path, dump_all=True)
+        self._handler_path = h_path
+        task["dataset"]["kwargs"]["handler"] = h_path
+        task["record"] = ["qlib.workflow.record_temp.SignalRecord"]
 
-            self._handler_path[tasks["name"]] = h_path
-            tasks["dataset"]["kwargs"]["handler"] = h_path
-            tasks["record"] = ["qlib.workflow.record_temp.SignalRecord"]
-        return tasks
+        return task
 
     def reset(self):
         print("========== reset ==========")
@@ -174,80 +145,53 @@ class RollingBenchmark:
     def ens_rolling(self):
         print("========== task_collecting ==========")
 
-        def rec_key(recorder):
-            task_config = recorder.load_object("task")
-            model_key = task_config["name"]
-            rolling_key = task_config["dataset"]["kwargs"]["segments"]["test"]
-            return model_key, rolling_key
-
         rc = RecorderCollector(
             experiment=self.rolling_exp,
-            process_list=RollingGroup(),
+            artifacts_key=["pred", "label"],
+            process_list=[RollingEnsemble()],
             # rec_key_func=lambda rec: (self.COMB_EXP, rec.info["id"]),
             artifacts_path={"pred": "pred.pkl", "label": "label.pkl"},
-            rec_key_func=rec_key,
         )
         res = rc()
-        # r = RecorderCollector(experiment=self.COMB_EXP)
-        # assert len(r.experiment.info["recorders"]) == 1
-        # recorder = R.get_recorder(experiment_name=self.COMB_EXP)
-        # recorder.log_params(exp_name=self.rolling_exp)
-        # recorder.save_objects(**{"pred.pkl": res["pred"], "label.pkl": res["label"]})
 
-        for task in self._config["task"]:
-            with R.start(experiment_name=self.COMB_EXP, recorder_name=task["name"]):
-                recorder = R.get_recorder()
-                recorder.save_objects(
-                    **{
-                        "pred.pkl": res["pred"][(task["name"],)],
-                        "label.pkl": res["label"][(task["name"],)],
-                    }
-                )
+        with R.start(
+            experiment_name=self.COMB_EXP,
+            recorder_name=self._config["task"].get("name"),
+        ):
+            _log_task_info(self._config["task"])
+            R.save_objects(**{"pred.pkl": res["pred"], "label.pkl": res["label"]})
+            recorder = R.get_recorder()
+            return recorder
 
-    def update_rolling_rec(self):
+    def update_rolling_rec(self, recorder):
         """
         Evaluate the combined rolling results
         """
-        for task in self._config["task"]:
-            rec = R.get_recorder(
-                experiment_name=self.COMB_EXP, recorder_name=task["name"]
+
+        for record in self._config["task"]["record"]:
+            r = init_instance_by_config(
+                record,
+                recorder=recorder,
+                default_module="qlib.workflow.record_temp",
+                try_kwargs={"handler": self._handler_path},
             )
-            for record in task["record"]:
-                r = init_instance_by_config(
-                    record,
-                    recorder=rec,
-                    default_module="qlib.workflow.record_temp",
-                    try_kwargs={"handler": self._handler_path[task["name"]]},
-                )
-                r.generate()
-        # for rid, rec in R.list_recorders(experiment_name=self.COMB_EXP).items():
-        #     for record in self._config["task"]["record"]:
-        #         # Some recorder require the parameter `model` and `dataset`.
-        #         # try to automatically pass in them to the initialization function
-        #         # to make defining the tasking easier
-        #         r = init_instance_by_config(
-        #             record,
-        #             recorder=rec,
-        #             default_module="qlib.workflow.record_temp",
-        #             try_kwargs={"handler": self._handler_path},
-        #         )
-        #         r.generate()
+            r.generate()
 
         print(
             f"Your evaluation results can be found in the experiment named `{self.COMB_EXP}`."
         )
 
     def run_all(self):
-        # the results will be  save in mlruns.
-        # 1) each rolling task is saved in rolling_models
-        self.train_rolling_tasks()
-        # 2) combined rolling tasks and evaluation results are saved in rolling
-        self.ens_rolling()
-        self.update_rolling_rec()
-
-        # 删除临时handler文件
-        for k, v in self._handler_path.items():
-            os.remove(v)
+        try:
+            # 1) each rolling task is saved in rolling_models
+            self.train_rolling_tasks()
+            # 2) combined rolling tasks and evaluation results are saved in rolling
+            recorder = self.ens_rolling()
+            self.update_rolling_rec(recorder)
+        finally:
+            # 删除临时handler文件
+            if os.path.exists(self._handler_path):
+                os.remove(self._handler_path)
 
 
 if __name__ == "__main__":

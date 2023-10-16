@@ -11,7 +11,7 @@ import qlib
 from qlib.config import C, SIMPLE_DATASET_CACHE
 from pathlib import Path
 from qlib.model.trainer import task_train
-
+from qlib.utils.data import deepcopy_basic_type
 from backtest.dynamic_pipeline import RollingBenchmark
 
 
@@ -50,15 +50,28 @@ def workflow(config_path, experiment_name="workflow", uri_folder="mlruns"):
         )
 
     roll_config = config.get("roll_config")
+    tasks = config.get("task")
+
     if roll_config is None:
-        for task in config.get("task"):
+        if not isinstance(tasks, list):
+            tasks = [tasks]
+        for task in tasks:
             recorder = task_train(task, experiment_name=experiment_name)
             recorder.save_objects(config=config)
     else:
-        RollingBenchmark(config).run_all()
+        if isinstance(tasks, list):
+            configs = []
+            for task in tasks:
+                conf = deepcopy_basic_type(config)
+                conf["task"] = task
+                configs.append(conf)
+        else:
+            configs = [config]
+        for conf in configs:
+            RollingBenchmark(conf).run_all()
 
 
-def main(name: str = "models.yaml"):
+def main(name: str = "GRU_XGB_LINEAR.yaml"):
     file_path = os.path.join("model_contrast_config", name)
     if not os.path.isfile(file_path):
         raise FileNotFoundError
