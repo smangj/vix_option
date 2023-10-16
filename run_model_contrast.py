@@ -51,7 +51,7 @@ def workflow(config_path, experiment_name="workflow", uri_folder="mlruns"):
 
     roll_config = config.get("roll_config")
     if roll_config is None:
-        for task in config.get("tasks"):
+        for task in config.get("task"):
             recorder = task_train(task, experiment_name=experiment_name)
             recorder.save_objects(config=config)
     else:
