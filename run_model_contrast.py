@@ -58,7 +58,7 @@ def workflow(config_path, experiment_name="workflow", uri_folder="mlruns"):
         RollingBenchmark(config).run_all()
 
 
-def main(name: str = "GRU_XGB_LINEAR.yaml"):
+def main(name: str = "models.yaml"):
     file_path = os.path.join("model_contrast_config", name)
     if not os.path.isfile(file_path):
         raise FileNotFoundError
