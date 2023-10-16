@@ -4,68 +4,16 @@
 # @Author   : wsy
 # @email    : 631535207@qq.com
 from qlib.model.ens.ensemble import RollingEnsemble
-import ruamel.yaml as yaml
-from qlib.workflow.cli import sys_config
 import qlib
 import os
-from qlib.config import C
 from pathlib import Path
 from qlib.model.trainer import TrainerR, TrainerRM, _log_task_info
 from qlib.workflow.task.manage import TaskManager
 from qlib.utils import init_instance_by_config
 from qlib.utils.data import deepcopy_basic_type
 from qlib.workflow import R
-from qlib.workflow.recorder import MLflowRecorder
 from qlib.workflow.task.gen import task_generator, RollingGen
 from qlib.workflow.task.collect import RecorderCollector
-
-
-def dynamicworkflow(
-    config_path, experiment_name="dynamicworkflow", uri_folder="mlruns"
-):
-    """
-    需要动态train的流程`
-    """
-    with open(config_path) as fp:
-        config = yaml.safe_load(fp)
-
-    # config the `sys` section
-    sys_config(config, config_path)
-
-    if "exp_manager" in config.get("qlib_init"):
-        qlib.init(**config.get("qlib_init"))
-    else:
-        exp_manager = C["exp_manager"]
-        exp_manager["kwargs"]["uri"] = "file:" + str(
-            Path(os.getcwd()).resolve() / uri_folder
-        )
-        qlib.init(**config.get("qlib_init"), exp_manager=exp_manager)
-
-    if "experiment_name" in config:
-        experiment_name = config["experiment_name"]
-
-    config["roll_config"]["rolling_exp"] = "rolling_" + experiment_name
-    i = 0
-    while True:
-
-        try:
-            record = R.get_recorder(experiment_name=config["experiment_name"])
-        except Exception as e:
-            print(e)
-            with R.start(experiment_name=config["experiment_name"]):
-                record = R.get_recorder()
-        assert isinstance(record, MLflowRecorder)
-        h_path = Path(record.get_local_dir()).parent
-        if not os.path.exists(os.path.join(h_path, "config.yaml")):
-            import shutil
-
-            shutil.copyfile(config_path, os.path.join(h_path, "config.yaml"))
-            break
-        else:
-            i += 1
-            config["experiment_name"] = config["experiment_name"] + str(i)
-
-    RollingBenchmark(config).run_all()
 
 
 class RollingBenchmark:

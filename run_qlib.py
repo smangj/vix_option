@@ -7,18 +7,18 @@ import os
 import fire
 from qlib.workflow.cli import workflow
 
-from backtest.dynamic_pipeline import dynamicworkflow
+from backtest.qlib_custom.pipeline import myworkflow
 
 LEGAL_WORKFLOW = ["origin", "dynamic"]
 
 
-def main(name: str = "linear_dynamic_simpleback.yaml", work_flow: str = "dynamic"):
+def main(name: str = "JiaQiBenchRecord.yaml", work_flow: str = "dynamic"):
     assert work_flow in LEGAL_WORKFLOW
     if work_flow == "origin":
         func = workflow
 
     elif work_flow == "dynamic":
-        func = dynamicworkflow
+        func = myworkflow
     else:
         raise NotImplementedError
 

@@ -1,13 +1,7 @@
 qlib_init:
     provider_uri: "data/qlib_data"
     region: cn
-    exp_manager:
-        class: "MLflowExpManager"
-        module_path: "qlib.workflow.expm"
-        kwargs:
-            uri: "databricks"
-            default_exp_name: "Experiment"
-experiment_name: "/Users/631535207@qq.com/JiaQiBenchRecord"
+experiment_name: "JiaQiBenchRecord"
 market: &market trable
 benchmark: &benchmark TLT
 roll_config:
@@ -46,26 +40,15 @@ port_analysis_config: &port_analysis_config
             min_cost: 0
 task:
     model:
-        class: GRU
-        module_path: qlib.contrib.model.pytorch_gru_ts
+        class: SmLinearModel
+        module_path: backtest.qlib_custom.model
         kwargs:
-            d_feat: 88
-            hidden_size: 128
-            num_layers: 3
-            dropout: 0.0
-            n_epochs: 20
-            lr: 1e-3
-            early_stop: 15
-            batch_size: 128
-            metric: loss
-            loss: mse
-            n_jobs: 0
-            GPU: 0
+            estimator: ols
+            fit_intercept: 1
     dataset:
-        class: TSDatasetH
+        class: DatasetH
         module_path: qlib.data.dataset
         kwargs:
-            step_len: 10
             handler:
                 class: GroupVixHandler20230711
                 module_path: backtest.qlib_custom.data_handler
