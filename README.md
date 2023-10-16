@@ -2,7 +2,10 @@
 
 ---
 ## 使用须知
-- run data_process/convert_data.py to prepare data
+- run convert_data.py to prepare data
+- gen data/qlib_data/instruments/trable.txt
+  - copy from all.txt
+  - instruments: just remain VIX_1M-VIX_6M
 
 ## 环境配置
 
