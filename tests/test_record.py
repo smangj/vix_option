@@ -6,7 +6,11 @@
 from qlib.workflow import R
 from pathlib import Path
 
-from backtest.qlib_custom.record import LongShortBacktestRecord, JiaQiRecord
+from backtest.qlib_custom.record import (
+    LongShortBacktestRecord,
+    JiaQiRecord,
+    JiaQiBenchRecord,
+)
 from utils.time import timing_decorator
 
 
@@ -31,6 +35,22 @@ def test_JiaQiRecord(qlib_init):
         / "GRU_GroupVixHandler20230711_LongShortBacktestRecord_handler_horizon0.pkl"
     )
     r = JiaQiRecord(
+        recorder=recorder,
+        handler=h_path,
+    )
+    r.generate()
+
+
+@timing_decorator
+def test_JiaQiBenchRecord(qlib_init):
+    recorder = R.get_recorder(
+        recorder_id="084e905ffbf34e69b74f2efc2cca2afb", experiment_id="8"
+    )
+    h_path = (
+        Path(recorder.get_local_dir()).parent
+        / "GRU_GroupVixHandler20230711_LongShortBacktestRecord_handler_horizon0.pkl"
+    )
+    r = JiaQiBenchRecord(
         recorder=recorder,
         handler=h_path,
     )

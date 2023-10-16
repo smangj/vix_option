@@ -17,13 +17,14 @@ from qlib.contrib.evaluate import risk_analysis, indicator_analysis
 from qlib.log import get_module_logger
 from qlib.utils import flatten_dict
 from qlib.utils.time import Freq
-from qlib.workflow.record_temp import PortAnaRecord
+from qlib.workflow.record_temp import PortAnaRecord, ACRecordTemp, SignalRecord
 from qlib.utils import init_instance_by_config
 
 from backtest.qlib_custom._dfbacktest import (
     LongShortBacktest,
     CvxpyBacktest,
-    DfBacktestResult, MuBacktest,
+    DfBacktestResult,
+    MuBacktest,
 )
 from backtest.qlib_custom.utils import gen_acct_pos_dfs, gen_orders_df
 from backtest.report import report, Values
@@ -51,15 +52,15 @@ class StandalonePortAnaRecord(PortAnaRecord):
     _ORDERS_HIST_EXCEL_FORMAT = "orders_{}.xlsx"
 
     def __init__(
-            self,
-            recorder,
-            config=None,
-            risk_analysis_freq: Union[List, str] = None,
-            indicator_analysis_freq: Union[List, str] = None,
-            indicator_analysis_method=None,
-            skip_existing=False,
-            artifact_sub_path: Optional[str] = None,
-            **kwargs,
+        self,
+        recorder,
+        config=None,
+        risk_analysis_freq: Union[List, str] = None,
+        indicator_analysis_freq: Union[List, str] = None,
+        indicator_analysis_method=None,
+        skip_existing=False,
+        artifact_sub_path: Optional[str] = None,
+        **kwargs,
     ):
         """
 
@@ -104,8 +105,8 @@ class StandalonePortAnaRecord(PortAnaRecord):
 
         with tempfile.TemporaryDirectory() as dir_path:
             for _freq, (
-                    report_normal,
-                    positions_normal,
+                report_normal,
+                positions_normal,
             ) in portfolio_metric_dict.items():
                 self.save(**{f"report_normal_{_freq}.pkl": report_normal})
                 self.save(**{f"positions_normal_{_freq}.pkl": positions_normal})
@@ -274,14 +275,14 @@ class _SimpleBacktestRecord(PortAnaRecord, abc.ABC):
     _NET_VALUE_EXCEL_FORMAT = "net_value_{}.xlsx"
 
     def __init__(
-            self,
-            recorder,
-            config=None,
-            risk_analysis_freq: Union[List, str] = None,
-            indicator_analysis_freq: Union[List, str] = None,
-            indicator_analysis_method=None,
-            skip_existing=False,
-            **kwargs,
+        self,
+        recorder,
+        config=None,
+        risk_analysis_freq: Union[List, str] = None,
+        indicator_analysis_freq: Union[List, str] = None,
+        indicator_analysis_method=None,
+        skip_existing=False,
+        **kwargs,
     ):
         super().__init__(
             recorder,
@@ -349,7 +350,7 @@ class _SimpleBacktestRecord(PortAnaRecord, abc.ABC):
             else self.backtest_config["end_time"]
         )
         time_mask = (dt_values >= pd.to_datetime(start_time)) & (
-                dt_values <= pd.to_datetime(end_time)
+            dt_values <= pd.to_datetime(end_time)
         )
         pred_label = pred_label.loc[time_mask]
 
@@ -386,8 +387,8 @@ class _SimpleBacktestRecord(PortAnaRecord, abc.ABC):
             self._save_df(
                 df=values_df,
                 file_name=self.name
-                          + "_"
-                          + self._NET_VALUE_EXCEL_FORMAT.format(self._freq),
+                + "_"
+                + self._NET_VALUE_EXCEL_FORMAT.format(self._freq),
                 dir_path=tmp_dir_path,
             )
             self._save_df(
@@ -454,10 +455,10 @@ class MeanReversion(_SimpleBacktestRecord):
         std_times = 2
         position_num = 1
         buy_signal = xt["ln_V" + str(month)] <= (
-                xt["vix_ma"] - std_times * xt["vix_std"]
+            xt["vix_ma"] - std_times * xt["vix_std"]
         )
         sell_signal = xt["ln_V" + str(month)] >= (
-                xt["vix_ma"] + std_times * xt["vix_std"]
+            xt["vix_ma"] + std_times * xt["vix_std"]
         )
 
         xt["signal"] = position_num * buy_signal - position_num * sell_signal
@@ -530,22 +531,20 @@ class ScoreSign(_SimpleBacktestRecord):
         return "score_sign"
 
 
-class _DfBacktestRecord(PortAnaRecord, abc.ABC):
+class _DfBacktestRecord(ACRecordTemp, abc.ABC):
     """
     调用_DfBacktest回测并保存相关结果
     """
 
     _NET_VALUE_EXCEL_FORMAT = "net_value_{}.xlsx"
+    depend_cls = SignalRecord
 
     def __init__(
-            self,
-            recorder,
-            config=None,
-            risk_analysis_freq: Union[List, str] = None,
-            indicator_analysis_freq: Union[List, str] = None,
-            indicator_analysis_method=None,
-            skip_existing=False,
-            **kwargs,
+        self,
+        recorder,
+        config=None,
+        skip_existing=False,
+        **kwargs,
     ):
         handler = kwargs.pop("handler", None)
         if handler is None:
@@ -559,15 +558,29 @@ class _DfBacktestRecord(PortAnaRecord, abc.ABC):
                 },
             }
         handler = init_instance_by_config(handler)
-        super().__init__(
-            recorder,
-            config,
-            risk_analysis_freq,
-            indicator_analysis_freq,
-            indicator_analysis_method,
-            skip_existing,
-            **kwargs,
-        )
+        if config is None:
+            config = {  # Default config for daily trading
+                "strategy": {
+                    "class": "TopkDropoutStrategy",
+                    "module_path": "qlib.contrib.strategy",
+                    "kwargs": {"signal": "<PRED>", "topk": 50, "n_drop": 5},
+                },
+                "backtest": {
+                    "start_time": None,
+                    "end_time": None,
+                    "account": 100000000,
+                    "benchmark": "SH000300",
+                    "exchange_kwargs": {
+                        "limit_threshold": 0.095,
+                        "deal_price": "close",
+                        "open_cost": 0.0005,
+                        "close_cost": 0.0015,
+                        "min_cost": 5,
+                    },
+                },
+            }
+        self.backtest_config = config["backtest"]
+        super().__init__(recorder=recorder, skip_existing=skip_existing, **kwargs)
 
         self._freq = "day"
         market_data_df = D.features(
@@ -615,7 +628,7 @@ class _DfBacktestRecord(PortAnaRecord, abc.ABC):
             else self.backtest_config["end_time"]
         )
         time_mask = (dt_values >= pd.to_datetime(start_time)) & (
-                dt_values <= pd.to_datetime(end_time)
+            dt_values <= pd.to_datetime(end_time)
         )
         pred = pred.loc[time_mask]
         pred_label = pd.concat([pred, label_df, self._data], axis=1, sort=True).reindex(
@@ -645,8 +658,8 @@ class _DfBacktestRecord(PortAnaRecord, abc.ABC):
             self._save_df(
                 df=pd.DataFrame(nv),
                 file_name=self.name
-                          + "_"
-                          + self._NET_VALUE_EXCEL_FORMAT.format(self._freq),
+                + "_"
+                + self._NET_VALUE_EXCEL_FORMAT.format(self._freq),
                 dir_path=tmp_dir_path,
             )
             self._save_df(
@@ -660,20 +673,6 @@ class _DfBacktestRecord(PortAnaRecord, abc.ABC):
                 dir_path=tmp_dir_path,
             )
 
-    def list(self):
-
-        full_list = super().list()
-
-        for _freq in self.all_freq:
-            indicators_files = [
-                self._NET_VALUE_EXCEL_FORMAT.format(_freq),
-            ]
-            for _file in indicators_files:
-                if _file not in full_list:
-                    full_list.append(_file)
-
-        return full_list
-
     @property
     def name(self) -> str:
         return "empty"
@@ -681,23 +680,17 @@ class _DfBacktestRecord(PortAnaRecord, abc.ABC):
 
 class LongShortBacktestRecord(_DfBacktestRecord):
     def __init__(
-            self,
-            recorder,
-            config=None,
-            risk_analysis_freq: Union[List, str] = None,
-            indicator_analysis_freq: Union[List, str] = None,
-            indicator_analysis_method=None,
-            skip_existing=False,
-            **kwargs,
+        self,
+        recorder,
+        config=None,
+        skip_existing=False,
+        **kwargs,
     ):
         self.short_weight = kwargs.pop("short_weight", 0.0)
 
         super().__init__(
             recorder,
             config,
-            risk_analysis_freq,
-            indicator_analysis_freq,
-            indicator_analysis_method,
             skip_existing,
             **kwargs,
         )
@@ -725,21 +718,15 @@ class LongShortBacktestRecord(_DfBacktestRecord):
 
 class JiaQiRecord(_DfBacktestRecord):
     def __init__(
-            self,
-            recorder,
-            config=None,
-            risk_analysis_freq: Union[List, str] = None,
-            indicator_analysis_freq: Union[List, str] = None,
-            indicator_analysis_method=None,
-            skip_existing=False,
-            **kwargs,
+        self,
+        recorder,
+        config=None,
+        skip_existing=False,
+        **kwargs,
     ):
         super().__init__(
             recorder,
             config,
-            risk_analysis_freq,
-            indicator_analysis_freq,
-            indicator_analysis_method,
             skip_existing,
             **kwargs,
         )
@@ -764,28 +751,42 @@ class JiaQiRecord(_DfBacktestRecord):
 
 
 class JiaQiBenchRecord(_DfBacktestRecord):
+    depend_cls = None
+
     def __init__(
-            self,
-            recorder,
-            config=None,
-            risk_analysis_freq: Union[List, str] = None,
-            indicator_analysis_freq: Union[List, str] = None,
-            indicator_analysis_method=None,
-            skip_existing=False,
-            **kwargs,
+        self,
+        recorder,
+        config=None,
+        skip_existing=False,
+        **kwargs,
     ):
         super().__init__(
             recorder,
             config,
-            risk_analysis_freq,
-            indicator_analysis_freq,
-            indicator_analysis_method,
             skip_existing,
             **kwargs,
         )
 
+    def _process_data(self):
+        dt_values = self._data.index.get_level_values("datetime")
+
+        start_time = (
+            dt_values[0]
+            if self.backtest_config["start_time"] is None
+            else self.backtest_config["start_time"]
+        )
+        end_time = (
+            dt_values[-1]
+            if self.backtest_config["end_time"] is None
+            else self.backtest_config["end_time"]
+        )
+        time_mask = (dt_values >= pd.to_datetime(start_time)) & (
+            dt_values <= pd.to_datetime(end_time)
+        )
+        return self._data.loc[time_mask]
+
     def _generate(self, *args, **kwargs):
-        pred, pred_label = self._process_data()
+        pred_label = self._process_data()
 
         back = MuBacktest(pred_label)
         result = back.run_backtest(
