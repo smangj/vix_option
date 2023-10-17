@@ -28,13 +28,15 @@ def myworkflow(config_path, experiment_name="workflow", uri_folder="mlruns"):
     # config the `sys` section
     sys_config(config, config_path)
     if "experiment_name" in config:
-        experiment_name = config["experiment_name"]
+        config["experiment_name"] = experiment_name
 
     if "exp_manager" in config.get("qlib_init"):
         os.environ["MLFLOW_HTTP_REQUEST_MAX_RETRIES"] = "1"
         exp = config["qlib_init"].get("exp_manager")
         if exp["kwargs"]["uri"] == "databricks":
-            config["experiment_name"] = "/Users/631535207@qq.com/" + experiment_name
+            config["experiment_name"] = (
+                "/Users/631535207@qq.com/" + config["experiment_name"]
+            )
         if exp["kwargs"]["uri"] == "http://192.168.16.11:5001":
             # 需要download_atifact需要，自建的mlflow_server
             os.environ["MLFLOW_TRACKING_URI"] = "http://192.168.16.11:5001"

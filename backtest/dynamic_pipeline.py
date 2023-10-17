@@ -51,9 +51,10 @@ class RollingBenchmark:
 
         task = conf["task"]
 
-        h_path = Path.cwd() / "{}_handler_horizon{}.pkl".format(
-            task["name"], self.horizon
-        )
+        name = task.get("name")
+        if name is None:
+            name = task["model"]["class"]
+        h_path = Path.cwd() / "{}_handler_horizon{}.pkl".format(name, self.horizon)
         if not h_path.exists():
             h_conf = task["dataset"]["kwargs"]["handler"]
             h = init_instance_by_config(h_conf)
@@ -138,8 +139,9 @@ class RollingBenchmark:
             self.update_rolling_rec(recorder)
         finally:
             # 删除临时handler文件
-            if os.path.exists(self._handler_path):
+            if self._handler_path is not None:
                 os.remove(self._handler_path)
+        return recorder
 
 
 if __name__ == "__main__":
