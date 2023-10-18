@@ -27,7 +27,7 @@ def myworkflow(config_path, experiment_name="workflow", uri_folder="mlruns"):
 
     # config the `sys` section
     sys_config(config, config_path)
-    if "experiment_name" in config:
+    if "experiment_name" not in config:
         config["experiment_name"] = experiment_name
 
     if "exp_manager" in config.get("qlib_init"):
