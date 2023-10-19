@@ -544,6 +544,7 @@ class _DfBacktestRecord(ACRecordTemp, abc.ABC):
         recorder,
         config=None,
         skip_existing=False,
+        ann_scaler=252,
         **kwargs,
     ):
         handler = kwargs.pop("handler", None)
@@ -596,6 +597,7 @@ class _DfBacktestRecord(ACRecordTemp, abc.ABC):
             market_data_df.swaplevel(), features, left_index=True, right_index=True
         )
         self._data = market_data_df.sort_index()
+        self.ann_scaler = ann_scaler
 
     def _save_df(self, df: pd.DataFrame, file_name: str, dir_path: str):
         file_path = os.path.join(dir_path, file_name)
@@ -648,6 +650,27 @@ class _DfBacktestRecord(ACRecordTemp, abc.ABC):
                 output_dir=tmp_dir_path,
                 file_name=self.name + "_report",
             )
+            metrics = {
+                self.name
+                + "Long Ann Return": result.long_returns.mean() * self.ann_scaler,
+                self.name
+                + "Long Ann Sharpe": result.long_returns.mean()
+                / result.long_returns.std()
+                * self.ann_scaler**0.5,
+                self.name
+                + "short Ann Return": result.short_returns.mean() * self.ann_scaler,
+                self.name
+                + "short Ann Sharpe": result.short_returns.mean()
+                / result.short_returns.std()
+                * self.ann_scaler**0.5,
+                self.name
+                + "Long-Short Ann Return": result.ls_returns.mean() * self.ann_scaler,
+                self.name
+                + "Long-Short Ann Sharpe": result.ls_returns.mean()
+                / result.ls_returns.std()
+                * self.ann_scaler**0.5,
+            }
+            self.recorder.log_metrics(**metrics)
             self.recorder.log_artifact(local_path=file_path)
             # values_df = result.position.stack()
             # values_df.name = "position"
