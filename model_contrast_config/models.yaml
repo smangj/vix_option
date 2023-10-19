@@ -7,7 +7,7 @@ qlib_init:
         kwargs:
             uri: "databricks"
             default_exp_name: "Experiment"
-experiment_name: "Fix_GroupVixHandler20230711_JiaQiRecord_allmodels_3years_test"
+experiment_name: "Fix_GroupVixHandler_JiaQiRecord_allmodels"
 market: &market trable
 benchmark: &benchmark TLT
 roll_config:
@@ -60,7 +60,7 @@ task:
 #        module_path: qlib.data.dataset
 #        kwargs:
 #            handler:
-#              class: GroupVixHandler20230711
+#              class: GroupVixHandler
 #              module_path: backtest.qlib_custom.data_handler
 #              kwargs: *data_handler_config
 #            segments:
@@ -103,7 +103,7 @@ task:
 #        module_path: qlib.data.dataset
 #        kwargs:
 #          handler:
-#            class: GroupVixHandler20230711
+#            class: GroupVixHandler
 #            module_path: backtest.qlib_custom.data_handler
 #            kwargs: *data_handler_config
 #          segments:
@@ -138,7 +138,7 @@ task:
 #        module_path: qlib.data.dataset
 #        kwargs:
 #          handler:
-#            class: GroupVixHandler20230711
+#            class: GroupVixHandler
 #            module_path: backtest.qlib_custom.data_handler
 #            kwargs: *data_handler_config
 #          segments:
@@ -168,7 +168,7 @@ task:
 #        kwargs:
 #          step_len: 5
 #          handler:
-#            class: GroupVixHandler20230711
+#            class: GroupVixHandler
 #            module_path: backtest.qlib_custom.data_handler
 #            kwargs: *data_handler_config
 #          segments:
@@ -206,7 +206,7 @@ task:
 #        module_path: qlib.data.dataset
 #        kwargs:
 #          handler:
-#            class: GroupVixHandler20230711
+#            class: GroupVixHandler
 #            module_path: backtest.qlib_custom.data_handler
 #            kwargs: *data_handler_config
 #          segments:
@@ -236,7 +236,7 @@ task:
 #        module_path: qlib.data.dataset
 #        kwargs:
 #          handler:
-#            class: GroupVixHandler20230711
+#            class: GroupVixHandler
 #            module_path: backtest.qlib_custom.data_handler
 #            kwargs: *data_handler_config
 #          segments:
@@ -285,7 +285,7 @@ task:
 #        module_path: qlib.data.dataset
 #        kwargs:
 #          handler:
-#            class: GroupVixHandler20230711
+#            class: GroupVixHandler
 #            module_path: backtest.qlib_custom.data_handler
 #            kwargs: *data_handler_config
 #          segments:
@@ -315,7 +315,7 @@ task:
 #        kwargs:
 #          step_len: 5
 #          handler:
-#            class: GroupVixHandler20230711
+#            class: GroupVixHandler
 #            module_path: backtest.qlib_custom.data_handler
 #            kwargs: *data_handler_config
 #          segments:
@@ -344,7 +344,7 @@ task:
         module_path: qlib.data.dataset
         kwargs:
             handler:
-                class: GroupVixHandler20230711
+                class: GroupVixHandler
                 module_path: backtest.qlib_custom.data_handler
                 kwargs: *data_handler_config
             segments:
@@ -379,7 +379,7 @@ task:
         module_path: qlib.data.dataset
         kwargs:
             handler:
-                class: GroupVixHandler20230711
+                class: GroupVixHandler
                 module_path: backtest.qlib_custom.data_handler
                 kwargs: *data_handler_config
             segments:
@@ -419,7 +419,7 @@ task:
         kwargs:
             step_len: 5
             handler:
-                class: GroupVixHandler20230711
+                class: GroupVixHandler
                 module_path: backtest.qlib_custom.data_handler
                 kwargs: *data_handler_config
             segments:
@@ -460,7 +460,7 @@ task:
         kwargs:
           step_len: 5
           handler:
-            class: GroupVixHandler20230711
+            class: GroupVixHandler
             module_path: backtest.qlib_custom.data_handler
             kwargs: *data_handler_config
           segments:
@@ -517,7 +517,7 @@ task:
 #        module_path: qlib.data.dataset
 #        kwargs:
 #          handler:
-#            class: GroupVixHandler20230711
+#            class: GroupVixHandler
 #            module_path: backtest.qlib_custom.data_handler
 #            kwargs: *data_handler_config
 #          segments:
@@ -536,8 +536,8 @@ task:
 #            config: *port_analysis_config
 #      name: "DEnsembleModel"
     - model:
-        class: LGBModel
-        module_path: qlib.contrib.model.gbdt
+        class: FixedLGBModel
+        module_path: backtest.qlib_custom.model
         kwargs:
             loss: mse
             colsample_bytree: 0.8879
@@ -553,7 +553,7 @@ task:
         module_path: qlib.data.dataset
         kwargs:
           handler:
-            class: GroupVixHandler20230711
+            class: GroupVixHandler
             module_path: backtest.qlib_custom.data_handler
             kwargs: *data_handler_config
           segments:
@@ -593,7 +593,7 @@ task:
         kwargs:
           step_len: 5
           handler:
-            class: GroupVixHandler20230711
+            class: GroupVixHandler
             module_path: backtest.qlib_custom.data_handler
             kwargs: *data_handler_config
           segments:
@@ -632,7 +632,7 @@ task:
         module_path: qlib.data.dataset
         kwargs:
           handler:
-            class: GroupVixHandler20230711
+            class: GroupVixHandler
             module_path: backtest.qlib_custom.data_handler
             kwargs: *data_handler_config
           segments:
@@ -672,7 +672,7 @@ task:
         kwargs:
           step_len: 5
           handler:
-            class: GroupVixHandler20230711
+            class: GroupVixHandler
             module_path: backtest.qlib_custom.data_handler
             kwargs: *data_handler_config
           segments:

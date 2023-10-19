@@ -11,6 +11,7 @@ from qlib.utils import get_or_create_path
 import statsmodels.api as sm
 import pandas as pd
 import xgboost as xgb
+import lightgbm as lgb
 import copy
 import torch
 import torch.optim as optim
@@ -18,10 +19,14 @@ from torch.utils.data import DataLoader
 from qlib.contrib.model.pytorch_utils import count_parameters
 import numpy as np
 from qlib.data.dataset.handler import DataHandlerLP
-from qlib.data.dataset import DatasetH
+from qlib.contrib.model.gbdt import LGBModel
 from qlib.data.dataset.weight import Reweighter
 from typing import Text, Union
-
+from qlib.log import TimeInspector
+from mlflow.utils.time_utils import get_current_time_millis
+from mlflow.entities.metric import Metric
+from qlib.workflow import R
+from qlib.data.dataset import DatasetH
 from backtest.qlib_custom.nn_module import GRUModel, GRUModelMultiOutput
 
 
@@ -43,6 +48,65 @@ class SmLinearModel(LinearModel):
         self.coef_ = result.params[1:]
         self.intercept_ = result.params[0]
         self.summary = str(result.summary())
+
+
+class FixedLGBModel(LGBModel):
+    def fit(
+        self,
+        dataset: DatasetH,
+        num_boost_round=None,
+        early_stopping_rounds=None,
+        verbose_eval=20,
+        evals_result=None,
+        reweighter=None,
+        **kwargs,
+    ):
+        if evals_result is None:
+            evals_result = {}  # in case of unsafety of Python default values
+        ds_l = self._prepare_data(dataset, reweighter)
+        ds, names = list(zip(*ds_l))
+        early_stopping_callback = lgb.early_stopping(
+            self.early_stopping_rounds
+            if early_stopping_rounds is None
+            else early_stopping_rounds
+        )
+        # NOTE: if you encounter error here. Please upgrade your lightgbm
+        verbose_eval_callback = lgb.log_evaluation(period=verbose_eval)
+        evals_result_callback = lgb.record_evaluation(evals_result)
+        self.model = lgb.train(
+            self.params,
+            ds[0],  # training dataset
+            num_boost_round=self.num_boost_round
+            if num_boost_round is None
+            else num_boost_round,
+            valid_sets=ds,
+            valid_names=names,
+            callbacks=[
+                early_stopping_callback,
+                verbose_eval_callback,
+                evals_result_callback,
+                # log_evaluation_to_mlflow()
+            ],
+            **kwargs,
+        )
+
+        with TimeInspector.logt(name="record metrics by log_batch", show_start=True):
+            metrics = []
+            current_time = get_current_time_millis()
+            for k in names:
+                for key, val in evals_result[k].items():
+                    name = f"{key}.{k}"
+                    for epoch, m in enumerate(val):
+                        metrics.append(
+                            Metric(
+                                key=name.replace("@", "_"),
+                                value=m,
+                                timestamp=current_time,
+                                step=epoch,
+                            )
+                        )
+            recorder = R.get_exp(start=True).get_recorder(start=True)
+            recorder.client.log_batch(run_id=recorder.id, metrics=metrics)
 
 
 class XgbFix(XGBModel):
@@ -90,7 +154,7 @@ class EmbeddingGRU(Model):
         n_jobs=2,
         GPU=0,
         seed=None,
-        **kwargs
+        **kwargs,
     ):
         # Set logger.
         self.logger = get_module_logger("Embedding_GRU")
@@ -232,7 +296,6 @@ class EmbeddingGRU(Model):
         losses = []
 
         for (data, weight) in data_loader:
-
             feature = data[:, :, 0:-1].to(self.device)
             # feature[torch.isnan(feature)] = 0
             label = data[:, -1, -1].to(self.device)
@@ -349,7 +412,6 @@ class EmbeddingGRU(Model):
         preds = []
 
         for data in test_loader:
-
             feature = data[:, :, 0:-1].to(self.device)
 
             with torch.no_grad():
@@ -392,7 +454,7 @@ class MultiOutputGRU(Model):
         n_jobs=2,
         GPU=0,
         seed=None,
-        **kwargs
+        **kwargs,
     ):
         # Set logger.
         self.logger = get_module_logger("MultiOutputGRU")
@@ -534,7 +596,6 @@ class MultiOutputGRU(Model):
         losses = []
 
         for (data, weight) in data_loader:
-
             feature = data[:, 0, :, 0:-1].to(self.device)
             # feature[torch.isnan(feature)] = 0
             label = data[:, :, -1, -1].to(self.device)
@@ -653,7 +714,6 @@ class MultiOutputGRU(Model):
         preds = []
 
         for i, data in enumerate(test_loader):
-
             feature = data[:, 0, :, 0:-1].to(self.device)
 
             with torch.no_grad():
