@@ -20,6 +20,7 @@ from qlib.contrib.model.pytorch_utils import count_parameters
 import numpy as np
 from qlib.data.dataset.handler import DataHandlerLP
 from qlib.contrib.model.gbdt import LGBModel
+from qlib.contrib.model.pytorch_gru_ts import GRU
 from qlib.data.dataset.weight import Reweighter
 from typing import Text, Union
 from qlib.log import TimeInspector
@@ -119,6 +120,96 @@ class XgbFix(XGBModel):
         return pd.Series(
             self.model.predict(xgb.DMatrix(x_test.values)), index=x_test.index
         )
+
+
+class myGRU(GRU):
+    def fit(
+        self,
+        dataset,
+        evals_result=dict(),
+        save_path=None,
+        reweighter=None,
+    ):
+        dl_train = dataset.prepare(
+            "train", col_set=["feature", "label"], data_key=DataHandlerLP.DK_L
+        )
+        dl_valid = dataset.prepare(
+            "valid", col_set=["feature", "label"], data_key=DataHandlerLP.DK_L
+        )
+        if dl_train.empty or dl_valid.empty:
+            raise ValueError(
+                "Empty data from dataset, please check your dataset config."
+            )
+
+        dl_train.config(fillna_type="ffill+bfill")  # process nan brought by dataloader
+        dl_valid.config(fillna_type="ffill+bfill")  # process nan brought by dataloader
+
+        if reweighter is None:
+            wl_train = np.ones(len(dl_train))
+            wl_valid = np.ones(len(dl_valid))
+        elif isinstance(reweighter, Reweighter):
+            wl_train = reweighter.reweight(dl_train)
+            wl_valid = reweighter.reweight(dl_valid)
+        else:
+            raise ValueError("Unsupported reweighter type.")
+
+        train_loader = DataLoader(
+            ConcatDataset(dl_train, wl_train),
+            batch_size=self.batch_size,
+            shuffle=True,
+            num_workers=self.n_jobs,
+            drop_last=True,
+            pin_memory=True,
+        )
+        valid_loader = DataLoader(
+            ConcatDataset(dl_valid, wl_valid),
+            batch_size=min(self.batch_size, len(ConcatDataset(dl_valid, wl_valid))),
+            shuffle=False,
+            num_workers=self.n_jobs,
+            drop_last=True,
+        )
+
+        save_path = get_or_create_path(save_path)
+
+        stop_steps = 0
+        train_loss = 0
+        best_score = -np.inf
+        best_epoch = 0
+        evals_result["train"] = []
+        evals_result["valid"] = []
+
+        # train
+        self.logger.info("training...")
+        self.fitted = True
+
+        for step in range(self.n_epochs):
+            self.logger.info("Epoch%d:", step)
+            self.logger.info("training...")
+            self.train_epoch(train_loader)
+            self.logger.info("evaluating...")
+            train_loss, train_score = self.test_epoch(train_loader)
+            val_loss, val_score = self.test_epoch(valid_loader)
+            self.logger.info("train %.6f, valid %.6f" % (train_score, val_score))
+            evals_result["train"].append(train_score)
+            evals_result["valid"].append(val_score)
+
+            if val_score > best_score:
+                best_score = val_score
+                stop_steps = 0
+                best_epoch = step
+                best_param = copy.deepcopy(self.GRU_model.state_dict())
+            else:
+                stop_steps += 1
+                if stop_steps >= self.early_stop:
+                    self.logger.info("early stop")
+                    break
+
+        self.logger.info("best score: %.6lf @ %d" % (best_score, best_epoch))
+        self.GRU_model.load_state_dict(best_param)
+        torch.save(best_param, save_path)
+
+        if self.use_gpu:
+            torch.cuda.empty_cache()
 
 
 class EmbeddingGRU(Model):
