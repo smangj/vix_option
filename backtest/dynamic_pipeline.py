@@ -24,6 +24,7 @@ class RollingBenchmark:
 
     def __init__(self, config: dict) -> None:
         self._config = config
+        self.roll_config = config.get("roll_config")
         self.step = config["roll_config"].get("step")
         self.horizon = config["roll_config"].get("horizon")
         self.rolling_type = config["roll_config"].get("rolling_type")
@@ -107,6 +108,7 @@ class RollingBenchmark:
             experiment_name=self.COMB_EXP,
             recorder_name=self._config["task"].get("name"),
         ):
+            R.log_params(**self.roll_config)
             _log_task_info(self._config["task"])
             R.save_objects(**{"pred.pkl": res["pred"], "label.pkl": res["label"]})
             recorder = R.get_recorder()

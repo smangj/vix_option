@@ -22,14 +22,25 @@ def objective(trial, config, experiment_name):
     if model_params is None:
         raise AttributeError("model info NOT in config!")
 
-    for k, v in conf["task"]["model"]["kwargs"].items():
-        if isinstance(v, list):
-            if len(v) == 2:
-                conf["task"]["model"]["kwargs"][k] = trial.suggest_float(k, v[0], v[1])
-            else:
-                conf["task"]["model"]["kwargs"][k] = trial.suggest_categorical(k, v)
-
     roll_config = conf.get("roll_config")
+
+    trials = []
+    model_trial = conf["task"]["model"]["kwargs"]
+    trials.append(model_trial)
+    if roll_config is not None:
+        trials.append(roll_config)
+    TSDataset_trial = conf["task"]["dataset"]["kwargs"].get("step_len")
+    if TSDataset_trial is not None:
+        trials.append(conf["task"]["dataset"]["kwargs"])
+
+    for tr in trials:
+        for k, v in tr.items():
+            if isinstance(v, list):
+                if len(v) == 2:
+                    tr[k] = trial.suggest_float(k, v[0], v[1])
+                else:
+                    tr[k] = trial.suggest_categorical(k, v)
+
     if roll_config is None:
         recorder = task_train(conf.get("task"), experiment_name=experiment_name)
     else:
