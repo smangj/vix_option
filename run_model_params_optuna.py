@@ -54,7 +54,9 @@ def objective(trial, config, experiment_name):
     return obj
 
 
-def workflow(config_path, experiment_name="workflow", uri_folder="mlruns"):
+def workflow(
+    config_path, experiment_name="workflow", uri_folder="mlruns", n_trials: int = 100
+):
     with open(config_path) as fp:
         config = yaml.safe_load(fp)
 
@@ -86,15 +88,15 @@ def workflow(config_path, experiment_name="workflow", uri_folder="mlruns"):
         )
 
     study = optuna.create_study(direction="maximize")
-    study.optimize(lambda x: objective(x, config, experiment_name), n_trials=100)
+    study.optimize(lambda x: objective(x, config, experiment_name), n_trials=n_trials)
 
 
-def main(name: str = "XGB.yaml"):
+def main(name: str = "XGB.yaml", n_trials: int = 100):
     file_path = os.path.join("model_optuna_config", name)
     if not os.path.isfile(file_path):
         raise FileNotFoundError
     else:
-        workflow(file_path, experiment_name=name.split(".")[0])
+        workflow(file_path, experiment_name=name.split(".")[0], n_trials=n_trials)
 
 
 if __name__ == "__main__":
