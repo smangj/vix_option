@@ -15,6 +15,9 @@ import optuna
 import copy
 from backtest.dynamic_pipeline import RollingBenchmark
 
+STORAGE_NAME = "sqlite:///data/optuna.db"
+STUDY_NAME = "OPT"
+
 
 def objective(trial, config, experiment_name):
     conf = copy.deepcopy(config)
@@ -55,8 +58,20 @@ def objective(trial, config, experiment_name):
 
 
 def workflow(
-    config_path, experiment_name="workflow", uri_folder="mlruns", n_trials: int = 100
+    config_path,
+    experiment_name="workflow",
+    uri_folder="mlruns",
+    n_trials: int = 100,
+    if_load_study=False,
 ):
+    """
+    :param config_path:
+    :param experiment_name:
+    :param uri_folder:
+    :param n_trials:
+    :param if_load_study: 提前create study，只需要load_study该参数可变更为True，主要STORAGE_NAME和STUDY_NAME匹配
+    :return:
+    """
     with open(config_path) as fp:
         config = yaml.safe_load(fp)
 
@@ -87,16 +102,24 @@ def workflow(
             dataset_cache=SIMPLE_DATASET_CACHE
         )
 
-    study = optuna.create_study(direction="maximize")
+    if if_load_study:
+        study = optuna.load_study(study_name=STUDY_NAME, storage=STORAGE_NAME)
+    else:
+        study = optuna.create_study(direction="maximize")
     study.optimize(lambda x: objective(x, config, experiment_name), n_trials=n_trials)
 
 
-def main(name: str = "XGB.yaml", n_trials: int = 100):
+def main(name: str = "XGB.yaml", n_trials: int = 100, if_load_study=False):
     file_path = os.path.join("model_optuna_config", name)
     if not os.path.isfile(file_path):
         raise FileNotFoundError
     else:
-        workflow(file_path, experiment_name=name.split(".")[0], n_trials=n_trials)
+        workflow(
+            file_path,
+            experiment_name=name.split(".")[0],
+            n_trials=n_trials,
+            if_load_study=if_load_study,
+        )
 
 
 if __name__ == "__main__":
