@@ -162,3 +162,9 @@ git config --global pull.rebase true
   - Working directory: `{项目根目录}`
 
 ---
+
+## 使用多进程跑optuna
+- 先create_study, use run_model_params_optuna.py 中的 STORAGE_NAME, STUDY_NAME(可变更)
+- run_model_params_optuna.py --if_load_study True
+- 如果是rolling, rolling_exp 和 handler.pkl 需要分配UUID
+- 在环境中跑多进程，需要注意显存占用
