@@ -13,13 +13,14 @@ from pathlib import Path
 from qlib.model.trainer import task_train
 import optuna
 import copy
+import uuid
 from backtest.dynamic_pipeline import RollingBenchmark
 
 STORAGE_NAME = "sqlite:///data/optuna.db"
 STUDY_NAME = "OPT"
 
 
-def objective(trial, config, experiment_name):
+def objective(trial, config, experiment_name, uid=""):
     conf = copy.deepcopy(config)
     model_params = conf["task"].get("model")
     if model_params is None:
@@ -47,6 +48,7 @@ def objective(trial, config, experiment_name):
     if roll_config is None:
         recorder = task_train(conf.get("task"), experiment_name=experiment_name)
     else:
+        conf["roll_exp_name"] = conf["experiment_name"] + "_rolling_exp" + str(uid)
         recorder = RollingBenchmark(conf).run_all()
 
     recorder.save_objects(config=conf)
@@ -104,9 +106,13 @@ def workflow(
 
     if if_load_study:
         study = optuna.load_study(study_name=STUDY_NAME, storage=STORAGE_NAME)
+        uid = uuid.uuid4().hex[:8]
     else:
         study = optuna.create_study(direction="maximize")
-    study.optimize(lambda x: objective(x, config, experiment_name), n_trials=n_trials)
+        uid = ""
+    study.optimize(
+        lambda x: objective(x, config, experiment_name, uid=uid), n_trials=n_trials
+    )
 
 
 def main(name: str = "XGB.yaml", n_trials: int = 100, if_load_study=False):

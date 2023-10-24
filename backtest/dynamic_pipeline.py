@@ -30,7 +30,11 @@ class RollingBenchmark:
         self.rolling_type = config["roll_config"].get("rolling_type")
 
         self.COMB_EXP = config.get("experiment_name")
-        self.rolling_exp = self.COMB_EXP + "_rolling_exp"
+        self.rolling_exp = (
+            config.get("roll_exp_name")
+            if (config.get("roll_exp_name") is not None)
+            else self.COMB_EXP + "_rolling_exp"
+        )
         self._handler_path = None
 
         if self.rolling_type is None or self.rolling_type == "expanding":
