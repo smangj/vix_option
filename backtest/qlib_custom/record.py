@@ -650,26 +650,18 @@ class _DfBacktestRecord(ACRecordTemp, abc.ABC):
                 output_dir=tmp_dir_path,
                 file_name=self.name + "_report",
             )
-            metrics = {
-                self.name
-                + "Long Ann Return": result.long_returns.mean() * self.ann_scaler,
-                self.name
-                + "Long Ann Sharpe": result.long_returns.mean()
-                / result.long_returns.std()
-                * self.ann_scaler**0.5,
-                self.name
-                + "short Ann Return": result.short_returns.mean() * self.ann_scaler,
-                self.name
-                + "short Ann Sharpe": result.short_returns.mean()
-                / result.short_returns.std()
-                * self.ann_scaler**0.5,
-                self.name
-                + "Long-Short Ann Return": result.ls_returns.mean() * self.ann_scaler,
-                self.name
-                + "Long-Short Ann Sharpe": result.ls_returns.mean()
-                / result.ls_returns.std()
-                * self.ann_scaler**0.5,
+            metrics = {}
+            eva_list = {
+                "long": result.long_returns,
+                "short": result.short_returns,
+                "Long-Short": result.ls_returns,
             }
+            metric_name = ["annualized_return", "information_ratio", "max_drawdown"]
+            for k, r in eva_list.items():
+                data = risk_analysis(r)["risk"]
+                metric = {"_".join([self.name, k, m]): data[m] for m in metric_name}
+                metrics.update(metric)
+
             self.recorder.log_metrics(**metrics)
             self.recorder.log_artifact(local_path=file_path)
             # values_df = result.position.stack()
