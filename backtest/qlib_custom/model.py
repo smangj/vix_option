@@ -4,11 +4,15 @@
 # @Author   : wsy
 # @email    : 631535207@qq.com
 from qlib.contrib.model import LinearModel, XGBModel
+from qlib.contrib.model.pytorch_nn import DNNModelPytorch, AverageMeter
+from qlib.contrib.meta.data_selection.utils import ICLoss
 from qlib.model.base import Model
 from qlib.model.utils import ConcatDataset
 from qlib.log import get_module_logger
-from qlib.utils import get_or_create_path
+from qlib.utils import get_or_create_path, auto_filter_kwargs
+from collections import defaultdict
 import statsmodels.api as sm
+import gc
 import pandas as pd
 import xgboost as xgb
 import lightgbm as lgb
@@ -813,3 +817,158 @@ class MultiOutputGRU(Model):
             preds.append(pred)
 
         return pd.DataFrame(np.concatenate(preds), index=dl_test.get_index())
+
+
+class DNNModelPytorchFix(DNNModelPytorch):
+
+    def get_metric(self, pred, target, index):
+        # NOTE: the order of the index must follow <datetime, instrument> sorted order
+        return -ICLoss()(pred, target, index, skip_size=6)
+
+    def fit(
+        self,
+        dataset: DatasetH,
+        evals_result=dict(),
+        verbose=True,
+        save_path=None,
+        reweighter=None,
+    ):
+        has_valid = "valid" in dataset.segments
+        segments = ["train", "valid"]
+        vars = ["x", "y", "w"]
+        all_df = defaultdict(dict)  # x_train, x_valid y_train, y_valid w_train, w_valid
+        all_t = defaultdict(dict)  # tensors
+        for seg in segments:
+            if seg in dataset.segments:
+                # df_train df_valid
+                df = dataset.prepare(
+                    seg, col_set=["feature", "label"], data_key=self.valid_key if seg == "valid" else DataHandlerLP.DK_L
+                )
+                all_df["x"][seg] = df["feature"]
+                all_df["y"][seg] = df["label"].copy()  # We have to use copy to remove the reference to release mem
+                if reweighter is None:
+                    all_df["w"][seg] = pd.DataFrame(np.ones_like(all_df["y"][seg].values), index=df.index)
+                elif isinstance(reweighter, Reweighter):
+                    all_df["w"][seg] = pd.DataFrame(reweighter.reweight(df))
+                else:
+                    raise ValueError("Unsupported reweighter type.")
+
+                # get tensors
+                for v in vars:
+                    all_t[v][seg] = torch.from_numpy(all_df[v][seg].values).float()
+                    # if seg == "valid": # accelerate the eval of validation
+                    all_t[v][seg] = all_t[v][seg].to(self.device)  # This will consume a lot of memory !!!!
+
+                evals_result[seg] = []
+                # free memory
+                del df
+                del all_df["x"]
+                gc.collect()
+
+        save_path = get_or_create_path(save_path)
+        stop_steps = 0
+        train_loss = 0
+        best_loss = np.inf
+        # train
+        self.logger.info("training...")
+        self.fitted = True
+        # return
+        # prepare training data
+        train_num = all_t["y"]["train"].shape[0]
+
+        for step in range(1, self.max_steps + 1):
+            if stop_steps >= self.early_stop_rounds:
+                if verbose:
+                    self.logger.info("\tearly stop")
+                break
+            loss = AverageMeter()
+            self.dnn_model.train()
+            self.train_optimizer.zero_grad()
+            choice = np.random.choice(train_num, self.batch_size)
+            x_batch_auto = all_t["x"]["train"][choice].to(self.device)
+            y_batch_auto = all_t["y"]["train"][choice].to(self.device)
+            w_batch_auto = all_t["w"]["train"][choice].to(self.device)
+
+            # forward
+            preds = self.dnn_model(x_batch_auto)
+            cur_loss = self.get_loss(preds, w_batch_auto, y_batch_auto, self.loss_type)
+            cur_loss.backward()
+            self.train_optimizer.step()
+            loss.update(cur_loss.item())
+            # R.log_metrics(train_loss=loss.avg, step=step)
+
+            # validation
+            train_loss += loss.val
+            # for evert `eval_steps` steps or at the last steps, we will evaluate the model.
+            if step % self.eval_steps == 0 or step == self.max_steps:
+                if has_valid:
+                    stop_steps += 1
+                    train_loss /= self.eval_steps
+
+                    with torch.no_grad():
+                        self.dnn_model.eval()
+
+                        # forward
+                        preds = self._nn_predict(all_t["x"]["valid"], return_cpu=False)
+                        cur_loss_val = self.get_loss(preds, all_t["w"]["valid"], all_t["y"]["valid"], self.loss_type)
+                        loss_val = cur_loss_val.item()
+                        metric_val = (
+                            self.get_metric(
+                                preds.reshape(-1), all_t["y"]["valid"].reshape(-1), all_df["y"]["valid"].index
+                            )
+                            .detach()
+                            .cpu()
+                            .numpy()
+                            .item()
+                        )
+                        # R.log_metrics(val_loss=loss_val, step=step)
+                        # R.log_metrics(val_metric=metric_val, step=step)
+
+                        if self.eval_train_metric:
+                            metric_train = (
+                                self.get_metric(
+                                    self._nn_predict(all_t["x"]["train"], return_cpu=False),
+                                    all_t["y"]["train"].reshape(-1),
+                                    all_df["y"]["train"].index,
+                                )
+                                .detach()
+                                .cpu()
+                                .numpy()
+                                .item()
+                            )
+                            # R.log_metrics(train_metric=metric_train, step=step)
+                        else:
+                            metric_train = np.nan
+                    if verbose:
+                        self.logger.info(
+                            f"[Step {step}]: train_loss {train_loss:.6f}, valid_loss {loss_val:.6f}, train_metric {metric_train:.6f}, valid_metric {metric_val:.6f}"
+                        )
+                    evals_result["train"].append(train_loss)
+                    evals_result["valid"].append(loss_val)
+                    if loss_val < best_loss:
+                        if verbose:
+                            self.logger.info(
+                                "\tvalid loss update from {:.6f} to {:.6f}, save checkpoint.".format(
+                                    best_loss, loss_val
+                                )
+                            )
+                        best_loss = loss_val
+                        self.best_step = step
+                        # R.log_metrics(best_step=self.best_step, step=step)
+                        stop_steps = 0
+                        torch.save(self.dnn_model.state_dict(), save_path)
+                    train_loss = 0
+                    # update learning rate
+                    if self.scheduler is not None:
+                        auto_filter_kwargs(self.scheduler.step, warning=False)(metrics=cur_loss_val, epoch=step)
+                    # R.log_metrics(lr=self.get_lr(), step=step)
+                else:
+                    # retraining mode
+                    if self.scheduler is not None:
+                        self.scheduler.step(epoch=step)
+
+        if has_valid:
+            # restore the optimal parameters after training
+            self.dnn_model.load_state_dict(torch.load(save_path, map_location=self.device))
+        if self.use_gpu:
+            torch.cuda.empty_cache()
