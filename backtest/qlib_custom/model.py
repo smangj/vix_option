@@ -25,6 +25,7 @@ import numpy as np
 from qlib.data.dataset.handler import DataHandlerLP
 from qlib.contrib.model.gbdt import LGBModel
 from qlib.contrib.model.pytorch_gru_ts import GRU
+from qlib.contrib.model.pytorch_transformer_ts import TransformerModel
 from qlib.data.dataset.weight import Reweighter
 from typing import Text, Union
 from qlib.log import TimeInspector
@@ -820,7 +821,6 @@ class MultiOutputGRU(Model):
 
 
 class DNNModelPytorchFix(DNNModelPytorch):
-
     def get_metric(self, pred, target, index):
         # NOTE: the order of the index must follow <datetime, instrument> sorted order
         return -ICLoss()(pred, target, index, skip_size=6)
@@ -842,12 +842,18 @@ class DNNModelPytorchFix(DNNModelPytorch):
             if seg in dataset.segments:
                 # df_train df_valid
                 df = dataset.prepare(
-                    seg, col_set=["feature", "label"], data_key=self.valid_key if seg == "valid" else DataHandlerLP.DK_L
+                    seg,
+                    col_set=["feature", "label"],
+                    data_key=self.valid_key if seg == "valid" else DataHandlerLP.DK_L,
                 )
                 all_df["x"][seg] = df["feature"]
-                all_df["y"][seg] = df["label"].copy()  # We have to use copy to remove the reference to release mem
+                all_df["y"][seg] = df[
+                    "label"
+                ].copy()  # We have to use copy to remove the reference to release mem
                 if reweighter is None:
-                    all_df["w"][seg] = pd.DataFrame(np.ones_like(all_df["y"][seg].values), index=df.index)
+                    all_df["w"][seg] = pd.DataFrame(
+                        np.ones_like(all_df["y"][seg].values), index=df.index
+                    )
                 elif isinstance(reweighter, Reweighter):
                     all_df["w"][seg] = pd.DataFrame(reweighter.reweight(df))
                 else:
@@ -857,7 +863,9 @@ class DNNModelPytorchFix(DNNModelPytorch):
                 for v in vars:
                     all_t[v][seg] = torch.from_numpy(all_df[v][seg].values).float()
                     # if seg == "valid": # accelerate the eval of validation
-                    all_t[v][seg] = all_t[v][seg].to(self.device)  # This will consume a lot of memory !!!!
+                    all_t[v][seg] = all_t[v][seg].to(
+                        self.device
+                    )  # This will consume a lot of memory !!!!
 
                 evals_result[seg] = []
                 # free memory
@@ -910,11 +918,18 @@ class DNNModelPytorchFix(DNNModelPytorch):
 
                         # forward
                         preds = self._nn_predict(all_t["x"]["valid"], return_cpu=False)
-                        cur_loss_val = self.get_loss(preds, all_t["w"]["valid"], all_t["y"]["valid"], self.loss_type)
+                        cur_loss_val = self.get_loss(
+                            preds,
+                            all_t["w"]["valid"],
+                            all_t["y"]["valid"],
+                            self.loss_type,
+                        )
                         loss_val = cur_loss_val.item()
                         metric_val = (
                             self.get_metric(
-                                preds.reshape(-1), all_t["y"]["valid"].reshape(-1), all_df["y"]["valid"].index
+                                preds.reshape(-1),
+                                all_t["y"]["valid"].reshape(-1),
+                                all_df["y"]["valid"].index,
                             )
                             .detach()
                             .cpu()
@@ -927,7 +942,9 @@ class DNNModelPytorchFix(DNNModelPytorch):
                         if self.eval_train_metric:
                             metric_train = (
                                 self.get_metric(
-                                    self._nn_predict(all_t["x"]["train"], return_cpu=False),
+                                    self._nn_predict(
+                                        all_t["x"]["train"], return_cpu=False
+                                    ),
                                     all_t["y"]["train"].reshape(-1),
                                     all_df["y"]["train"].index,
                                 )
@@ -941,7 +958,8 @@ class DNNModelPytorchFix(DNNModelPytorch):
                             metric_train = np.nan
                     if verbose:
                         self.logger.info(
-                            f"[Step {step}]: train_loss {train_loss:.6f}, valid_loss {loss_val:.6f}, train_metric {metric_train:.6f}, valid_metric {metric_val:.6f}"
+                            f"[Step {step}]: train_loss {train_loss:.6f}, valid_loss {loss_val:.6f}, "
+                            f"train_metric {metric_train:.6f}, valid_metric {metric_val:.6f}"
                         )
                     evals_result["train"].append(train_loss)
                     evals_result["valid"].append(loss_val)
@@ -960,7 +978,9 @@ class DNNModelPytorchFix(DNNModelPytorch):
                     train_loss = 0
                     # update learning rate
                     if self.scheduler is not None:
-                        auto_filter_kwargs(self.scheduler.step, warning=False)(metrics=cur_loss_val, epoch=step)
+                        auto_filter_kwargs(self.scheduler.step, warning=False)(
+                            metrics=cur_loss_val, epoch=step
+                        )
                     # R.log_metrics(lr=self.get_lr(), step=step)
                 else:
                     # retraining mode
@@ -969,6 +989,89 @@ class DNNModelPytorchFix(DNNModelPytorch):
 
         if has_valid:
             # restore the optimal parameters after training
-            self.dnn_model.load_state_dict(torch.load(save_path, map_location=self.device))
+            self.dnn_model.load_state_dict(
+                torch.load(save_path, map_location=self.device)
+            )
+        if self.use_gpu:
+            torch.cuda.empty_cache()
+
+
+class myTransformer(TransformerModel):
+    def fit(
+        self,
+        dataset: DatasetH,
+        evals_result=dict(),
+        save_path=None,
+    ):
+
+        dl_train = dataset.prepare(
+            "train", col_set=["feature", "label"], data_key=DataHandlerLP.DK_L
+        )
+        dl_valid = dataset.prepare(
+            "valid", col_set=["feature", "label"], data_key=DataHandlerLP.DK_L
+        )
+
+        if dl_train.empty or dl_valid.empty:
+            raise ValueError(
+                "Empty data from dataset, please check your dataset config."
+            )
+
+        dl_train.config(fillna_type="ffill+bfill")  # process nan brought by dataloader
+        dl_valid.config(fillna_type="ffill+bfill")  # process nan brought by dataloader
+
+        train_loader = DataLoader(
+            dl_train,
+            batch_size=self.batch_size,
+            shuffle=True,
+            num_workers=self.n_jobs,
+            drop_last=True,
+        )
+        valid_loader = DataLoader(
+            dl_valid,
+            batch_size=min(self.batch_size, len(dl_valid)),
+            shuffle=False,
+            num_workers=self.n_jobs,
+            drop_last=True,
+        )
+
+        save_path = get_or_create_path(save_path)
+
+        stop_steps = 0
+        train_loss = 0
+        best_score = -np.inf
+        best_epoch = 0
+        evals_result["train"] = []
+        evals_result["valid"] = []
+
+        # train
+        self.logger.info("training...")
+        self.fitted = True
+
+        for step in range(self.n_epochs):
+            self.logger.info("Epoch%d:", step)
+            self.logger.info("training...")
+            self.train_epoch(train_loader)
+            self.logger.info("evaluating...")
+            train_loss, train_score = self.test_epoch(train_loader)
+            val_loss, val_score = self.test_epoch(valid_loader)
+            self.logger.info("train %.6f, valid %.6f" % (train_score, val_score))
+            evals_result["train"].append(train_score)
+            evals_result["valid"].append(val_score)
+
+            if val_score > best_score:
+                best_score = val_score
+                stop_steps = 0
+                best_epoch = step
+                best_param = copy.deepcopy(self.model.state_dict())
+            else:
+                stop_steps += 1
+                if stop_steps >= self.early_stop:
+                    self.logger.info("early stop")
+                    break
+
+        self.logger.info("best score: %.6lf @ %d" % (best_score, best_epoch))
+        self.model.load_state_dict(best_param)
+        torch.save(best_param, save_path)
+
         if self.use_gpu:
             torch.cuda.empty_cache()
