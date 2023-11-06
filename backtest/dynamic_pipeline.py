@@ -33,7 +33,13 @@ class RollingBenchmark:
         self.rolling_exp = (
             config.get("roll_exp_name")
             if (config.get("roll_exp_name") is not None)
-            else self.COMB_EXP + "_rolling_exp"
+            else self.COMB_EXP
+            + "_rolling_exp"
+            + (
+                "_" + config["task"]["name"]
+                if config["task"].get("name") is not None
+                else ""
+            )
         )
         self._handler_path = None
 
