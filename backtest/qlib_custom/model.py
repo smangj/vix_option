@@ -25,6 +25,7 @@ import numpy as np
 from qlib.data.dataset.handler import DataHandlerLP
 from qlib.contrib.model.gbdt import LGBModel
 from qlib.contrib.model.pytorch_gru_ts import GRU
+from qlib.contrib.model.pytorch_gru import GRU as GRU_normal
 from qlib.contrib.model.pytorch_transformer_ts import TransformerModel
 from qlib.data.dataset.weight import Reweighter
 from typing import Text, Union
@@ -518,7 +519,7 @@ class EmbeddingGRU(Model):
         return pd.Series(np.concatenate(preds), index=dl_test.get_index())
 
 
-class MultiOutputGRU(Model):
+class MultiOutputGRU(GRU_normal):
     """GRU Model
 
     Parameters
@@ -616,88 +617,102 @@ class MultiOutputGRU(Model):
             np.random.seed(self.seed)
             torch.manual_seed(self.seed)
 
-        self.GRU_model = GRUModelMultiOutput(
+        self.gru_model = GRUModelMultiOutput(
             d_feat=self.d_feat,
             hidden_size=self.hidden_size,
             num_layers=self.num_layers,
             dropout=self.dropout,
             output_size=self.d_instru,
         )
-        self.logger.info("model:\n{:}".format(self.GRU_model))
+        self.logger.info("model:\n{:}".format(self.gru_model))
         self.logger.info(
-            "model size: {:.4f} MB".format(count_parameters(self.GRU_model))
+            "model size: {:.4f} MB".format(count_parameters(self.gru_model))
         )
 
         if optimizer.lower() == "adam":
-            self.train_optimizer = optim.Adam(self.GRU_model.parameters(), lr=self.lr)
+            self.train_optimizer = optim.Adam(self.gru_model.parameters(), lr=self.lr)
         elif optimizer.lower() == "gd":
-            self.train_optimizer = optim.SGD(self.GRU_model.parameters(), lr=self.lr)
+            self.train_optimizer = optim.SGD(self.gru_model.parameters(), lr=self.lr)
         else:
             raise NotImplementedError(
                 "optimizer {} is not supported!".format(optimizer)
             )
 
         self.fitted = False
-        self.GRU_model.to(self.device)
-
-    @property
-    def use_gpu(self):
-        return self.device != torch.device("cpu")
-
-    def mse(self, pred, label, weight):
-        loss = weight * (pred - label) ** 2
-        return torch.mean(loss)
+        self.gru_model.to(self.device)
 
     def loss_fn(self, pred, label, weight=None):
         mask = ~torch.isnan(label)
 
-        if weight is None:
-            weight = torch.ones_like(label)
-
         if self.loss == "mse":
-            return self.mse(pred[mask], label[mask], weight[mask])
+            return self.mse(pred[mask], label[mask])
+        if self.loss == "ls_mse":
+            pass
 
         raise ValueError("unknown loss `%s`" % self.loss)
 
-    def metric_fn(self, pred, label):
+    def train_epoch(self, x_train, y_train):
 
-        mask = torch.isfinite(label)
+        x_train_values = x_train.values.reshape(-1, self.d_instru, self.d_feat)
+        y_train_values = y_train.values.reshape(-1, self.d_instru)
 
-        if self.metric in ("", "loss"):
-            return -self.loss_fn(pred[mask], label[mask])
+        self.gru_model.train()
 
-        raise ValueError("unknown metric `%s`" % self.metric)
+        indices = np.arange(len(x_train_values))
+        np.random.shuffle(indices)
 
-    def train_epoch(self, data_loader):
+        for i in range(len(indices))[:: self.batch_size]:
 
-        self.GRU_model.train()
+            if len(indices) - i < self.batch_size:
+                break
 
-        for (data, weight) in data_loader:
-            feature = data[:, 0, :, 0:-1].to(self.device)
-            label = data[:, :, -1, -1].to(self.device)
+            feature = (
+                torch.from_numpy(x_train_values[indices[i : i + self.batch_size]])
+                .float()
+                .to(self.device)
+            )
+            label = (
+                torch.from_numpy(y_train_values[indices[i : i + self.batch_size]])
+                .float()
+                .to(self.device)
+            )
 
-            pred = self.GRU_model(feature.float())
+            pred = self.gru_model(feature)
             loss = self.loss_fn(pred, label)
 
             self.train_optimizer.zero_grad()
             loss.backward()
-            torch.nn.utils.clip_grad_value_(self.GRU_model.parameters(), 3.0)
+            torch.nn.utils.clip_grad_value_(self.gru_model.parameters(), 3.0)
             self.train_optimizer.step()
 
-    def test_epoch(self, data_loader):
+    def test_epoch(self, data_x, data_y):
 
-        self.GRU_model.eval()
+        # prepare training data
+        x_values = data_x.values.reshape(-1, self.d_instru, self.d_feat)
+        y_values = data_y.values.reshape(-1, self.d_instru)
+
+        self.gru_model.eval()
 
         scores = []
         losses = []
 
-        for (data, weight) in data_loader:
-            feature = data[:, 0, :, 0:-1].to(self.device)
-            # feature[torch.isnan(feature)] = 0
-            label = data[:, :, -1, -1].to(self.device)
+        indices = np.arange(len(x_values))
+
+        for i in range(len(indices))[:: self.batch_size]:
+
+            feature = (
+                torch.from_numpy(x_values[indices[i : i + self.batch_size]])
+                .float()
+                .to(self.device)
+            )
+            label = (
+                torch.from_numpy(y_values[indices[i : i + self.batch_size]])
+                .float()
+                .to(self.device)
+            )
 
             with torch.no_grad():
-                pred = self.GRU_model(feature.float())
+                pred = self.gru_model(feature)
                 loss = self.loss_fn(pred, label)
                 losses.append(loss.item())
 
@@ -706,118 +721,41 @@ class MultiOutputGRU(Model):
 
         return np.mean(losses), np.mean(scores)
 
-    def fit(
-        self,
-        dataset,
-        evals_result=dict(),
-        save_path=None,
-        reweighter=None,
-    ):
-        dl_train = dataset.prepare(
-            "train", col_set=["feature", "label"], data_key=DataHandlerLP.DK_L
-        )
-        dl_valid = dataset.prepare(
-            "valid", col_set=["feature", "label"], data_key=DataHandlerLP.DK_L
-        )
-        if dl_train.empty or dl_valid.empty:
-            raise ValueError(
-                "Empty data from dataset, please check your dataset config."
-            )
-
-        dl_train.config(fillna_type="ffill+bfill")  # process nan brought by dataloader
-        dl_valid.config(fillna_type="ffill+bfill")  # process nan brought by dataloader
-
-        if reweighter is None:
-            wl_train = np.ones(len(dl_train))
-            wl_valid = np.ones(len(dl_valid))
-        elif isinstance(reweighter, Reweighter):
-            wl_train = reweighter.reweight(dl_train)
-            wl_valid = reweighter.reweight(dl_valid)
-        else:
-            raise ValueError("Unsupported reweighter type.")
-
-        train_loader = DataLoader(
-            ConcatDataset(dl_train, wl_train),
-            batch_size=self.batch_size,
-            shuffle=True,
-            num_workers=self.n_jobs,
-            drop_last=True,
-        )
-        valid_loader = DataLoader(
-            ConcatDataset(dl_valid, wl_valid),
-            batch_size=self.batch_size,
-            shuffle=False,
-            num_workers=self.n_jobs,
-            drop_last=True,
-        )
-
-        save_path = get_or_create_path(save_path)
-
-        stop_steps = 0
-        train_loss = 0
-        best_score = -np.inf
-        best_epoch = 0
-        evals_result["train"] = []
-        evals_result["valid"] = []
-
-        # train
-        self.logger.info("training...")
-        self.fitted = True
-
-        for step in range(self.n_epochs):
-            self.logger.info("Epoch%d:", step)
-            self.logger.info("training...")
-            self.train_epoch(train_loader)
-            self.logger.info("evaluating...")
-            train_loss, train_score = self.test_epoch(train_loader)
-            val_loss, val_score = self.test_epoch(valid_loader)
-            self.logger.info("train %.6f, valid %.6f" % (train_score, val_score))
-            evals_result["train"].append(train_score)
-            evals_result["valid"].append(val_score)
-
-            if val_score > best_score:
-                best_score = val_score
-                stop_steps = 0
-                best_epoch = step
-                best_param = copy.deepcopy(self.GRU_model.state_dict())
-            else:
-                stop_steps += 1
-                if stop_steps >= self.early_stop:
-                    self.logger.info("early stop")
-                    break
-
-        self.logger.info("best score: %.6lf @ %d" % (best_score, best_epoch))
-        self.GRU_model.load_state_dict(best_param)
-        torch.save(best_param, save_path)
-
-        if self.use_gpu:
-            torch.cuda.empty_cache()
-
-    def predict(self, dataset):
+    def predict(self, dataset: DatasetH, segment: Union[Text, slice] = "test"):
         if not self.fitted:
             raise ValueError("model is not fitted yet!")
 
-        dl_test = dataset.prepare(
-            "test", col_set=["feature", "label"], data_key=DataHandlerLP.DK_I
+        x_test = dataset.prepare(
+            segment, col_set="feature", data_key=DataHandlerLP.DK_I
         )
-        dl_test.config(fillna_type="ffill+bfill")
-        test_loader = DataLoader(
-            dl_test,
-            batch_size=int(len(dl_test) / self.d_instru),
-            num_workers=self.n_jobs,
+        index = x_test.index
+        self.gru_model.eval()
+        x_values = x_test.values.reshape(-1, self.d_instru, self.d_feat)
+        # sample_num = x_values.shape[0]
+        # preds = []
+        #
+        # for begin in range(sample_num)[:: self.batch_size]:
+        #
+        #     if sample_num - begin < self.batch_size:
+        #         end = sample_num
+        #     else:
+        #         end = begin + self.batch_size
+        #
+        #     x_batch = torch.from_numpy(x_values[begin:end]).float().to(self.device)
+        #
+        #     with torch.no_grad():
+        #         pred = self.gru_model(x_batch).detach().cpu().numpy()
+        #
+        #     preds.append(pred)
+
+        pred = (
+            self.gru_model(torch.from_numpy(x_values).float().to(self.device))
+            .detach()
+            .cpu()
+            .numpy()
         )
-        self.GRU_model.eval()
-        preds = []
 
-        for i, data in enumerate(test_loader):
-            feature = data[:, 0, :, 0:-1].to(self.device)
-
-            with torch.no_grad():
-                pred = self.GRU_model(feature.float()).detach().cpu().numpy()[:, i]
-
-            preds.append(pred)
-
-        return pd.DataFrame(np.concatenate(preds), index=dl_test.get_index())
+        return pd.Series(pred.reshape(-1, 1).squeeze(), index=index)
 
 
 class DNNModelPytorchFix(DNNModelPytorch):
