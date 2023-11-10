@@ -1,0 +1,57 @@
+qlib_init:
+    provider_uri: "data/qlib_data"
+    region: cn
+market: &market trable
+experiment_name: XGB_optuna
+roll_config:
+    step: 20
+    rolling_type: "expanding"
+    horizon: 0
+data_handler_config: &data_handler_config
+    start_time: 2005-12-20
+    end_time: 2022-08-15
+    fit_start_time: 2005-12-20
+    fit_end_time: 2022-08-15
+    instruments: *market
+    infer_processors:
+        - class: DropnaProcessor
+          kwargs:
+              fields_group: feature
+    learn_processors:
+        - class: DropnaProcessor
+          kwargs:
+              fields_group: feature
+        - class: DropnaLabel
+    label: ["Ref($close, -1) / $close - 1"]
+
+task:
+    model:
+        class: XgbFix
+        module_path: backtest.qlib_custom.model
+        kwargs:
+            eval_metric: rmse
+            colsample_bytree: [0.3, 1.0]
+            learning_rate: [0.001, 0.01, 0.1]
+            max_depth: [5, 7, 9, 11, 13, 15, 17, 20]
+            min_child_weight: [1, 300]
+            early_stopping_rounds: [20, 60, 100]
+            subsample: [0.4, 1.0]
+    dataset:
+        class: DatasetH
+        module_path: qlib.data.dataset
+        kwargs:
+            handler:
+                class: GroupVixHandler20230711
+                module_path: backtest.qlib_custom.data_handler
+                kwargs: *data_handler_config
+            segments:
+                train: [2005-12-20, 2010-06-30]
+                valid: [2010-07-01, 2010-12-31]
+                test: [2011-01-01, 2022-08-15]
+    record:
+        - class: SigAnaRecord
+          module_path: qlib.workflow.record_temp
+          kwargs:
+              ana_long_short: True
+              ann_scaler: 252
+

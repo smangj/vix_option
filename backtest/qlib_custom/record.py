@@ -544,6 +544,7 @@ class _DfBacktestRecord(ACRecordTemp, abc.ABC):
         recorder,
         config=None,
         skip_existing=False,
+        ann_scaler=252,
         **kwargs,
     ):
         handler = kwargs.pop("handler", None)
@@ -596,6 +597,7 @@ class _DfBacktestRecord(ACRecordTemp, abc.ABC):
             market_data_df.swaplevel(), features, left_index=True, right_index=True
         )
         self._data = market_data_df.sort_index()
+        self.ann_scaler = ann_scaler
 
     def _save_df(self, df: pd.DataFrame, file_name: str, dir_path: str):
         file_path = os.path.join(dir_path, file_name)
@@ -648,6 +650,19 @@ class _DfBacktestRecord(ACRecordTemp, abc.ABC):
                 output_dir=tmp_dir_path,
                 file_name=self.name + "_report",
             )
+            metrics = {}
+            eva_list = {
+                "long": result.long_returns,
+                "short": result.short_returns,
+                "Long-Short": result.ls_returns,
+            }
+            metric_name = ["annualized_return", "information_ratio", "max_drawdown"]
+            for k, r in eva_list.items():
+                data = risk_analysis(r)["risk"]
+                metric = {"_".join([self.name, k, m]): data[m] for m in metric_name}
+                metrics.update(metric)
+
+            self.recorder.log_metrics(**metrics)
             self.recorder.log_artifact(local_path=file_path)
             # values_df = result.position.stack()
             # values_df.name = "position"

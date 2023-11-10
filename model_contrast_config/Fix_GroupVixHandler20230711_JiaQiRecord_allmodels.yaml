@@ -5,9 +5,9 @@ qlib_init:
         class: "MLflowExpManager"
         module_path: "qlib.workflow.expm"
         kwargs:
-            uri: "databricks"
+            uri: "http://127.0.0.1:5001"
             default_exp_name: "Experiment"
-experiment_name: "Fix_GroupVixHandler_JiaQiRecord_allmodels"
+experiment_name: "Fix_GroupVixHandler20230711_JiaQiRecord_allmodels"
 market: &market trable
 benchmark: &benchmark TLT
 roll_config:
@@ -60,7 +60,7 @@ task:
 #        module_path: qlib.data.dataset
 #        kwargs:
 #            handler:
-#              class: GroupVixHandler
+#              class: GroupVixHandler20230711
 #              module_path: backtest.qlib_custom.data_handler
 #              kwargs: *data_handler_config
 #            segments:
@@ -103,7 +103,7 @@ task:
 #        module_path: qlib.data.dataset
 #        kwargs:
 #          handler:
-#            class: GroupVixHandler
+#            class: GroupVixHandler20230711
 #            module_path: backtest.qlib_custom.data_handler
 #            kwargs: *data_handler_config
 #          segments:
@@ -138,7 +138,7 @@ task:
 #        module_path: qlib.data.dataset
 #        kwargs:
 #          handler:
-#            class: GroupVixHandler
+#            class: GroupVixHandler20230711
 #            module_path: backtest.qlib_custom.data_handler
 #            kwargs: *data_handler_config
 #          segments:
@@ -168,7 +168,7 @@ task:
 #        kwargs:
 #          step_len: 5
 #          handler:
-#            class: GroupVixHandler
+#            class: GroupVixHandler20230711
 #            module_path: backtest.qlib_custom.data_handler
 #            kwargs: *data_handler_config
 #          segments:
@@ -206,7 +206,7 @@ task:
 #        module_path: qlib.data.dataset
 #        kwargs:
 #          handler:
-#            class: GroupVixHandler
+#            class: GroupVixHandler20230711
 #            module_path: backtest.qlib_custom.data_handler
 #            kwargs: *data_handler_config
 #          segments:
@@ -236,7 +236,7 @@ task:
 #        module_path: qlib.data.dataset
 #        kwargs:
 #          handler:
-#            class: GroupVixHandler
+#            class: GroupVixHandler20230711
 #            module_path: backtest.qlib_custom.data_handler
 #            kwargs: *data_handler_config
 #          segments:
@@ -285,7 +285,7 @@ task:
 #        module_path: qlib.data.dataset
 #        kwargs:
 #          handler:
-#            class: GroupVixHandler
+#            class: GroupVixHandler20230711
 #            module_path: backtest.qlib_custom.data_handler
 #            kwargs: *data_handler_config
 #          segments:
@@ -303,36 +303,36 @@ task:
 #          kwargs:
 #            config: *port_analysis_config
 #      name: "TCTS"
-#    - model:
-#        class: TransformerModel
-#        module_path: qlib.contrib.model.pytorch_transformer_ts
-#        kwargs:
-#            seed: 0
-#            n_jobs: 20
-#      dataset:
-#        class: TSDatasetH
-#        module_path: qlib.data.dataset
-#        kwargs:
-#          step_len: 5
-#          handler:
-#            class: GroupVixHandler
-#            module_path: backtest.qlib_custom.data_handler
-#            kwargs: *data_handler_config
-#          segments:
-#                train: [2005-12-20, 2010-06-30]
-#                valid: [2010-07-01, 2010-12-31]
-#                test: [2011-01-01, 2011-01-31]
-#      record:
-#        - class: SigAnaRecord
-#          module_path: qlib.workflow.record_temp
-#          kwargs:
-#            ana_long_short: True
-#            ann_scaler: 252
-#        - class: JiaQiRecord
-#          module_path: backtest.qlib_custom.record
-#          kwargs:
-#            config: *port_analysis_config
-#      name: "TransformerModel"
+    - model:
+        class: TransformerModel
+        module_path: qlib.contrib.model.pytorch_transformer_ts
+        kwargs:
+            dropout: 0.1
+            n_jobs: 0
+      dataset:
+        class: TSDatasetH
+        module_path: qlib.data.dataset
+        kwargs:
+          step_len: 10
+          handler:
+            class: GroupVixHandler20230711
+            module_path: backtest.qlib_custom.data_handler
+            kwargs: *data_handler_config
+          segments:
+                train: [2005-12-20, 2010-06-30]
+                valid: [2010-07-01, 2010-12-31]
+                test: [2011-01-01, 2011-01-31]
+      record:
+        - class: SigAnaRecord
+          module_path: qlib.workflow.record_temp
+          kwargs:
+            ana_long_short: True
+            ann_scaler: 252
+        - class: JiaQiRecord
+          module_path: backtest.qlib_custom.record
+          kwargs:
+            config: *port_analysis_config
+      name: "TransformerModel"
     - model:
         class: SmLinearModel
         module_path: backtest.qlib_custom.model
@@ -344,7 +344,7 @@ task:
         module_path: qlib.data.dataset
         kwargs:
             handler:
-                class: GroupVixHandler
+                class: GroupVixHandler20230711
                 module_path: backtest.qlib_custom.data_handler
                 kwargs: *data_handler_config
             segments:
@@ -379,7 +379,7 @@ task:
         module_path: qlib.data.dataset
         kwargs:
             handler:
-                class: GroupVixHandler
+                class: GroupVixHandler20230711
                 module_path: backtest.qlib_custom.data_handler
                 kwargs: *data_handler_config
             segments:
@@ -404,7 +404,7 @@ task:
             d_feat: 88
             hidden_size: 128
             num_layers: 3
-            dropout: 0.0
+            dropout: 0.1
             n_epochs: 20
             lr: 1e-3
             early_stop: 15
@@ -417,9 +417,9 @@ task:
         class: TSDatasetH
         module_path: qlib.data.dataset
         kwargs:
-            step_len: 5
+            step_len: 10
             handler:
-                class: GroupVixHandler
+                class: GroupVixHandler20230711
                 module_path: backtest.qlib_custom.data_handler
                 kwargs: *data_handler_config
             segments:
@@ -444,7 +444,7 @@ task:
           d_feat: 88
           hidden_size: 128
           num_layers: 3
-          dropout: 0.0
+          dropout: 0.1
           n_epochs: 20
           lr: 1e-3
           early_stop: 20
@@ -458,9 +458,9 @@ task:
         class: TSDatasetH
         module_path: qlib.data.dataset
         kwargs:
-          step_len: 5
+          step_len: 10
           handler:
-            class: GroupVixHandler
+            class: GroupVixHandler20230711
             module_path: backtest.qlib_custom.data_handler
             kwargs: *data_handler_config
           segments:
@@ -517,7 +517,7 @@ task:
 #        module_path: qlib.data.dataset
 #        kwargs:
 #          handler:
-#            class: GroupVixHandler
+#            class: GroupVixHandler20230711
 #            module_path: backtest.qlib_custom.data_handler
 #            kwargs: *data_handler_config
 #          segments:
@@ -535,42 +535,42 @@ task:
 #          kwargs:
 #            config: *port_analysis_config
 #      name: "DEnsembleModel"
-    - model:
-        class: FixedLGBModel
-        module_path: backtest.qlib_custom.model
-        kwargs:
-            loss: mse
-            colsample_bytree: 0.8879
-            learning_rate: 0.2
-            subsample: 0.8789
-            lambda_l1: 205.6999
-            lambda_l2: 580.9768
-            max_depth: 8
-            num_leaves: 210
-            num_threads: 20
-      dataset:
-        class: DatasetH
-        module_path: qlib.data.dataset
-        kwargs:
-          handler:
-            class: GroupVixHandler
-            module_path: backtest.qlib_custom.data_handler
-            kwargs: *data_handler_config
-          segments:
-                train: [2005-12-20, 2010-06-30]
-                valid: [2010-07-01, 2010-12-31]
-                test: [2011-01-01, 2022-08-15]
-      record:
-        - class: SigAnaRecord
-          module_path: qlib.workflow.record_temp
-          kwargs:
-            ana_long_short: True
-            ann_scaler: 252
-        - class: JiaQiRecord
-          module_path: backtest.qlib_custom.record
-          kwargs:
-            config: *port_analysis_config
-      name: "LGBModel"
+#    - model:
+#        class: FixedLGBModel
+#        module_path: backtest.qlib_custom.model
+#        kwargs:
+#            loss: mse
+#            colsample_bytree: 0.8879
+#            learning_rate: 0.2
+#            subsample: 0.8789
+#            lambda_l1: 205.6999
+#            lambda_l2: 580.9768
+#            max_depth: 8
+#            num_leaves: 210
+#            num_threads: 20
+#      dataset:
+#        class: DatasetH
+#        module_path: qlib.data.dataset
+#        kwargs:
+#          handler:
+#            class: GroupVixHandler20230711
+#            module_path: backtest.qlib_custom.data_handler
+#            kwargs: *data_handler_config
+#          segments:
+#                train: [2005-12-20, 2010-06-30]
+#                valid: [2010-07-01, 2010-12-31]
+#                test: [2011-01-01, 2022-08-15]
+#      record:
+#        - class: SigAnaRecord
+#          module_path: qlib.workflow.record_temp
+#          kwargs:
+#            ana_long_short: True
+#            ann_scaler: 252
+#        - class: JiaQiRecord
+#          module_path: backtest.qlib_custom.record
+#          kwargs:
+#            config: *port_analysis_config
+#      name: "LGBModel"
     - model:
         class: LSTM
         module_path: qlib.contrib.model.pytorch_lstm_ts
@@ -578,7 +578,7 @@ task:
             d_feat: 88
             hidden_size: 128
             num_layers: 3
-            dropout: 0.0
+            dropout: 0.1
             n_epochs: 20
             lr: 1e-3
             early_stop: 15
@@ -591,9 +591,9 @@ task:
         class: TSDatasetH
         module_path: qlib.data.dataset
         kwargs:
-          step_len: 5
+          step_len: 10
           handler:
-            class: GroupVixHandler
+            class: GroupVixHandler20230711
             module_path: backtest.qlib_custom.data_handler
             kwargs: *data_handler_config
           segments:
@@ -632,7 +632,7 @@ task:
         module_path: qlib.data.dataset
         kwargs:
           handler:
-            class: GroupVixHandler
+            class: GroupVixHandler20230711
             module_path: backtest.qlib_custom.data_handler
             kwargs: *data_handler_config
           segments:
@@ -650,43 +650,43 @@ task:
           kwargs:
             config: *port_analysis_config
       name: "SFM"
-    - model:
-        class: TCN
-        module_path: qlib.contrib.model.pytorch_tcn_ts
-        kwargs:
-            d_feat: 5
-            hidden_size: 128
-            num_layers: 3
-            dropout: 0.0
-            n_epochs: 20
-            lr: 1e-3
-            early_stop: 15
-            batch_size: 128
-            metric: loss
-            loss: mse
-            n_jobs: 0
-            GPU: 0
-      dataset:
-        class: TSDatasetH
-        module_path: qlib.data.dataset
-        kwargs:
-          step_len: 5
-          handler:
-            class: GroupVixHandler
-            module_path: backtest.qlib_custom.data_handler
-            kwargs: *data_handler_config
-          segments:
-                train: [2005-12-20, 2010-06-30]
-                valid: [2010-07-01, 2010-12-31]
-                test: [2011-01-01, 2022-08-15]
-      record:
-        - class: SigAnaRecord
-          module_path: qlib.workflow.record_temp
-          kwargs:
-            ana_long_short: True
-            ann_scaler: 252
-        - class: JiaQiRecord
-          module_path: backtest.qlib_custom.record
-          kwargs:
-            config: *port_analysis_config
-      name: "TCN"
+#    - model:
+#        class: TCN
+#        module_path: qlib.contrib.model.pytorch_tcn_ts
+#        kwargs:
+#            d_feat: 5
+#            hidden_size: 128
+#            num_layers: 3
+#            dropout: 0.0
+#            n_epochs: 20
+#            lr: 1e-3
+#            early_stop: 15
+#            batch_size: 128
+#            metric: loss
+#            loss: mse
+#            n_jobs: 0
+#            GPU: 0
+#      dataset:
+#        class: TSDatasetH
+#        module_path: qlib.data.dataset
+#        kwargs:
+#          step_len: 10
+#          handler:
+#            class: GroupVixHandler20230711
+#            module_path: backtest.qlib_custom.data_handler
+#            kwargs: *data_handler_config
+#          segments:
+#                train: [2005-12-20, 2010-06-30]
+#                valid: [2010-07-01, 2010-12-31]
+#                test: [2011-01-01, 2022-08-15]
+#      record:
+#        - class: SigAnaRecord
+#          module_path: qlib.workflow.record_temp
+#          kwargs:
+#            ana_long_short: True
+#            ann_scaler: 252
+#        - class: JiaQiRecord
+#          module_path: backtest.qlib_custom.record
+#          kwargs:
+#            config: *port_analysis_config
+#      name: "TCN"
