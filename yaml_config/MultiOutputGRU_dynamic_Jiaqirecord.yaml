@@ -1,7 +1,13 @@
 qlib_init:
     provider_uri: "data/qlib_data"
     region: cn
-experiment_name: MultiOutputGRU_JiaQiRecord
+    exp_manager:
+        class: "MLflowExpManager"
+        module_path: "qlib.workflow.expm"
+        kwargs:
+            uri: "http://192.168.16.11:5001"
+            default_exp_name: "Experiment"
+experiment_name: "Fix_GroupVixHandler20230711_JiaQiRecord_allmodels"
 market: &market trable
 benchmark: &benchmark TLT
 roll_config:
@@ -13,8 +19,15 @@ data_handler_config: &data_handler_config
     fit_start_time: 2005-12-20
     fit_end_time: 2022-08-15
     instruments: *market
-    infer_processors: []
+    infer_processors:
+        - class: RobustZScoreNorm
+          kwargs:
+              fields_group: feature
     learn_processors:
+        - class: FFill
+          module_path: backtest.qlib_custom.processors
+          kwargs:
+              fields_group: feature
         - class: DropnaProcessor
           kwargs:
               fields_group: feature
@@ -60,7 +73,7 @@ task:
             segments:
                 train: [2005-12-20, 2010-06-30]
                 valid: [2010-07-01, 2010-12-31]
-                test: [2011-01-01, 2011-01-31]
+                test: [2011-01-01, 2022-08-15]
     record:
         - class: SigAnaRecord
           module_path: qlib.workflow.record_temp
@@ -71,3 +84,4 @@ task:
           module_path: backtest.qlib_custom.record
           kwargs:
             config: *port_analysis_config
+    name: "GRU_MultiOutput_right_infer"

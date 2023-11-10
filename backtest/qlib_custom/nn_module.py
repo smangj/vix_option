@@ -79,4 +79,4 @@ class GRUModelMultiOutput(nn.Module):
     def forward(self, x):
         # x: (N, output_size, d_feat)
         out, _ = self.rnn(x)
-        return self.fc_out(out[:, -1, :]).squeeze()
+        return self.fc_out(out[:, -1, :])
