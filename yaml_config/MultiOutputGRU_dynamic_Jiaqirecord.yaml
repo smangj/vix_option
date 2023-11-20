@@ -59,7 +59,7 @@ task:
             early_stop: 15
             batch_size: 128
             metric: loss
-            loss: mse
+            loss: ls_mse
             n_jobs: 0
             GPU: 0
     dataset:
@@ -84,4 +84,4 @@ task:
           module_path: backtest.qlib_custom.record
           kwargs:
             config: *port_analysis_config
-    name: "GRU_MultiOutput_right_infer"
+    name: "GRU_MultiOutputs_lsloss"

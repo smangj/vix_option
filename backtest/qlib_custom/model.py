@@ -642,12 +642,24 @@ class MultiOutputGRU(GRU_normal):
         self.gru_model.to(self.device)
 
     def loss_fn(self, pred, label, weight=None):
-        mask = ~torch.isnan(label)
 
         if self.loss == "mse":
+            mask = ~torch.isnan(label)
             return self.mse(pred[mask], label[mask])
         if self.loss == "ls_mse":
-            pass
+            batch = len(pred)
+
+            pred_max = pred.max(axis=1)
+            pred_min = pred.max(axis=1)
+
+            label_max = label[list(np.arange(batch)), pred_max[1]]
+            label_min = label[list(np.arange(batch)), pred_min[1]]
+
+            pred_ = torch.cat([pred_max[0], pred_min[0]])
+            label_ = torch.cat([label_max, label_min])
+            mask = ~torch.isnan(label_)
+
+            return self.mse(pred_[mask], label_[mask])
 
         raise ValueError("unknown loss `%s`" % self.loss)
 
@@ -716,7 +728,7 @@ class MultiOutputGRU(GRU_normal):
                 loss = self.loss_fn(pred, label)
                 losses.append(loss.item())
 
-                score = self.metric_fn(pred, label)
+                score = -loss
                 scores.append(score.item())
 
         return np.mean(losses), np.mean(scores)
