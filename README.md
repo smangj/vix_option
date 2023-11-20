@@ -107,8 +107,9 @@
 #### 服务器环境初始化：
 1. 安装配置好系统全局的`pdm`工具
 2. 终端中进入工程所在目录
-3. 执行```pdm install --prod --no-lock --no-editable```初始化虚拟环境
-4. 激活`{项目根目录}/.venv/`下的虚拟环境，执行命令即可
+3. 删除pdm.lock
+4. 执行```pdm install --prod --no-lock --no-editable```初始化虚拟环境
+5. 激活`{项目根目录}/.venv/`下的虚拟环境，执行命令即可
 
 ---
 
