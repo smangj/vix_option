@@ -1,0 +1,70 @@
+\documentclass[9pt]{article}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{multicol}
+\usepackage[a4paper, margin=1in]{geometry}
+\usepackage{times}
+\usepackage{titlesec}
+\titleformat*{\section}{\fontsize{12}{14}\selectfont}
+\titleformat*{\subsection}{\fontsize{12}{14}\selectfont}
+\usepackage{setspace}
+\doublespacing
+\begin{document}
+\title{Portfolio optimization with return prediction using machine learning in VIX derivatives}
+\author{Sangyuan Wang, Keran Li}
+\maketitle
+\begin{abstract}
+we use two sets of features derived from VIX futures term-structure curve to predict the next-day returns of VIX rolling ETFs by using machine learning approaches. Based on the returns prediction,
+\end{abstract}
+\begin{multicols}{2}
+\section{Introduction}
+The key contributions of this study can be summarised as follows, first, based on the VIX futures term structures decomposition approach proposed by Avellaneda(2021), features with term-structure information, personal information, and major market trends information are included in the datasets. Second, various state-of-art machine learning approaches are introduced to predict the VIX rolling-ETFs next-day returns. Third, two trading strategies are used in the backtesting which are, the long-short strategy based on machine learning ranking and a mean-variance adjusted portfolio optimization strategy.
+The results reveal that firstly,the VIX futures curve has the ability to predict the next-day return of VIX ETFs. Thirdly, The economic performance of machine learning models relying on the adjusted mean-variance portfolio optimization strategy generally outperforms that of models based on the long-short strategy.
+The remainder of the paper is composed as follows: Section 2 provides a review of the literature, Section 3 introduce VIX and VIX derivatives, explains how parameters are estimated, Section 4 describes the dataset of features and its pre-processing, Section 5 describes Methodology for
+construct a Machine Learning Trading Strategy, Section 6 analysis results, Section 7 concludes and discuss, Appendix: graph and code.
+\section{Literature Review}
+\subsection{Vix Definition}
+The volatility index or known as “VIX” has been the “investor fear gauge” in the financial market since early 90s. The level of VIX is derived from current traded SP 500 options prices and plays as an important tool to imply the next 30 calendar days expected volatility (Whaley, 2009). Since VIX is not directly tradable. Exchanged-listed VIX futures and options serve as essential tools for investors to trade VIX since its first launch on CBOE futures exchange in 2004. (Moran  Liu, 2020). Meanwhile, with the booming of VIX-related instruments, SP introduced the VIX futures index series to indicate the return performances of holding long or short positions on different VIX futures contracts (SP,2023). 
+\subsection{VIX futures term structures}
+The VIX term structures delineate the relationship among various VIX futures contracts with varying expiration dates. A multitude VIX term structures can be observed in the market. Contango occurs when longer-term futures are priced higher than near-term futures, while backwardation describes the situation when longer-term futures are valued lower than near-term futures.
+\subsection{Machine Learning}
+\subsection{Portfolio Optimization}
+Portfolio optimization can be defined as a series of actions aimed at determining asset types and their portfolio participation weights based on investor risk-return criteria. Within this framework, classical models include the Mean-Variance model proposed by Markowitz (1952), which aims to find the optimal combination of assets to maximize the expected return of the portfolio while minimizing portfolio risk, which can be measured in terms of variances or standard deviations. Merton (1971) introduced an optimal continuous-time dynamic model under uncertainty that considers only two stochastic processes: Brownian motion and the Poisson process, thus limiting the parameters for the portfolio optimization problem.
+The Conditional Value at Risk (CvaR), invented by Uryasev (2000), calculates the weighted average of 'extreme' tail returns while providing optimization shortcuts through the use of linear programming techniques.
+
+\section{Data Descriptions}
+The primary rationale behind features construction in this paper is to find derivative market(under consideration for the use of word) related factors that exhibit potential predictive power for constant-maturity VIX futures(CMF) returns. We first consider features that describe the personal information on varies VIX futures. Specifically, we construct the CMF(Vt), roll-yields and Mu factors for each VIX futures by following VIX term structures decomposition methodology proposed by Avellaneda(2021) as illustrated in equation 3,  each VIX futures time-to-maturity information is also included as nominal features. Building upon robust evidences of VIX term-structure  predictive power on VIX futures returns (see....), we construct the VIX term structure factors based on equation 4 to represent the comprehensive term structures information in both CMF and roll-yield among all VIX futures. Furthermore, we introduce the iShares 20+ years treasury bond ETF(TLT) and SPDR S P 500 ETF Trust (SPY) to reflect the major market conditions.Lastly, we also introduce various statistical transformations for all numerical features to exploit possible extra information exist in statistical derivations.  For prediction label, we consider the next day returns of 1-6 months CMFs which can be calculated by equation 5 to serve as the six different prediction labels within one timestamp. In our study, the time range for VIX futures data is spanning from May 24, 2005, to March 3, 2023, rolling-VIX indexes and ETFs data covers the period from January 3, 2025, to March 7, 2023 while TLT and SPY data are selected within the time frame of January 12, 1995, to April 12, 2023.
+The raw data employed in our study comprises VIX futures data, spanning from May 24, 2005, to March 3, 2023, rolling-VIX indexes or ETFs, ranging from January 3, 2025, to March 7, 2023, and additional data-sets, which include U.S. Treasury bonds, VIX indexes, and major stock indexes, spanning from January 12, 1995, to April 12, 2023. We utilize VIX futures data to initially formulate a time-series dataset of constant-maturity VIX futures prices by linear interpolation in formula 1, (please refer to the original journal for specific details). Subsequently, based on the price time-series data, we generate the return time-series data for constant-maturity VIX futures which serve as the final label in our study.
+
+\begin {equation}
+V_t^i = W_t^iF_t^i+(1-W_t^i)F_t^{i+1}
+\end{equation}
+
+\section{Experiment design}
+During model training, results could become invalid if data leakage exists. Data leakage occurs when future information is used for current prediction or decision-making (David, 2019). To address this concern, we have adopted a strict expanding time window procedure throughout our research, as presented in figure 1. In each expanding iteration, the data range of the training dataset is extended by a designated time window. Meanwhile, the validation dataset starts on the trading day immediately following the conclusion of the training dataset. To prevent potential information leakage, we have introduced a one-day gap between the validation and test datasets. 
+In our experiment setup, the initial training dataset covers the period from December 20, 2005, to June 30, 2006. The start dates of the validation and test datasets are set as July 1, 2006, and October 1, 2006, respectively. The fixed time window for the validation dataset is 60 trading days(WTC), while time horizon for test dataset is 20 trading days(WTC).
+
+\section{Results}
+
+
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{expanding_fig.pdf}
+    \caption{Enter Caption}
+    \label{fig:enter-label}
+\end{figure}
+
+
+\begin{tabular}{ |p{3cm}|p{3cm}|p{3cm}|}
+\hline
+\multicolumn{3}{|c|}{Features List} \\
+\hline
+common field& private field &Term-structures field\\
+\hline
+TLT(Treasury bills) & roll & Delta(V1 to V6)\\
+\hline
+SP500 & mu(expected return) & Delta(roll1 to roll6)\\
+\hline
+\end{tabular}
+\end{multicols}
+\end{document}
