@@ -8,7 +8,7 @@ qlib_init:
             uri: "http://127.0.0.1:5001"
             default_exp_name: "Experiment"
 market: &market trable
-experiment_name: GRU_optuna_GroupVixHandler
+experiment_name: TCN_optuna_GroupVixHandler
 roll_config:
     step: [5, 20, 60]
     rolling_type: "expanding"
