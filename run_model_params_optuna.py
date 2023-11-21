@@ -50,6 +50,7 @@ def objective(trial, config, experiment_name, uid=""):
     else:
         conf["roll_exp_name"] = conf["experiment_name"] + "_rolling_exp" + str(uid)
         recorder = RollingBenchmark(conf).run_all()
+        recorder.log_metrics(roll_step=roll_config["step"])
 
     recorder.save_objects(config=conf)
 

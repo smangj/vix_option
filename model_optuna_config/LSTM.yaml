@@ -5,10 +5,10 @@ qlib_init:
         class: "MLflowExpManager"
         module_path: "qlib.workflow.expm"
         kwargs:
-            uri: "databricks"
+            uri: "http://127.0.0.1:5001"
             default_exp_name: "Experiment"
 market: &market trable
-experiment_name: XGB_optuna
+experiment_name: GRU_optuna_GroupVixHandler
 roll_config:
     step: [5, 20, 60]
     rolling_type: "expanding"
@@ -29,32 +29,35 @@ data_handler_config: &data_handler_config
 
 task:
     model:
-        class: XgbFix
-        module_path: backtest.qlib_custom.model
+        class: LSTM
+        module_path: qlib.contrib.model.pytorch_lstm_ts
         kwargs:
-            eval_metric: rmse
-            colsample_bytree: [0.3, 1.0]
-            learning_rate: [0.001, 0.01, 0.1]
-            max_depth: [5, 7, 9, 11, 13, 15, 17, 20]
-            min_child_weight: [1, 300]
-            early_stopping_rounds: [20, 60, 100]
-            subsample: [0.4, 1.0]
+            d_feat: 17
+            hidden_size: 31
+            num_layers: 3
+            dropout: [0.0, 0.3]
+            n_epochs: 20
+            lr: [1e-3, 1e-2, 1e-1]
+            early_stop: 15
+            batch_size: 512
+            metric: loss
+            loss: mse
+            n_jobs: 0
+            GPU: 0
     dataset:
-        class: DatasetH
+        class: TSDatasetH
         module_path: qlib.data.dataset
         kwargs:
+            step_len: [5, 10, 20]
             handler:
-                class: GroupVixHandler20230711
+                class: GroupVixHandler
                 module_path: backtest.qlib_custom.data_handler
                 kwargs: *data_handler_config
             segments:
                 train: [2005-12-20, 2010-06-30]
                 valid: [2010-07-01, 2010-12-31]
-                test: [2011-01-01, 2011-06-30]
+                test: [2011-01-01, 2022-08-15]
     record:
         - class: SigAnaRecord
           module_path: qlib.workflow.record_temp
-#          kwargs:
-#              ana_long_short: True
-#              ann_scaler: 252
 
