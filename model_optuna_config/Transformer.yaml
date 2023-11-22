@@ -33,9 +33,10 @@ task:
         module_path: backtest.qlib_custom.model
         kwargs:
             batch_size: 2000
-            nhead: [2, 3, 4, 5, 6]
+            nhead: [2, 3, 4, 6]
             dropout: [0.0, 0.3]
             d_feat: 17
+            d_model: 72
             n_jobs: 0
     dataset:
         class: TSDatasetH
