@@ -4,8 +4,9 @@
 # @Author   : wsy
 # @email    : 631535207@qq.com
 import abc
-
+import pandas as pd
 from qlib.data.dataset.processor import Processor, get_group_columns
+from qlib.data.dataset.utils import fetch_df_by_index
 
 
 class _MethodFill(Processor, abc.ABC):
@@ -50,3 +51,36 @@ class FFill(_MethodFill):
     @classmethod
     def method(cls) -> str:
         return "ffill"
+
+
+class LabelInstrumentNorm(Processor):
+    """
+    按照不同instrument的label的std进行norm
+    """
+
+    def __init__(self, fit_start_time, fit_end_time, fields_group="label"):
+        # NOTE: correctly set the `fit_start_time` and `fit_end_time` is very important !!!
+        # `fit_end_time` **must not** include any information from the test data!!!
+        self.fit_start_time = fit_start_time
+        self.fit_end_time = fit_end_time
+        self.fields_group = fields_group
+
+    def fit(self, df: pd.DataFrame = None):
+        df = fetch_df_by_index(
+            df, slice(self.fit_start_time, self.fit_end_time), level="datetime"
+        )
+        cols = get_group_columns(df, self.fields_group)
+        std = df[cols].groupby("instrument", group_keys=False).std()
+        scale = std.iloc[0, :] / std
+        self.scale = pd.merge(
+            left=pd.DataFrame(index=df.index),
+            left_on=df.index.get_level_values("instrument"),
+            right=scale,
+            right_index=True,
+            how="left",
+        )
+        self.cols = cols
+
+    def __call__(self, df):
+        df.loc(axis=1)[self.cols] = df[self.cols] * self.scale[self.cols]
+        return df
