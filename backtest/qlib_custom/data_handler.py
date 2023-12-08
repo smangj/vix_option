@@ -987,8 +987,8 @@ class Derivative(TermStructure):
     def get_features(cls):
         fields, names = super().get_features()
         p_fields, p_names = cls.get_private_features()
-        rolling_features = fields
-        var_names = names
+        rolling_features = fields.copy()
+        var_names = names.copy()
 
         # z-score
         fields += [
@@ -997,7 +997,7 @@ class Derivative(TermStructure):
             for y in cls.windows
         ]
         names += ["{}_z-score{}".format(x, y) for x in p_names for y in cls.windows]
-        # rolling, 除了maturity
+        # rolling
         fields += [
             "Mean({}, {})".format(x, y) for x in rolling_features for y in cls.windows
         ]

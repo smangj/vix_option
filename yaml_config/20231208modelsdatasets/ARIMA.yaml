@@ -41,7 +41,7 @@ task:
        module_path: qlib.data.dataset
        kwargs:
          handler:
-           class: GroupVixHandler
+           class: OldBro
            module_path: backtest.qlib_custom.data_handler
            kwargs: *data_handler_config
          segments:
