@@ -1,7 +1,7 @@
 qlib_init:
     provider_uri: "data/qlib_data"
     region: cn
-experiment_name: "JiaQiBenchRecord"
+experiment_name: "20231208all"
 market: &market trable
 benchmark: &benchmark TLT
 roll_config:
@@ -50,19 +50,19 @@ task:
         module_path: qlib.data.dataset
         kwargs:
             handler:
-                class: GroupVixHandler20230711
+                class: OldBro
                 module_path: backtest.qlib_custom.data_handler
                 kwargs: *data_handler_config
             segments:
-                train: [2005-12-20, 2006-06-30]
-                valid: [2006-07-01, 2006-09-30]
-                test: [2006-10-01, 2022-08-15]
+                train: [2005-12-20, 2007-06-30]
+                valid: [2007-07-01, 2007-12-31]
+                test: [2008-01-01, 2008-02-01]
     record:
         - class: JiaQiBenchRecord
           module_path: backtest.qlib_custom.record
           kwargs:
             config: *port_analysis_config
             handler:
-                class: GroupVixHandler20230711
+                class: Derivative
                 module_path: backtest.qlib_custom.data_handler
                 kwargs: *data_handler_config
