@@ -11,6 +11,7 @@ from qlib.model.utils import ConcatDataset
 from qlib.log import get_module_logger
 from qlib.utils import get_or_create_path, auto_filter_kwargs
 from collections import defaultdict
+from statsmodels.tsa.arima.model import ARIMA
 import statsmodels.api as sm
 import gc
 import pandas as pd
@@ -1025,3 +1026,56 @@ class myTransformer(TransformerModel):
 
         if self.use_gpu:
             torch.cuda.empty_cache()
+
+
+class Garch(Model):
+    """Garch"""
+
+    def __init__(self, order=(1, 0, 1)):
+        """
+        order 为 ARIMA参数
+        """
+        self.order = order
+
+        self.result = None
+
+    def fit(self, dataset: DatasetH, reweighter: Reweighter = None):
+        df_train = dataset.prepare(
+            "train", col_set="label", data_key=DataHandlerLP.DK_L
+        )
+        if df_train.empty:
+            raise ValueError(
+                "Empty data from dataset, please check your dataset config."
+            )
+
+        # fixme 目前假设label只有一列
+        df_train = df_train.iloc[:, 0]
+
+        instruments = set(df_train.index.get_level_values("instrument"))
+
+        self.result = {}
+        for instrument in instruments:
+            df = df_train.loc[(slice(None), instrument)]
+            model = ARIMA(df, order=self.order)
+            self.result[instrument] = model.fit()
+
+        return self
+
+    def predict(self, dataset: DatasetH, segment: Union[Text, slice] = "test"):
+        if self.result is None:
+            raise ValueError("model is not fitted yet!")
+        x_test = dataset.prepare(
+            segment, col_set="feature", data_key=DataHandlerLP.DK_I
+        )
+
+        instruments = set(x_test.index.get_level_values("instrument"))
+        forecast = {}
+        for instrument in instruments:
+            df = x_test.loc[(slice(None), instrument), :]
+            n_forecast = len(df)
+            forecast[instrument] = self.result[instrument].forecast(steps=n_forecast)
+
+        result = pd.Series(index=x_test.index)
+        for i in range(len(result)):
+            result[i] = forecast[result.index[i][1]].iloc[divmod(i, 6)[0]]
+        return result
