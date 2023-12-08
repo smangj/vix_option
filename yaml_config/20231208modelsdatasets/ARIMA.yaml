@@ -1,13 +1,7 @@
 qlib_init:
     provider_uri: "data/qlib_data"
     region: cn
-    exp_manager:
-        class: "MLflowExpManager"
-        module_path: "qlib.workflow.expm"
-        kwargs:
-            uri: "databricks"
-            default_exp_name: "Experiment"
-experiment_name: "Fix_GroupVixHandler20230711_JiaQiRecord_allmodels_test"
+experiment_name: "20231208all"
 market: &market trable
 benchmark: &benchmark TLT
 roll_config:
@@ -40,7 +34,7 @@ port_analysis_config: &port_analysis_config
             min_cost: 0
 task:
    - model:
-       class: Garch
+       class: Arima
        module_path: backtest.qlib_custom.model
      dataset:
        class: DatasetH
@@ -53,7 +47,7 @@ task:
          segments:
                train: [2005-12-20, 2010-12-30]
                valid: [2010-12-31, 2010-12-31]
-               test: [2011-01-01, 2011-12-31]
+               test: [2011-01-01, 2011-02-01]
      record:
        - class: SigAnaRecord
          module_path: qlib.workflow.record_temp
@@ -64,4 +58,4 @@ task:
          module_path: backtest.qlib_custom.record
          kwargs:
            config: *port_analysis_config
-     name: "Garch"
+     name: "ARIMA"

@@ -1028,8 +1028,8 @@ class myTransformer(TransformerModel):
             torch.cuda.empty_cache()
 
 
-class Garch(Model):
-    """Garch"""
+class Arima(Model):
+    """ARIMA"""
 
     def __init__(self, order=(1, 0, 1)):
         """
