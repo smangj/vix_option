@@ -50,7 +50,7 @@ task:
         module_path: qlib.data.dataset
         kwargs:
             handler:
-                class: OldBro
+                class: TermStructure
                 module_path: backtest.qlib_custom.data_handler
                 kwargs: *data_handler_config
             segments:
@@ -63,6 +63,6 @@ task:
           kwargs:
             config: *port_analysis_config
             handler:
-                class: GroupVixHandler20230711
+                class: TermStructure
                 module_path: backtest.qlib_custom.data_handler
                 kwargs: *data_handler_config

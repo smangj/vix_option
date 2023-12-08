@@ -47,13 +47,10 @@ task:
          segments:
                 train: [2005-12-20, 2007-06-30]
                 valid: [2007-07-01, 2007-12-31]
-                test: [2008-01-01, 2022-08-15]
+                test: [2008-01-01, 2008-02-01]
      record:
        - class: SigAnaRecord
          module_path: qlib.workflow.record_temp
-         kwargs:
-           ana_long_short: True
-           ann_scaler: 252
        - class: LongShortBacktestRecord
          module_path: backtest.qlib_custom.record
          kwargs:
@@ -80,13 +77,10 @@ task:
          segments:
                 train: [2005-12-20, 2007-06-30]
                 valid: [2007-07-01, 2007-12-31]
-                test: [2008-01-01, 2022-08-15]
+                test: [2008-01-01, 2008-02-01]
      record:
        - class: SigAnaRecord
          module_path: qlib.workflow.record_temp
-         kwargs:
-           ana_long_short: True
-           ann_scaler: 252
        - class: LongShortBacktestRecord
          module_path: backtest.qlib_custom.record
          kwargs:
@@ -113,13 +107,10 @@ task:
          segments:
                 train: [2005-12-20, 2007-06-30]
                 valid: [2007-07-01, 2007-12-31]
-                test: [2008-01-01, 2022-08-15]
+                test: [2008-01-01, 2008-02-01]
      record:
        - class: SigAnaRecord
          module_path: qlib.workflow.record_temp
-         kwargs:
-           ana_long_short: True
-           ann_scaler: 252
        - class: LongShortBacktestRecord
          module_path: backtest.qlib_custom.record
          kwargs:
