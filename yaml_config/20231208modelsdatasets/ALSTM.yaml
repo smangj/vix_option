@@ -1,0 +1,177 @@
+qlib_init:
+    provider_uri: "data/qlib_data"
+    region: cn
+experiment_name: "20231208all"
+market: &market trable
+benchmark: &benchmark TLT
+roll_config:
+    step: 20
+    rolling_type: "expanding"
+    horizon: 0
+data_handler_config: &data_handler_config
+    start_time: 2005-12-20
+    end_time: 2022-08-15
+    fit_start_time: 2005-12-20
+    fit_end_time: 2022-08-15
+    instruments: *market
+    infer_processors:
+        - class: FFill
+          module_path: backtest.qlib_custom.processors
+          kwargs:
+              fields_group: feature
+        - class: RobustZScoreNorm
+          kwargs:
+            fields_group: feature
+    learn_processors:
+        - class: DropnaProcessor
+          kwargs:
+              fields_group: feature
+        - class: DropnaLabel
+    label: ["Ref($close, -1) / $close - 1"]
+port_analysis_config: &port_analysis_config
+    backtest:
+        start_time: 2006-10-01
+        end_time: 2022-12-15
+        account: 100000000
+        benchmark: *benchmark
+        exchange_kwargs:
+            deal_price: close
+            open_cost: 0
+            close_cost: 0
+            min_cost: 0
+task:
+   - model:
+        class: ALSTM
+        module_path: qlib.contrib.model.pytorch_alstm_ts
+        kwargs:
+          d_feat: 6
+          hidden_size: 24
+          num_layers: 3
+          dropout: 0.1
+          n_epochs: 20
+          lr: 1e-3
+          early_stop: 20
+          batch_size: 128
+          metric: loss
+          loss: mse
+          n_jobs: 0
+          GPU: 0
+          rnn_type: GRU
+     dataset:
+       class: TSDatasetH
+       module_path: qlib.data.dataset
+       kwargs:
+         step_len: 10
+         handler:
+           class: OldBro
+           module_path: backtest.qlib_custom.data_handler
+           kwargs: *data_handler_config
+         segments:
+                train: [2005-12-20, 2007-06-30]
+                valid: [2007-07-01, 2007-12-31]
+                test: [2008-01-01, 2022-08-15]
+     record:
+       - class: SigAnaRecord
+         module_path: qlib.workflow.record_temp
+         kwargs:
+           ana_long_short: True
+           ann_scaler: 252
+       - class: LongShortBacktestRecord
+         module_path: backtest.qlib_custom.record
+         kwargs:
+           config: *port_analysis_config
+       - class: JiaQiRecord
+         module_path: backtest.qlib_custom.record
+         kwargs:
+           config: *port_analysis_config
+     name: "ALSTM_OldBro"
+   - model:
+        class: ALSTM
+        module_path: qlib.contrib.model.pytorch_alstm_ts
+        kwargs:
+          d_feat: 12
+          hidden_size: 24
+          num_layers: 3
+          dropout: 0.1
+          n_epochs: 20
+          lr: 1e-3
+          early_stop: 20
+          batch_size: 128
+          metric: loss
+          loss: mse
+          n_jobs: 0
+          GPU: 0
+          rnn_type: GRU
+     dataset:
+       class: TSDatasetH
+       module_path: qlib.data.dataset
+       kwargs:
+         handler:
+           step_len: 10
+           class: TermStructure
+           module_path: backtest.qlib_custom.data_handler
+           kwargs: *data_handler_config
+         segments:
+                train: [2005-12-20, 2007-06-30]
+                valid: [2007-07-01, 2007-12-31]
+                test: [2008-01-01, 2022-08-15]
+     record:
+       - class: SigAnaRecord
+         module_path: qlib.workflow.record_temp
+         kwargs:
+           ana_long_short: True
+           ann_scaler: 252
+       - class: LongShortBacktestRecord
+         module_path: backtest.qlib_custom.record
+         kwargs:
+           config: *port_analysis_config
+       - class: JiaQiRecord
+         module_path: backtest.qlib_custom.record
+         kwargs:
+           config: *port_analysis_config
+     name: "ALSTM_TermStructure"
+   - model:
+        class: ALSTM
+        module_path: qlib.contrib.model.pytorch_alstm_ts
+        kwargs:
+          d_feat: 153
+          hidden_size: 24
+          num_layers: 3
+          dropout: 0.1
+          n_epochs: 20
+          lr: 1e-3
+          early_stop: 20
+          batch_size: 128
+          metric: loss
+          loss: mse
+          n_jobs: 0
+          GPU: 0
+          rnn_type: GRU
+     dataset:
+       class: TSDatasetH
+       module_path: qlib.data.dataset
+       kwargs:
+         step_len: 10
+         handler:
+           class: Derivative
+           module_path: backtest.qlib_custom.data_handler
+           kwargs: *data_handler_config
+         segments:
+                train: [2005-12-20, 2007-06-30]
+                valid: [2007-07-01, 2007-12-31]
+                test: [2008-01-01, 2022-08-15]
+     record:
+       - class: SigAnaRecord
+         module_path: qlib.workflow.record_temp
+         kwargs:
+           ana_long_short: True
+           ann_scaler: 252
+       - class: LongShortBacktestRecord
+         module_path: backtest.qlib_custom.record
+         kwargs:
+           config: *port_analysis_config
+       - class: JiaQiRecord
+         module_path: backtest.qlib_custom.record
+         kwargs:
+           config: *port_analysis_config
+     name: "ALSTM_Derivative"
