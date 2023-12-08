@@ -54,7 +54,8 @@ def myworkflow(
     - the code is located here ``qlib/workflow/cli.py`
     """
     with open(config_path) as fp:
-        config = yaml.safe_load(fp)
+        y = yaml.YAML(typ="safe", pure=True)
+        config = y.load(fp)
 
     # config the `sys` section
     sys_config(config, config_path)
