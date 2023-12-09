@@ -14,14 +14,7 @@ data_handler_config: &data_handler_config
     fit_start_time: 2005-12-20
     fit_end_time: 2022-08-15
     instruments: *market
-    infer_processors:
-        - class: FFill
-          module_path: backtest.qlib_custom.processors
-          kwargs:
-              fields_group: feature
-        - class: RobustZScoreNorm
-          kwargs:
-            fields_group: feature
+    infer_processors: []
     learn_processors:
         - class: DropnaProcessor
           kwargs:
@@ -41,26 +34,12 @@ port_analysis_config: &port_analysis_config
             min_cost: 0
 task:
    - model:
-        class: LSTM
-        module_path: qlib.contrib.model.pytorch_lstm_ts
-        kwargs:
-            d_feat: 5
-            hidden_size: 24
-            num_layers: 3
-            dropout: 0.1
-            n_epochs: 20
-            lr: 1e-3
-            early_stop: 15
-            batch_size: 128
-            metric: loss
-            loss: mse
-            n_jobs: 0
-            GPU: 0
+        class: XgbFix
+        module_path: backtest.qlib_custom.model
      dataset:
-       class: TSDatasetH
+       class: DatasetH
        module_path: qlib.data.dataset
        kwargs:
-         step_len: 10
          handler:
            class: OldBro
            module_path: backtest.qlib_custom.data_handler
@@ -68,7 +47,7 @@ task:
          segments:
                 train: [2005-12-20, 2007-06-30]
                 valid: [2007-07-01, 2007-12-31]
-                test: [2008-01-01, 2008-02-01]
+                test: [2008-01-01, 2022-08-15]
      record:
        - class: SigAnaRecord
          module_path: qlib.workflow.record_temp
@@ -80,36 +59,25 @@ task:
          module_path: backtest.qlib_custom.record
          kwargs:
            config: *port_analysis_config
-     name: "LSTM_OldBro"
+     name: "XGB_OldBro"
    - model:
-        class: LSTM
-        module_path: qlib.contrib.model.pytorch_lstm_ts
+        class: XgbFix
+        module_path: backtest.qlib_custom.model
         kwargs:
-            d_feat: 11
-            hidden_size: 24
-            num_layers: 3
-            dropout: 0.1
-            n_epochs: 20
-            lr: 1e-3
-            early_stop: 15
-            batch_size: 128
-            metric: loss
-            loss: mse
-            n_jobs: 0
-            GPU: 0
+            estimator: ols
+            fit_intercept: 1
      dataset:
-       class: TSDatasetH
+       class: DatasetH
        module_path: qlib.data.dataset
        kwargs:
          handler:
-           step_len: 10
            class: TermStructure
            module_path: backtest.qlib_custom.data_handler
            kwargs: *data_handler_config
          segments:
                 train: [2005-12-20, 2007-06-30]
                 valid: [2007-07-01, 2007-12-31]
-                test: [2008-01-01, 2008-02-01]
+                test: [2008-01-01, 2022-08-15]
      record:
        - class: SigAnaRecord
          module_path: qlib.workflow.record_temp
@@ -121,28 +89,17 @@ task:
          module_path: backtest.qlib_custom.record
          kwargs:
            config: *port_analysis_config
-     name: "LSTM_TermStructure"
+     name: "XGB_TermStructure"
    - model:
-        class: LSTM
-        module_path: qlib.contrib.model.pytorch_lstm_ts
+        class: XgbFix
+        module_path: backtest.qlib_custom.model
         kwargs:
-            d_feat: 152
-            hidden_size: 24
-            num_layers: 3
-            dropout: 0.1
-            n_epochs: 20
-            lr: 1e-3
-            early_stop: 15
-            batch_size: 128
-            metric: loss
-            loss: mse
-            n_jobs: 0
-            GPU: 0
+            estimator: ols
+            fit_intercept: 1
      dataset:
-       class: TSDatasetH
+       class: DatasetH
        module_path: qlib.data.dataset
        kwargs:
-         step_len: 10
          handler:
            class: Derivative
            module_path: backtest.qlib_custom.data_handler
@@ -150,7 +107,7 @@ task:
          segments:
                 train: [2005-12-20, 2007-06-30]
                 valid: [2007-07-01, 2007-12-31]
-                test: [2008-01-01, 2008-02-01]
+                test: [2008-01-01, 2022-08-15]
      record:
        - class: SigAnaRecord
          module_path: qlib.workflow.record_temp
@@ -162,4 +119,4 @@ task:
          module_path: backtest.qlib_custom.record
          kwargs:
            config: *port_analysis_config
-     name: "LSTM_Derivative"
+     name: "XGB_Derivative"

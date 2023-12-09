@@ -14,7 +14,14 @@ data_handler_config: &data_handler_config
     fit_start_time: 2005-12-20
     fit_end_time: 2022-08-15
     instruments: *market
-    infer_processors: []
+    infer_processors:
+        - class: FFill
+          module_path: backtest.qlib_custom.processors
+          kwargs:
+              fields_group: feature
+        - class: RobustZScoreNorm
+          kwargs:
+            fields_group: feature
     learn_processors:
         - class: DropnaProcessor
           kwargs:
@@ -34,8 +41,11 @@ port_analysis_config: &port_analysis_config
             min_cost: 0
 task:
    - model:
-        class: XgbFix
+        class: DNNModelPytorchFix
         module_path: backtest.qlib_custom.model
+        kwargs:
+            pt_model_kwargs:
+              input_dim: 5
      dataset:
        class: DatasetH
        module_path: qlib.data.dataset
@@ -47,7 +57,7 @@ task:
          segments:
                 train: [2005-12-20, 2007-06-30]
                 valid: [2007-07-01, 2007-12-31]
-                test: [2008-01-01, 2008-02-01]
+                test: [2008-01-01, 2022-08-15]
      record:
        - class: SigAnaRecord
          module_path: qlib.workflow.record_temp
@@ -59,13 +69,13 @@ task:
          module_path: backtest.qlib_custom.record
          kwargs:
            config: *port_analysis_config
-     name: "XGB_OldBro"
+     name: "MLP_OldBro"
    - model:
-        class: XgbFix
+        class: DNNModelPytorchFix
         module_path: backtest.qlib_custom.model
         kwargs:
-            estimator: ols
-            fit_intercept: 1
+            pt_model_kwargs:
+              input_dim: 11
      dataset:
        class: DatasetH
        module_path: qlib.data.dataset
@@ -77,7 +87,7 @@ task:
          segments:
                 train: [2005-12-20, 2007-06-30]
                 valid: [2007-07-01, 2007-12-31]
-                test: [2008-01-01, 2008-02-01]
+                test: [2008-01-01, 2022-08-15]
      record:
        - class: SigAnaRecord
          module_path: qlib.workflow.record_temp
@@ -89,13 +99,13 @@ task:
          module_path: backtest.qlib_custom.record
          kwargs:
            config: *port_analysis_config
-     name: "XGB_TermStructure"
+     name: "MLP_TermStructure"
    - model:
-        class: XgbFix
+        class: DNNModelPytorchFix
         module_path: backtest.qlib_custom.model
         kwargs:
-            estimator: ols
-            fit_intercept: 1
+            pt_model_kwargs:
+              input_dim: 152
      dataset:
        class: DatasetH
        module_path: qlib.data.dataset
@@ -107,7 +117,7 @@ task:
          segments:
                 train: [2005-12-20, 2007-06-30]
                 valid: [2007-07-01, 2007-12-31]
-                test: [2008-01-01, 2008-02-01]
+                test: [2008-01-01, 2022-08-15]
      record:
        - class: SigAnaRecord
          module_path: qlib.workflow.record_temp
@@ -119,4 +129,4 @@ task:
          module_path: backtest.qlib_custom.record
          kwargs:
            config: *port_analysis_config
-     name: "XGB_Derivative"
+     name: "MLP_Derivative"

@@ -41,21 +41,12 @@ port_analysis_config: &port_analysis_config
             min_cost: 0
 task:
    - model:
-       class: TCN
-       module_path: qlib.contrib.model.pytorch_tcn_ts
-       kwargs:
-           d_feat: 5
-           hidden_size: 128
-           num_layers: 3
-           dropout: 0.0
-           n_epochs: 20
-           lr: 1e-3
-           early_stop: 15
-           batch_size: 256
-           metric: loss
-           loss: mse
-           n_jobs: 0
-           GPU: 0
+        class: myTransformer
+        module_path: backtest.qlib_custom.model
+        kwargs:
+            d_feat: 5
+            hidden_size: 2000
+            n_jobs: 0
      dataset:
        class: TSDatasetH
        module_path: qlib.data.dataset
@@ -68,7 +59,7 @@ task:
          segments:
                 train: [2005-12-20, 2007-06-30]
                 valid: [2007-07-01, 2007-12-31]
-                test: [2008-01-01, 2008-02-01]
+                test: [2008-01-01, 2022-08-15]
      record:
        - class: SigAnaRecord
          module_path: qlib.workflow.record_temp
@@ -80,36 +71,27 @@ task:
          module_path: backtest.qlib_custom.record
          kwargs:
            config: *port_analysis_config
-     name: "TCN_OldBro"
+     name: "Transformer_OldBro"
    - model:
-       class: TCN
-       module_path: qlib.contrib.model.pytorch_tcn_ts
-       kwargs:
-           d_feat: 5
-           hidden_size: 128
-           num_layers: 3
-           dropout: 0.0
-           n_epochs: 20
-           lr: 1e-3
-           early_stop: 15
-           batch_size: 256
-           metric: loss
-           loss: mse
-           n_jobs: 0
-           GPU: 0
+        class: myTransformer
+        module_path: backtest.qlib_custom.model
+        kwargs:
+            d_feat: 11
+            hidden_size: 2000
+            n_jobs: 0
      dataset:
        class: TSDatasetH
        module_path: qlib.data.dataset
        kwargs:
-         step_len: 5
          handler:
+           step_len: 5
            class: TermStructure
            module_path: backtest.qlib_custom.data_handler
            kwargs: *data_handler_config
          segments:
                 train: [2005-12-20, 2007-06-30]
                 valid: [2007-07-01, 2007-12-31]
-                test: [2008-01-01, 2008-02-01]
+                test: [2008-01-01, 2022-08-15]
      record:
        - class: SigAnaRecord
          module_path: qlib.workflow.record_temp
@@ -121,23 +103,14 @@ task:
          module_path: backtest.qlib_custom.record
          kwargs:
            config: *port_analysis_config
-     name: "TCN_TermStructure"
+     name: "Transformer_TermStructure"
    - model:
-       class: TCN
-       module_path: qlib.contrib.model.pytorch_tcn_ts
-       kwargs:
-           d_feat: 5
-           hidden_size: 128
-           num_layers: 3
-           dropout: 0.0
-           n_epochs: 20
-           lr: 1e-3
-           early_stop: 15
-           batch_size: 256
-           metric: loss
-           loss: mse
-           n_jobs: 0
-           GPU: 0
+        class: myTransformer
+        module_path: backtest.qlib_custom.model
+        kwargs:
+            d_feat: 152
+            hidden_size: 2000
+            n_jobs: 0
      dataset:
        class: TSDatasetH
        module_path: qlib.data.dataset
@@ -150,7 +123,7 @@ task:
          segments:
                 train: [2005-12-20, 2007-06-30]
                 valid: [2007-07-01, 2007-12-31]
-                test: [2008-01-01, 2008-02-01]
+                test: [2008-01-01, 2022-08-15]
      record:
        - class: SigAnaRecord
          module_path: qlib.workflow.record_temp
@@ -162,4 +135,4 @@ task:
          module_path: backtest.qlib_custom.record
          kwargs:
            config: *port_analysis_config
-     name: "TCN_Derivative"
+     name: "Transformer_Derivative"

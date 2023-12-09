@@ -41,13 +41,13 @@ port_analysis_config: &port_analysis_config
             min_cost: 0
 task:
    - model:
-        class: SFM
-        module_path: qlib.contrib.model.pytorch_sfm
+        class: LSTM
+        module_path: qlib.contrib.model.pytorch_lstm_ts
         kwargs:
             d_feat: 5
             hidden_size: 24
             num_layers: 3
-            dropout: 0.0
+            dropout: 0.1
             n_epochs: 20
             lr: 1e-3
             early_stop: 15
@@ -57,9 +57,10 @@ task:
             n_jobs: 0
             GPU: 0
      dataset:
-       class: DatasetH
+       class: TSDatasetH
        module_path: qlib.data.dataset
        kwargs:
+         step_len: 10
          handler:
            class: OldBro
            module_path: backtest.qlib_custom.data_handler
@@ -67,7 +68,7 @@ task:
          segments:
                 train: [2005-12-20, 2007-06-30]
                 valid: [2007-07-01, 2007-12-31]
-                test: [2008-01-01, 2008-02-01]
+                test: [2008-01-01, 2022-08-15]
      record:
        - class: SigAnaRecord
          module_path: qlib.workflow.record_temp
@@ -79,15 +80,15 @@ task:
          module_path: backtest.qlib_custom.record
          kwargs:
            config: *port_analysis_config
-     name: "SFM_OldBro"
+     name: "LSTM_OldBro"
    - model:
-        class: SFM
-        module_path: qlib.contrib.model.pytorch_sfm
+        class: LSTM
+        module_path: qlib.contrib.model.pytorch_lstm_ts
         kwargs:
             d_feat: 11
             hidden_size: 24
             num_layers: 3
-            dropout: 0.0
+            dropout: 0.1
             n_epochs: 20
             lr: 1e-3
             early_stop: 15
@@ -97,17 +98,18 @@ task:
             n_jobs: 0
             GPU: 0
      dataset:
-       class: DatasetH
+       class: TSDatasetH
        module_path: qlib.data.dataset
        kwargs:
          handler:
+           step_len: 10
            class: TermStructure
            module_path: backtest.qlib_custom.data_handler
            kwargs: *data_handler_config
          segments:
                 train: [2005-12-20, 2007-06-30]
                 valid: [2007-07-01, 2007-12-31]
-                test: [2008-01-01, 2008-02-01]
+                test: [2008-01-01, 2022-08-15]
      record:
        - class: SigAnaRecord
          module_path: qlib.workflow.record_temp
@@ -119,15 +121,15 @@ task:
          module_path: backtest.qlib_custom.record
          kwargs:
            config: *port_analysis_config
-     name: "SFM_TermStructure"
+     name: "LSTM_TermStructure"
    - model:
-        class: SFM
-        module_path: qlib.contrib.model.pytorch_sfm
+        class: LSTM
+        module_path: qlib.contrib.model.pytorch_lstm_ts
         kwargs:
             d_feat: 152
             hidden_size: 24
             num_layers: 3
-            dropout: 0.0
+            dropout: 0.1
             n_epochs: 20
             lr: 1e-3
             early_stop: 15
@@ -137,9 +139,10 @@ task:
             n_jobs: 0
             GPU: 0
      dataset:
-       class: DatasetH
+       class: TSDatasetH
        module_path: qlib.data.dataset
        kwargs:
+         step_len: 10
          handler:
            class: Derivative
            module_path: backtest.qlib_custom.data_handler
@@ -147,7 +150,7 @@ task:
          segments:
                 train: [2005-12-20, 2007-06-30]
                 valid: [2007-07-01, 2007-12-31]
-                test: [2008-01-01, 2008-02-01]
+                test: [2008-01-01, 2022-08-15]
      record:
        - class: SigAnaRecord
          module_path: qlib.workflow.record_temp
@@ -159,4 +162,4 @@ task:
          module_path: backtest.qlib_custom.record
          kwargs:
            config: *port_analysis_config
-     name: "SFM_Derivative"
+     name: "LSTM_Derivative"
