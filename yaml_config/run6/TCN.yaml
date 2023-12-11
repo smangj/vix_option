@@ -14,7 +14,14 @@ data_handler_config: &data_handler_config
     fit_start_time: 2005-12-20
     fit_end_time: 2022-08-15
     instruments: *market
-    infer_processors: []
+    infer_processors:
+        - class: FFill
+          module_path: backtest.qlib_custom.processors
+          kwargs:
+              fields_group: feature
+        - class: RobustZScoreNorm
+          kwargs:
+            fields_group: feature
     learn_processors:
         - class: DropnaProcessor
           kwargs:
@@ -36,12 +43,26 @@ port_analysis_config: &port_analysis_config
             min_cost: 0
 task:
    - model:
-        class: XgbFix
-        module_path: backtest.qlib_custom.model
+       class: TCN
+       module_path: qlib.contrib.model.pytorch_tcn_ts
+       kwargs:
+           d_feat: 5
+           hidden_size: 128
+           num_layers: 3
+           dropout: 0.0
+           n_epochs: 20
+           lr: 1e-3
+           early_stop: 15
+           batch_size: 256
+           metric: loss
+           loss: mse
+           n_jobs: 0
+           GPU: 0
      dataset:
-       class: DatasetH
+       class: TSDatasetH
        module_path: qlib.data.dataset
        kwargs:
+         step_len: 5
          handler:
            class: OldBro
            module_path: backtest.qlib_custom.data_handler
@@ -61,17 +82,28 @@ task:
          module_path: backtest.qlib_custom.record
          kwargs:
            config: *port_analysis_config
-     name: "XGB_OldBro_ynorm"
+     name: "TCN_OldBro_ynorm"
    - model:
-        class: XgbFix
-        module_path: backtest.qlib_custom.model
-        kwargs:
-            estimator: ols
-            fit_intercept: 1
+       class: TCN
+       module_path: qlib.contrib.model.pytorch_tcn_ts
+       kwargs:
+           d_feat: 5
+           hidden_size: 128
+           num_layers: 3
+           dropout: 0.0
+           n_epochs: 20
+           lr: 1e-3
+           early_stop: 15
+           batch_size: 256
+           metric: loss
+           loss: mse
+           n_jobs: 0
+           GPU: 0
      dataset:
-       class: DatasetH
+       class: TSDatasetH
        module_path: qlib.data.dataset
        kwargs:
+         step_len: 5
          handler:
            class: TermStructure
            module_path: backtest.qlib_custom.data_handler
@@ -91,17 +123,28 @@ task:
          module_path: backtest.qlib_custom.record
          kwargs:
            config: *port_analysis_config
-     name: "XGB_TermStructure_ynorm"
+     name: "TCN_TermStructure_ynorm"
    - model:
-        class: XgbFix
-        module_path: backtest.qlib_custom.model
-        kwargs:
-            estimator: ols
-            fit_intercept: 1
+       class: TCN
+       module_path: qlib.contrib.model.pytorch_tcn_ts
+       kwargs:
+           d_feat: 5
+           hidden_size: 128
+           num_layers: 3
+           dropout: 0.0
+           n_epochs: 20
+           lr: 1e-3
+           early_stop: 15
+           batch_size: 256
+           metric: loss
+           loss: mse
+           n_jobs: 0
+           GPU: 0
      dataset:
-       class: DatasetH
+       class: TSDatasetH
        module_path: qlib.data.dataset
        kwargs:
+         step_len: 5
          handler:
            class: Derivative
            module_path: backtest.qlib_custom.data_handler
@@ -121,4 +164,4 @@ task:
          module_path: backtest.qlib_custom.record
          kwargs:
            config: *port_analysis_config
-     name: "XGB_Derivative_ynorm"
+     name: "TCN_Derivative_ynorm"
