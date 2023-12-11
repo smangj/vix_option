@@ -238,7 +238,7 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur eget porta er
 Lorem ipsum dolor sit~\cite{bib1} amet, consectetur adipiscing elit. Curabitur eget porta erat. Morbi consectetur est vel gravida pretium. Suspendisse ut dui eu ante cursus gravida non sed sem. Nullam Eq~(\ref{eq:schemeP}) sapien tellus, commodo id velit id, eleifend volutpat quam. Phasellus mauris velit, dapibus finibus elementum vel, pulvinar non tellus. Nunc pellentesque pretium diam, quis maximus dolor faucibus id.~\cite{bib2} Nunc convallis sodales ante, ut ullamcorper est egestas vitae. Nam sit amet enim ultrices, ultrices elit pulvinar, volutpat risus.
 
 \begin{eqnarray}
-\label{eq:schemeP}
+\label{eq:XGBoost}
 	\mathrm{P_Y} = \underbrace{H(Y_n) - H(Y_n|\mathbf{V}^{Y}_{n})}_{S_Y} + \underbrace{H(Y_n|\mathbf{V}^{Y}_{n})- H(Y_n|\mathbf{V}^{X,Y}_{n})}_{T_{X\rightarrow Y}},
 \end{eqnarray}
 
@@ -257,9 +257,23 @@ Figure caption text here, please use this space for the figure panel description
 
 \subsection*{machine learning models}
 
-...
+\subsection*{1. Trading signals constructions}
+\subsection*{2. Proposed Machine Learning Algorithms}
+\subsubsection*{2.1 XGBoost}
+We first implement XGBoost machine learning algorithm to predict next-day returns of VIX CMFs, XGBoost is a scalable end-to-end tree boosting based on gradient tree boosting proposed by Freidman (1999). It shows promising results on various machine learning challenges. See XGBoost details in Chen and Guestrin (2016) work. Eq.1 presents the XGBoost algorithm implementation in our prediction task.
 
-\subsection*{machine learning models}
+
+                            [eq.1]
+
+\subsubsection*{2.2 Recurrent Neural Network (RNN)}
+We then implement multiple machine learning models based on RNN architecture which aims to find patterns in sequences of data. an overview of RNN architecture can be found in Schmidt (2019) and Sherstinsky (2023)  work.
+\subsubsection*{2.2.1 Long Short-term Memory (LSTM)}
+ We first apply LSTM model that is originally proposed by Hochreiter and Schmidhuber (1997).The unique memory cells and input, forget and output gates mechanism enables LSTM to store important information and forget irrelevant details over long sequences. Furthermore, given the recent innovation of attention mechanism, we further apply the Attention-based LSTM (ALSTM) introduced by Wang and Hao (2020) that applies a multi-head dot product attention in the memory systems and achieve reasoning purposes. Eq.2 and eq.3 illustrates the mathematical details for the implementation of LSTM and ALSTM in our study.
+
+[eq.2], [eq.3]
+
+\subsubsection*{2.2.2 Gated Recurrent Unit (GRU)}
+A RNN model based on GRU is also implemented, GRU was initially introduced by Cho et al. (2014), it is designed to efficiently capture dependencies in sequential data over time. The GRU achieves this through its unique structure, which includes two gates: the update gate and the reset gate. These gates effectively control the flow of information within the unit, allowing the network to retain important information from past data inputs while discarding irrelevant data.
 
 % Results and Discussion can be combined.
 \section*{data and experiment design}
