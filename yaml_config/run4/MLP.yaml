@@ -27,6 +27,8 @@ data_handler_config: &data_handler_config
           kwargs:
               fields_group: feature
         - class: DropnaLabel
+        - class: LabelInstrumentNorm
+          module_path: backtest.qlib_custom.processors
     label: ["Ref($close, -1) / $close - 1"]
 port_analysis_config: &port_analysis_config
     backtest:
@@ -41,26 +43,15 @@ port_analysis_config: &port_analysis_config
             min_cost: 0
 task:
    - model:
-       class: TCN
-       module_path: qlib.contrib.model.pytorch_tcn_ts
-       kwargs:
-           d_feat: 5
-           hidden_size: 128
-           num_layers: 3
-           dropout: 0.0
-           n_epochs: 20
-           lr: 1e-3
-           early_stop: 15
-           batch_size: 256
-           metric: loss
-           loss: mse
-           n_jobs: 0
-           GPU: 0
+        class: DNNModelPytorchFix
+        module_path: backtest.qlib_custom.model
+        kwargs:
+            pt_model_kwargs:
+              input_dim: 5
      dataset:
-       class: TSDatasetH
+       class: DatasetH
        module_path: qlib.data.dataset
        kwargs:
-         step_len: 5
          handler:
            class: OldBro
            module_path: backtest.qlib_custom.data_handler
@@ -80,28 +71,17 @@ task:
          module_path: backtest.qlib_custom.record
          kwargs:
            config: *port_analysis_config
-     name: "TCN_OldBro"
+     name: "MLP_OldBro_ynorm"
    - model:
-       class: TCN
-       module_path: qlib.contrib.model.pytorch_tcn_ts
-       kwargs:
-           d_feat: 5
-           hidden_size: 128
-           num_layers: 3
-           dropout: 0.0
-           n_epochs: 20
-           lr: 1e-3
-           early_stop: 15
-           batch_size: 256
-           metric: loss
-           loss: mse
-           n_jobs: 0
-           GPU: 0
+        class: DNNModelPytorchFix
+        module_path: backtest.qlib_custom.model
+        kwargs:
+            pt_model_kwargs:
+              input_dim: 11
      dataset:
-       class: TSDatasetH
+       class: DatasetH
        module_path: qlib.data.dataset
        kwargs:
-         step_len: 5
          handler:
            class: TermStructure
            module_path: backtest.qlib_custom.data_handler
@@ -121,28 +101,17 @@ task:
          module_path: backtest.qlib_custom.record
          kwargs:
            config: *port_analysis_config
-     name: "TCN_TermStructure"
+     name: "MLP_TermStructure_ynorm"
    - model:
-       class: TCN
-       module_path: qlib.contrib.model.pytorch_tcn_ts
-       kwargs:
-           d_feat: 5
-           hidden_size: 128
-           num_layers: 3
-           dropout: 0.0
-           n_epochs: 20
-           lr: 1e-3
-           early_stop: 15
-           batch_size: 256
-           metric: loss
-           loss: mse
-           n_jobs: 0
-           GPU: 0
+        class: DNNModelPytorchFix
+        module_path: backtest.qlib_custom.model
+        kwargs:
+            pt_model_kwargs:
+              input_dim: 152
      dataset:
-       class: TSDatasetH
+       class: DatasetH
        module_path: qlib.data.dataset
        kwargs:
-         step_len: 5
          handler:
            class: Derivative
            module_path: backtest.qlib_custom.data_handler
@@ -162,4 +131,4 @@ task:
          module_path: backtest.qlib_custom.record
          kwargs:
            config: *port_analysis_config
-     name: "TCN_Derivative"
+     name: "MLP_Derivative_ynorm"

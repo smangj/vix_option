@@ -27,6 +27,8 @@ data_handler_config: &data_handler_config
           kwargs:
               fields_group: feature
         - class: DropnaLabel
+        - class: LabelInstrumentNorm
+          module_path: backtest.qlib_custom.processors
     label: ["Ref($close, -1) / $close - 1"]
 port_analysis_config: &port_analysis_config
     backtest:
@@ -41,17 +43,25 @@ port_analysis_config: &port_analysis_config
             min_cost: 0
 task:
    - model:
-        class: myTransformer
-        module_path: backtest.qlib_custom.model
+        class: SFM
+        module_path: qlib.contrib.model.pytorch_sfm
         kwargs:
             d_feat: 5
-            batch_size: 2000
+            hidden_size: 24
+            num_layers: 3
+            dropout: 0.0
+            n_epochs: 20
+            lr: 1e-3
+            early_stop: 15
+            batch_size: 128
+            metric: loss
+            loss: mse
             n_jobs: 0
+            GPU: 0
      dataset:
-       class: TSDatasetH
+       class: DatasetH
        module_path: qlib.data.dataset
        kwargs:
-         step_len: 5
          handler:
            class: OldBro
            module_path: backtest.qlib_custom.data_handler
@@ -71,20 +81,28 @@ task:
          module_path: backtest.qlib_custom.record
          kwargs:
            config: *port_analysis_config
-     name: "Transformer_OldBro"
+     name: "SFM_OldBro_ynorm"
    - model:
-        class: myTransformer
-        module_path: backtest.qlib_custom.model
+        class: SFM
+        module_path: qlib.contrib.model.pytorch_sfm
         kwargs:
             d_feat: 11
-            batch_size: 2000
+            hidden_size: 24
+            num_layers: 3
+            dropout: 0.0
+            n_epochs: 20
+            lr: 1e-3
+            early_stop: 15
+            batch_size: 128
+            metric: loss
+            loss: mse
             n_jobs: 0
+            GPU: 0
      dataset:
-       class: TSDatasetH
+       class: DatasetH
        module_path: qlib.data.dataset
        kwargs:
          handler:
-           step_len: 5
            class: TermStructure
            module_path: backtest.qlib_custom.data_handler
            kwargs: *data_handler_config
@@ -103,19 +121,27 @@ task:
          module_path: backtest.qlib_custom.record
          kwargs:
            config: *port_analysis_config
-     name: "Transformer_TermStructure"
+     name: "SFM_TermStructure_ynorm"
    - model:
-        class: myTransformer
-        module_path: backtest.qlib_custom.model
+        class: SFM
+        module_path: qlib.contrib.model.pytorch_sfm
         kwargs:
             d_feat: 152
-            batch_size: 2000
+            hidden_size: 24
+            num_layers: 3
+            dropout: 0.0
+            n_epochs: 20
+            lr: 1e-3
+            early_stop: 15
+            batch_size: 128
+            metric: loss
+            loss: mse
             n_jobs: 0
+            GPU: 0
      dataset:
-       class: TSDatasetH
+       class: DatasetH
        module_path: qlib.data.dataset
        kwargs:
-         step_len: 5
          handler:
            class: Derivative
            module_path: backtest.qlib_custom.data_handler
@@ -135,4 +161,4 @@ task:
          module_path: backtest.qlib_custom.record
          kwargs:
            config: *port_analysis_config
-     name: "Transformer_Derivative"
+     name: "SFM_Derivative_ynorm"
