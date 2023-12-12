@@ -4,6 +4,7 @@
 # @Author   : wsy
 # @email    : 631535207@qq.com
 from qlib.contrib.model import LinearModel, XGBModel
+from qlib.contrib.model.pytorch_transformer_ts import Transformer
 from qlib.contrib.model.pytorch_nn import DNNModelPytorch, AverageMeter
 from qlib.contrib.meta.data_selection.utils import ICLoss
 from qlib.model.base import Model
@@ -712,7 +713,6 @@ class MultiOutputGRU(GRU_normal):
         indices = np.arange(len(x_values))
 
         for i in range(len(indices))[:: self.batch_size]:
-
             feature = (
                 torch.from_numpy(x_values[indices[i : i + self.batch_size]])
                 .float()
@@ -948,6 +948,74 @@ class DNNModelPytorchFix(DNNModelPytorch):
 
 
 class myTransformer(TransformerModel):
+    def __init__(
+        self,
+        d_feat: int = 20,
+        d_model: int = 64,
+        batch_size: int = 8192,
+        nhead: int = 2,
+        num_layers: int = 2,
+        dropout: float = 0,
+        n_epochs=100,
+        lr=0.0001,
+        metric="",
+        early_stop=5,
+        loss="mse",
+        optimizer="adam",
+        reg=1e-3,
+        n_jobs=10,
+        GPU=0,
+        seed=None,
+        **kwargs,
+    ):
+
+        # set hyper-parameters.
+        self.d_model = d_model
+        self.dropout = dropout
+        self.n_epochs = n_epochs
+        self.lr = lr
+        self.reg = reg
+        self.metric = metric
+        self.batch_size = batch_size
+        self.early_stop = early_stop
+        self.optimizer = optimizer.lower()
+        self.loss = loss
+        self.n_jobs = n_jobs
+        if torch.cuda.is_available() and GPU >= 0:
+            self.device = torch.cuda.set_device(GPU)
+        else:
+            self.device = torch.device("cpu")
+        self.seed = seed
+        self.logger = get_module_logger("TransformerModel")
+        self.logger.info(
+            "Naive Transformer:"
+            "\nbatch_size : {}"
+            "\ndevice : {}".format(self.batch_size, self.device)
+        )
+
+        if self.seed is not None:
+            np.random.seed(self.seed)
+            torch.manual_seed(self.seed)
+
+        self.model = Transformer(
+            d_feat, d_model, nhead, num_layers, dropout, self.device
+        )
+        if optimizer.lower() == "adam":
+            self.train_optimizer = optim.Adam(
+                self.model.parameters(), lr=self.lr, weight_decay=self.reg
+            )
+        elif optimizer.lower() == "gd":
+            self.train_optimizer = optim.SGD(
+                self.model.parameters(), lr=self.lr, weight_decay=self.reg
+            )
+        else:
+            raise NotImplementedError(
+                "optimizer {} is not supported!".format(optimizer)
+            )
+
+        self.fitted = False
+        self.model.to(self.device)
+
     def fit(
         self,
         dataset: DatasetH,
