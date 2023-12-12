@@ -244,7 +244,60 @@ Lorem ipsum dolor sit~\cite{bib1} amet, consectetur adipiscing elit. Curabitur e
 
 \section*{Research Methodology}
 \subsection*{VIX term structures decompositions}
-The VIX is calculated by the Chicago Board Options Exchange (CBOE) and is based on the prices of options on the S&P 500 Index.
+The VIX is calculated by the Chicago Board Options Exchange (CBOE) and is based on the prices of options on the S\&P 500 Index.
+\\Let $t$ denote time and let $VIX_t$ denote the value of VIX on that date. At time $t$,
+we can view lots of VIX futures contracts with different expiration dates:
+\begin{eqnarray}
+    \mathrm{F^i_t} := \text{VIX futures expiring at time $T_i$ at time t}
+\end{eqnarray}
+where $i$ denote the index of the VIX futures contracts with a ascending expiration dates $T_1 < T_2 < ... < T_d$.
+\\A term-structure of constant-maturity VIX futures(CMFs), consist of 1,2,...,6 months in our case, are constructed as
+a linear interpolation of two nearest expiration dates VIX futures:
+\begin{eqnarray}
+\label{eq:defineV}
+    \mathrm{V^j_t} := \omega^j_tF^{L_j}_t\ + (1 - \omega^j_t)F^{R_j}_t \text{for j in \{1,2,...,6\}}
+\end{eqnarray}
+where $L_j$ represents the VIX futures of the nearest expiration dates close to $j$-month on the left of time axis,
+$R_j$ represents the VIX futures of the nearest expiration dates close to $j$-month on the right of time axis, and
+$\omega^j_t = \frac{T_{R_j} - 30j}{T_{R_j} - T_{L_j}}$. Note that $VIX_t$ is like a zero-horizon CMF.
+CMFs are commonly used for they do not suffer fluctuations caused by contract expiry.
+
+\subsubsection*{Rolling VIX Futures Derivatives and Strategies}
+Through a rolling VIX futures derivatives or strategies can reappearance the daily returns of CMFs.
+SPVXSP, SPVIX2ME, SPVIX3ME, SPVIX4ME, SPVXMP, SPVIX6ME represents 1-6 months CMFs, they can be traded or replicated with trades in the rolling VIX futures strategies.
+Derivatives like ETFs and ETNs or Strategies maintains the CMF weights of equation \ref{eq:define V} for fixed maturity $j-month$. For each $j$, we denote $R^j$
+the daily return of rolling VIX futures strategy, trading cost is not considered:
+\begin{eqnarray}
+    \mathrm{R^j_t} = \frac{\omega^j_t{\Delta}F^{L_j}_t\ + (1 - \omega^j_t){\Delta}F^{R_j}_t}{\omega^j_tF^{L_j}_t\ + (1 - \omega^j_t)F^{R_j}_t}
+\end{eqnarray}
+where${\Delta}F^{L_j}_t = F^{L_j}_{t+1} - F^{L_j}_t$. We denote ${\Delta}t = \frac{1}{252}$, transform equation in terms of the CMFs:
+\begin{eqnarray}
+\label{eq: $R^j_t$2}
+    \mathrm{R^j_t} = \frac{{\Delta}V^j_t}{V^j_t} - \frac{F^{R_j}_{t+1} - F^{L_j}_{t+1}}{V^j_t(T_{R_j} - T_{L_j}){\Delta}t}{\Delta}t
+\end{eqnarray}
+Let Roll denote the drift term in equation \ref{eq: $R^j_t$2}, it referred to as the roll yield of rolling VIX futures strategy:
+\begin{eqnarray}
+    \mathrm{Roll^j_{t+1}} := - \frac{F^{R_j}_{t+1} - F^{L_j}_{t+1}}{V^j_t(T_{R_j} - T_{L_j}){\Delta}t}
+\end{eqnarray}
+In a Contango circumstances, $F^{R_j}_{t+1} > F^{L_j}_{t+1}$ means $Roll < 0$. On the opposite, in a Backwardation circumstances $Roll > 0$.
+We re-write equation as follows:
+\begin{eqnarray}
+\label{eq: $R^j_t$3}
+    \mathrm{R^j_t} = \frac{{\Delta}V^j_t}{V^j_t} + Roll^j_{t+1}{\Delta}t
+\end{eqnarray}
+From equation \ref{eq: $R^j_t$3} we see $R^j_t$ consist of two parts, the change in $V^j_t$ and roll yield. As history data shown, the most likely VIX futures
+curves are contango, so the value of the rolling VIX futures strategies decay.
+\\xxx shows that volatility is a mean-reversion process, in a ideal world, suppose $V^j_t$ and CMFs are both stable for a long time like a month, then
+the return of $V^j_t$ should be $V^j_t - V^{j-1}_t$, so we denote $\mu$ as :
+\begin{eqnarray}
+\label{eq: mu}
+    \mathrm{\mu^j_t} = V^j_t - V^{j-1}_t
+\end{eqnarray}
+$\mu^j_t$ contains instantaneous market views of return about $V^j_t$.
+ynorm
+
+
+
 % For figure citations, please use "Fig" instead of "Figure".
 Nulla mi mi, Fig~\ref{fig1} venenatis sed ipsum varius, volutpat euismod diam. Proin rutrum vel massa non gravida. Quisque tempor sem et dignissim rutrum. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi at justo vitae nulla elementum commodo eu id massa. In vitae diam ac augue semper tincidunt eu ut eros. Fusce fringilla erat porttitor lectus cursus, \nameref{S1_Video} vel sagittis arcu lobortis. Aliquam in enim semper, aliquam massa id, cursus neque. Praesent faucibus semper libero.
 
