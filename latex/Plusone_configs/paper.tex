@@ -310,28 +310,64 @@ Figure caption text here, please use this space for the figure panel description
 
 \subsection*{machine learning models}
 
-\subsection*{1. Trading signals constructions}
-Let $t$ denote time and let $VIX_t$ denote the value of VIX on that date. Let $d$ be an integer such that $d + 1$ is the number of VIX futures contracts, and let $T_1 < T_2 < • • • < T_(t+1)$ denote the
-expiration dates of these VIX futures contracts. Let us denote:
-
-\subsection*{2. Proposed Machine Learning Algorithms}
 \subsubsection*{2.1 XGBoost}
-We first implement XGBoost machine learning algorithm to predict next-day returns of VIX CMFs, XGBoost is a scalable end-to-end tree boosting based on gradient tree boosting proposed by Freidman (1999). It shows promising results on various machine learning challenges. See XGBoost details in Chen and Guestrin (2016) work. Eq.1 presents the XGBoost algorithm implementation in our prediction task.
+ The concept of boosting, proposed by Freund and Schapire (1999), revolves around an ensemble model strategy that combines multiple weak learners to create a more robust learner. Friedman (1999) introduced Gradient Tree Boosting, an improvement in boosting that incorporates the gradient descent algorithm into the loss function to minimize errors. Expanding on gradient boosting, Chen and Guestrin (2016) introduce XGBoost, a scalable end-to-end tree boosting system based on additive training strategy that augments gradient tree boosting with regularization, efficient handling of sparse data, and enhanced computational efficiency, resulting in superior speed and accuracy. Eq.1 denotes the objective function of XGBoost where \(\mathbf{\sum_{i=1}^{n}l(y_i,\hat{y}_i)}\) represents the training loss function and \(\mathbf{{\sum_{k=1}^{K}}\Omega(f_k)}\) denotes the complexity of trees.
+\begin{eqnarray}
+\label{eq:schemeP}
+\mathrm{Obj}=\underbrace{\mathbf{\sum_{i=1}^{n}l(y_i,\hat{y}_i)}}_{Training \: Loss} +\underbrace{\mathbf{{\sum_{k=1}^{K}}\Omega(f_k)}}_{Complexity \: of \: trees}
+\end{eqnarray}
 
 
-                            [eq.1]
+\subsubsection*{2.2 Multilayer Perceptron (MLP)}
 
-\subsubsection*{2.2 Recurrent Neural Network (RNN)}
-We then implement multiple machine learning models based on RNN architecture which aims to find patterns in sequences of data. an overview of RNN architecture can be found in Schmidt (2019) and Sherstinsky (2023)  work.
-\subsubsection*{2.2.1 Long Short-term Memory (LSTM)}
- We first apply LSTM model that is originally proposed by Hochreiter and Schmidhuber (1997).The unique memory cells and input, forget and output gates mechanism enables LSTM to store important information and forget irrelevant details over long sequences. Furthermore, given the recent innovation of attention mechanism, we further apply the Attention-based LSTM (ALSTM) introduced by Wang and Hao (2020) that applies a multi-head dot product attention in the memory systems and achieve reasoning purposes. Eq.2 and eq.3 illustrates the mathematical details for the implementation of LSTM and ALSTM in our study.
+(introduction of MLP).
+In our experiment, we use leaky ReLU introduced by Mass (2013) as the activation function \(\phi\) for MLP, the mathematical expression of leaky ReLU  is shown in Eq.2. Given activation function \(\phi\), features \(X \in R^ {n\times d}\) where \(x\) presents the batch size and \(d\) presents the dimensionalities
+\begin{eqnarray}
+\label{eq:schemeP}
+\mathrm{\phi^{(i)}} =\mathbf{max({W^{(i)}}^{T}x,0)}=
+\begin{cases}
+\mathbf{{W^{(i)}}^{T}x},\quad &\mathbf{{W^{(i)}}^{T}x}>0\\0, \quad else
+\end{cases}
+\end{eqnarray}
+where \(W^{(i)}\) is the weight vector of \(i_{th}\) hidden unit while \(x\) is the input features. A naive MLP can be illustrated as figure 2.
+\begin{figure}[!h]
+\includegraphics[width=0.5\linewidth]{MLP.jpg}
+\caption{{\bf Naive MLP:} MLP network with one hidden layer}
+\label{fig2}
+\end{figure}
+
+\subsubsection*{2.3 Recurrent Neural Network (RNN)}
+We then implement multiple machine learning models based on RNN architecture which aims to find patterns in sequences of data. The work of Schmidt (2019) provides a comprehensive overview of the basic architecture and functions of RNNs while \textit{Sherstinsky (2023) work focuses on deriving the classical RNN formulation from differential equations and addresses the challenges in training standard RNNs. The transformation of RNN into the "Vanilla LSTM" network is explained through logical arguments, with a detailed description of the LSTM system's equations and entities. }
+
+
+\subsubsection*{2.3.1 Long Short-term Memory (LSTM)}
+The Long Short-Term Memory (LSTM) model, originally proposed by Hochreiter and Schmidhuber (1997), represents a significant milestone in the field of neural networks, particularly in handling sequential data. LSTMs were designed to overcome the limitations of traditional RNNs, especially issues related to learning long-range dependencies. Traditional RNNs struggled with the vanishing and exploding gradient problems, making it challenging to retain information over long sequences. The unique memory cells and input, forget and output gates mechanism enables LSTM to store important information and forget irrelevant details over long sequences. With the recent innovation of attention mechanism, Wang and Hao (2020) introduced the Attention-based LSTM (ALSTM) model, they integrates a multi-head dot product attention within the LSTM architecture and significantly enhances model ability for complex reasoning over sequences.
+
+
+
+Eq.2 and eq.3 illustrates the mathematical details for the implementation of LSTM and ALSTM in our study.
+
 
 [eq.2], [eq.3]
 
-\subsubsection*{2.2.2 Gated Recurrent Unit (GRU)}
-A RNN model based on GRU is also implemented, GRU was initially introduced by Cho et al. (2014), it is designed to efficiently capture dependencies in sequential data over time. The GRU achieves this through its unique structure, which includes two gates: the update gate and the reset gate. These gates effectively control the flow of information within the unit, allowing the network to retain important information from past data inputs while discarding irrelevant data.
+\subsubsection*{2.3.2 Gated Recurrent Unit}
+ The Gated Recurrent Unit (GRU), first introduced by Cho et al. (2014), is designed to capture temporal dependencies in sequential data efficiently. This efficiency in GRU is achieved through its unique architecture, consisting of two gates: the update gate and the reset gate. The update gate plays a crucial role in determining how much of its previous state the GRU retains, enabling the effective capture of long-term dependencies. Conversely, the reset gate influences the amount of past information to be forgotten, assisting the model in concentrating on the most pertinent information. These gates effectively control the flow of information within the unit, allowing the network to retain important information from past data inputs while discarding irrelevant data.This selective memory mechanism empowers the GRU to effectively tackle the vanishing gradient problem, a common challenge in traditional RNNs.The implementation details can be found in eq.4.
 
-% Results and Discussion can be combined.
+[eq.4]
+
+
+
+\subsubsection*{2.4 Temporal Covolutional Networks}
+Temporal covolutional networks (TCN), originally introduced by Lea et al. (2016), is a type of neural network that employs convolutional layers to capture dependencies in sequential data, . Unlike traditional RNN and LSTMs, TCNs use 1D convolutions to process input sequences in parallel, making them highly parallelizable and capable of capturing long-range dependencies. Implementation details can be found in eq.5.
+
+[eq.5]
+
+
+
+\subsubsection* {2.5 Transformer}
+We also implement attention-based network architecture called transformer proposed by Vaswani et al. (2017) for prediction. Transformer departs from the traditional recurrent or convolutional layers, relying instead on the attention mechanism, This enables the model to weigh the significance of different parts of the input data differently, allowing it to capture complex dependencies and relationships within the data. Eq.6 illustrates the implementation details.
+
+[eq.6]
 \section*{data and experiment design}
 Nulla mi mi, venenatis sed ipsum varius, Table~\ref{table1} volutpat euismod diam. Proin rutrum vel massa non gravida. Quisque tempor sem et dignissim rutrum. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi at justo vitae nulla elementum commodo eu id massa. In vitae diam ac augue semper tincidunt eu ut eros. Fusce fringilla erat porttitor lectus cursus, vel sagittis arcu lobortis. Aliquam in enim semper, aliquam massa id, cursus neque. Praesent faucibus semper libero.
 
