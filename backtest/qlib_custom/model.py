@@ -4,6 +4,7 @@
 # @Author   : wsy
 # @email    : 631535207@qq.com
 from qlib.contrib.model import LinearModel, XGBModel
+from qlib.contrib.model.pytorch_transformer_ts import Transformer
 from qlib.contrib.model.pytorch_nn import DNNModelPytorch, AverageMeter
 from qlib.contrib.meta.data_selection.utils import ICLoss
 from qlib.model.base import Model
@@ -11,6 +12,7 @@ from qlib.model.utils import ConcatDataset
 from qlib.log import get_module_logger
 from qlib.utils import get_or_create_path, auto_filter_kwargs
 from collections import defaultdict
+from statsmodels.tsa.arima.model import ARIMA
 import statsmodels.api as sm
 import gc
 import pandas as pd
@@ -642,12 +644,24 @@ class MultiOutputGRU(GRU_normal):
         self.gru_model.to(self.device)
 
     def loss_fn(self, pred, label, weight=None):
-        mask = ~torch.isnan(label)
 
         if self.loss == "mse":
+            mask = ~torch.isnan(label)
             return self.mse(pred[mask], label[mask])
         if self.loss == "ls_mse":
-            pass
+            batch = len(pred)
+
+            pred_max = pred.max(axis=1)
+            pred_min = pred.max(axis=1)
+
+            label_max = label[list(np.arange(batch)), pred_max[1]]
+            label_min = label[list(np.arange(batch)), pred_min[1]]
+
+            pred_ = torch.cat([pred_max[0], pred_min[0]])
+            label_ = torch.cat([label_max, label_min])
+            mask = ~torch.isnan(label_)
+
+            return self.mse(pred_[mask], label_[mask])
 
         raise ValueError("unknown loss `%s`" % self.loss)
 
@@ -699,7 +713,6 @@ class MultiOutputGRU(GRU_normal):
         indices = np.arange(len(x_values))
 
         for i in range(len(indices))[:: self.batch_size]:
-
             feature = (
                 torch.from_numpy(x_values[indices[i : i + self.batch_size]])
                 .float()
@@ -716,7 +729,7 @@ class MultiOutputGRU(GRU_normal):
                 loss = self.loss_fn(pred, label)
                 losses.append(loss.item())
 
-                score = self.metric_fn(pred, label)
+                score = -loss
                 scores.append(score.item())
 
         return np.mean(losses), np.mean(scores)
@@ -935,6 +948,74 @@ class DNNModelPytorchFix(DNNModelPytorch):
 
 
 class myTransformer(TransformerModel):
+    def __init__(
+        self,
+        d_feat: int = 20,
+        d_model: int = 64,
+        batch_size: int = 8192,
+        nhead: int = 2,
+        num_layers: int = 2,
+        dropout: float = 0,
+        n_epochs=100,
+        lr=0.0001,
+        metric="",
+        early_stop=5,
+        loss="mse",
+        optimizer="adam",
+        reg=1e-3,
+        n_jobs=10,
+        GPU=0,
+        seed=None,
+        **kwargs,
+    ):
+
+        # set hyper-parameters.
+        self.d_model = d_model
+        self.dropout = dropout
+        self.n_epochs = n_epochs
+        self.lr = lr
+        self.reg = reg
+        self.metric = metric
+        self.batch_size = batch_size
+        self.early_stop = early_stop
+        self.optimizer = optimizer.lower()
+        self.loss = loss
+        self.n_jobs = n_jobs
+        if torch.cuda.is_available() and GPU >= 0:
+            self.device = torch.cuda.set_device(GPU)
+        else:
+            self.device = torch.device("cpu")
+        self.seed = seed
+        self.logger = get_module_logger("TransformerModel")
+        self.logger.info(
+            "Naive Transformer:"
+            "\nbatch_size : {}"
+            "\ndevice : {}".format(self.batch_size, self.device)
+        )
+
+        if self.seed is not None:
+            np.random.seed(self.seed)
+            torch.manual_seed(self.seed)
+
+        self.model = Transformer(
+            d_feat, d_model, nhead, num_layers, dropout, self.device
+        )
+        if optimizer.lower() == "adam":
+            self.train_optimizer = optim.Adam(
+                self.model.parameters(), lr=self.lr, weight_decay=self.reg
+            )
+        elif optimizer.lower() == "gd":
+            self.train_optimizer = optim.SGD(
+                self.model.parameters(), lr=self.lr, weight_decay=self.reg
+            )
+        else:
+            raise NotImplementedError(
+                "optimizer {} is not supported!".format(optimizer)
+            )
+
+        self.fitted = False
+        self.model.to(self.device)
+
     def fit(
         self,
         dataset: DatasetH,
@@ -1013,3 +1094,56 @@ class myTransformer(TransformerModel):
 
         if self.use_gpu:
             torch.cuda.empty_cache()
+
+
+class Arima(Model):
+    """ARIMA"""
+
+    def __init__(self, order=(1, 0, 1)):
+        """
+        order 为 ARIMA参数
+        """
+        self.order = order
+
+        self.result = None
+
+    def fit(self, dataset: DatasetH, reweighter: Reweighter = None):
+        df_train = dataset.prepare(
+            "train", col_set="label", data_key=DataHandlerLP.DK_L
+        )
+        if df_train.empty:
+            raise ValueError(
+                "Empty data from dataset, please check your dataset config."
+            )
+
+        # fixme 目前假设label只有一列
+        df_train = df_train.iloc[:, 0]
+
+        instruments = set(df_train.index.get_level_values("instrument"))
+
+        self.result = {}
+        for instrument in instruments:
+            df = df_train.loc[(slice(None), instrument)]
+            model = ARIMA(df, order=self.order)
+            self.result[instrument] = model.fit()
+
+        return self
+
+    def predict(self, dataset: DatasetH, segment: Union[Text, slice] = "test"):
+        if self.result is None:
+            raise ValueError("model is not fitted yet!")
+        x_test = dataset.prepare(
+            segment, col_set="feature", data_key=DataHandlerLP.DK_I
+        )
+
+        instruments = set(x_test.index.get_level_values("instrument"))
+        forecast = {}
+        for instrument in instruments:
+            df = x_test.loc[(slice(None), instrument), :]
+            n_forecast = len(df)
+            forecast[instrument] = self.result[instrument].forecast(steps=n_forecast)
+
+        result = pd.Series(index=x_test.index)
+        for i in range(len(result)):
+            result[i] = forecast[result.index[i][1]].iloc[divmod(i, 6)[0]]
+        return result

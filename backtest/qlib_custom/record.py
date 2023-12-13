@@ -678,7 +678,7 @@ class _DfBacktestRecord(ACRecordTemp, abc.ABC):
                 dir_path=tmp_dir_path,
             )
             self._save_df(
-                df=data,
+                df=self._data,
                 file_name="pred_label.xlsx",
                 dir_path=tmp_dir_path,
             )
