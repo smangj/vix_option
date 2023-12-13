@@ -436,6 +436,117 @@ where FFN is a feedforward network with residual added and layer norm, self-atte
 where $Z$ is the output of self-attention layer.
 
 \section*{data and experiment design}
+\subsubsection*{Data Preparations}
+In line with our primary goal of predicting next-day arithmetical return of \(CMFs\) as denoted in eq.X, it is rational to initially incorporate CMFs-related factors \(V^j_t\) and \(Roll^j_{t+1}\) as detailed in Eq.2 and Eq.5. Additionally, to thoroughly examine the informative power of term structures, we introduce \(\mu^j_t\) denoted in Eq.7 and \(\triangle Roll_{t}^j\)to provides a comprehensive description of the CMFs term structure. We also integrate \(TLT\) and \(SPY\) into our analysis to partially represents the macro-economics conditions. Furthermore, various time-series statistical transformations are employed to explore possible extra information with details provided in table 3. The time range for \(VIX\)  futures and \(CMFs\)  data covers the period from January 3, 2005, to March 7, 2023 while \(TLT\)  and \(SPY\)  data are selected within the time frame of January 12, 1995, to April 12, 2023. Three distinct data sets are utilised to incrementally examine the informative power of VIX term structures and additional information offered by time-series statistical transformations.
+Detailed descriptions of all three datasets are provided in tables 1, 2 and 3.
+\begin{table}[!ht]
+%\begin{adjustwidth}{-2.25in}{0in} % Comment out/remove adjustwidth environment if table fits in text column.
+\centering
+\caption{
+{\bf Simple Data sets}}
+\begin{tabular}{|c|c|c|} % Use c for centered columns; you can also use other alignment options like l (left) or r (right)
+    \hline % Horizontal line at the top
+    \(VIX_{CMFs}\)  & CMFs-related factors & Macro-factors \\
+    \hline % Horizontal line under column headers
+    \(CMF_{1m}\)  & \({[V_{t}^1},{Roll_{t}^1]}\) & \([log_{SPY_t},log_{TLT_t},VIX_t]\) \\
+    \hline
+    \(CMF_{2m}\)  & \({[V_{t}^2},{Roll_{t}^2]}\)  & \([log_{SPY_t},log_{TLT_t},VIX_t]\) \\
+    \hline
+    \(CMF_{3m}\)  & \({[V_{t}^3},{Roll_{t}^3]}\) & \([log_{SPY_t},log_{TLT_t},VIX_t]\) \\
+    \hline
+    \(CMF_{4m}\)& \({[V_{t}^4},{Roll_{t}^4]}\) & \([log_{SPY_t},log_{TLT_t},VIX_t]\)\\
+    \hline
+    \(CMF_{5m}\) &  \({[V_{t}^5},{Roll_{t}^5]}\) & \([log_{SPY_t},log_{TLT_t},VIX_t]\) \\
+    \hline
+    \(CMF_{6m}\) & \({[V_{t}^6},{Roll_{t}^6]}\) & \([log_{SPY_t},log_{TLT_t},VIX_t]\) \\
+    \hline % Horizontal line at the bottom
+  \end{tabular}
+\begin{flushleft} Table notes: The initial data sets comprise solely of CMFs-related factors and macroeconomic variables.
+\end{flushleft}
+\label{table1}
+%\end{adjustwidth}
+\end{table}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{table}[!ht]
+%\begin{adjustwidth}{-2.25in}{0in} % Comment out/remove adjustwidth environment if table fits in text column.
+\centering
+\caption{
+{\bf Term Structure Data sets}}
+\begin{tabular}{|c|c|c|c|c|c|} % Use c for centered columns; you can also use other alignment options like l (left) or r (right)
+    \hline % Horizontal line at the top
+    \(VIX_{CMFs}\)  & CMFs-related factors & Macro-factors & Term Structures factors \\
+    \hline % Horizontal line under column headers
+    \(CMF_{1m}\)  & \({[V_{t}^1},{Roll_{t}^1]}\) & \([log_{SPY_t},log_{TLT_t},VIX_t]\) & \({[\mu_{t}^1, \triangle Roll_{t}^1]}\)  \\
+    \hline
+    \(CMF_{2m}\)  & \({[V_{t}^2},{Roll_{t}^2]}\)  & \([log_{SPY_t},log_{TLT_t},VIX_t]\) &  \({[\mu_{t}^2, \triangle Roll_{t}^2]}\) \\
+    \hline
+    \(CMF_{3m}\)  & \({[V_{t}^3},{Roll_{t}^3]}\) & \([log_{SPY_t},log_{TLT_t},VIX_t]\) & \({[\mu_{t}^3, \triangle Roll_{t}^3]}\) \\
+    \hline
+    \(CMF_{4m}\)& \({[V_{t}^4},{Roll_{t}^4]}\) & \([log_{SPY_t},log_{TLT_t},VIX_t]\) & \({[\mu_{t}^4, \triangle Roll_{t}^4]}\)\\
+    \hline
+    \(CMF_{5m}\) &  \({[V_{t}^5},{Roll_{t}^5]}\) & \([log_{SPY_t},log_{TLT_t},VIX_t]\) & \({[\mu_{t}^5, \triangle Roll_{t}^5]}\) \\
+    \hline
+    \(CMF_{6m}\) & \({[V_{t}^6},{Roll_{t}^6]}\) & \([log_{SPY_t},log_{TLT_t},VIX_t]\) & \({[\mu_{t}^6, \triangle Roll_{t}^6]}\)  \\
+    \hline % Horizontal line at the bottom
+  \end{tabular}
+\begin{flushleft} Table notes: Term structures have been added to the data sets based on the simple datasets.
+\end{flushleft}
+\label{table1}
+%\end{adjustwidth}
+\end{table}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{sidewaystable}
+\caption{{\bf Statistical Derivations Data Sets}}
+%\begin{adjustwidth}{2.25in}{0in} % Comment out/remove adjustwidth environment if table fits in text column.
+\centering
+\begin{tabular}{|c|c|c|c|c|c|}% Use c for centered columns; you can also use other alignment options like l (left) or r (right)
+    \hline % Horizontal line at the top
+    \(VIX_{CMFs}\)  & CMFs-related Factors & Macro-factors & Term Structure Factors & Time-series Statistical Derivations\\
+    \hline % Horizontal line under column headers
+    \(CMF_{1}\)  & \({[V_{t}^1},{Roll_{t}^1]}\) & \([log_{SPY_t},log_{TLT_t},VIX_t]\) & \({[\mu_{t}^1, \triangle Roll_{t}^1]}\) &
+    \makecell[c]{\([Std_{T}(All_{t}^{1}), Skew_{T}^{1}(All_{t}^{1}),Kurt_T(All_{t}^{1}),Mean_{T}(All_{t}^{1})\),\\ \(z\ score_{T}(term_{t}^{1})\)\\ , \(where \: T \in \{5,20, 60\}\)]}   \\
+    \hline
+    \(CMF_{2}\)  & \({[V_{t}^2},{Roll_{t}^2]}\)  & \([log_{SPY_t},log_{TLT_t},VIX_t]\) &  \({[\mu_{t}^2, \triangle Roll_{t}^2]}\) &   \makecell[c]{\([Std_{T}(All_{t}^{2}), Skew_{T}^{2}(All_{t}^{2}),Kurt_T(All_{t}^{2}),Mean_{T}(All_{t}^{2})\),\\ \(z\ score_{T}(term_{t}^{2})\)\\ , \(where \: T \in \{5,20, 60\}\)]} \\
+    \hline
+    \(CMF_{3}\)  & \({[V_{t}^3},{Roll_{t}^3]}\) & \([log_{SPY_t},log_{TLT_t},VIX_t]\) & \({[\mu_{t}^3, \triangle Roll_{t}^3]}\) &  \makecell[c]{\([Std_{T}(All_{t}^{3}), Skew_{T}^{3}(All_{t}^{3}),Kurt_T(All_{t}^{3}),Mean_{T}(All_{t}^{3})\),\\ \(z\ score_{T}(term_{t}^{3})\)\\ , \(where \: T \in \{5,20, 60\}\)]}  \\
+    \hline
+    \(CMF_{4}\)& \({[V_{t}^4},{Roll_{t}^4]}\) & \([log_{SPY_t},log_{TLT_t},VIX_t]\) & \({[\mu_{t}^4, \triangle Roll_{t}^4]}\) &   \makecell[c]{\([Std_{T}(All_{t}^{4}), Skew_{T}^{4}(All_{t}^{4}),Kurt_T(All_{t}^{4}),Mean_{T}(All_{t}^{4})\),\\ \(z\ score_{T}(term_{t}^{4})\)\\ , \(where \: T \in \{5,20, 60\}\)]} \\
+    \hline
+    \(CMF_{5}\) &  \({[V_{t}^5},{Roll_{t}^5]}\) & \([log_{SPY_t},log_{TLT_t},VIX_t]\) & \({[\mu_{t}^5, \triangle Roll_{t}^5]}\) &  \makecell[c]{\([Std_{T}(All_{t}^{5}), Skew_{T}^{5}(All_{t}^{5}),Kurt_T(All_{t}^{5}),Mean_{T}(All_{t}^{5})\),\\ \(z\ score_{T}(term_{t}^{5})\)\\ , \(where \: T \in \{5,20, 60\}\)]} \\
+    \hline
+    \(CMF_{6}\) & \({[V_{t}^6},{Roll_{t}^6]}\) & \([log_{SPY_t},log_{TLT_t},VIX_t]\) & \({[\mu_{t}^6, \triangle Roll_{t}^6]}\) & \makecell[c]{\([Std_{T}(All_{t}^{6}), Skew_{T}^{6}(All_{t}^{6}),Kurt_T(All_{t}^{6}),Mean_{T}(All_{t}^{6})\),\\ \(z\ score_{T}(term_{t}^{6})\)\\ , \(where \: T \in \{5,20, 60\}\)]}  \\
+    \hline % Horizontal line at the bottom
+\end{tabular}
+\begin{flushleft} Table notes: \( All_{t}^{j} \in \{CMFs\ related \ Factors, Macro \ factors, Term\ Structure\ Factors\}\) and \(term_{t}^{j} \in \{Term\ Structure\ Factors \}\)
+
+\end{flushleft}
+\label{table1}
+%\end{adjustwidth}
+\end{sidewaystable}
+
+ \subsubsection*{Empirical Experiment Designs}
+ The main goal of our empirical experiment aims to evaluate the statistical and economic performances among different models and different datasets.
+Before training we are dealing with tabular datasets with multi-index datetime and instruments, columns represents features. we form dataset {(Xi, yi)}i=1,2,..,I into a single combined dataset(X, y) to train model instead of train I models every task named "features stacking". With this dataset organization, conclusions are more general and less biased by outliers or over fitting and model can be trained with more data, correspondingly correlation of instruments are not considered in the model.
+
+
+
+\subsubsection*{Trading Strategy: A mean-variance approach}
+To ascertain optimal portfolio weights grounded in forecasted data, we employed mean-variance optimization incorporating additional constraints. The covariance structure was derived through the estimation of a 60-day historical covariance matrix. The risk aversion parameter, denoted as gamma, was fixed at a value of 0.2.
+To ensure prudent risk management, we imposed constraints on portfolio characteristics. Specifically, we restricted gross leverage to a maximum of 3, and imposed absolute limits on the individual weights of VIX futures indices, ensuring they did not exceed an absolute value of 1. Furthermore, a critical risk threshold was established, with the annualized risk of the portfolio constrained to not exceed 30%.
+This methodology, integrating forecast-driven optimization within a risk-constrained mean-variance framework, provides a rigorous approach to portfolio construction, striking a balance between expected returns and risk mitigation. The application of historical covariance data and the delineation of precise risk parameters contribute to the robustness and reliability of the derived portfolio weights, thereby enhancing the integrity of the investment strategy.
+
+
+
+
+
+
+
+
+
+
+
+
+
 Nulla mi mi, venenatis sed ipsum varius, Table~\ref{table1} volutpat euismod diam. Proin rutrum vel massa non gravida. Quisque tempor sem et dignissim rutrum. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi at justo vitae nulla elementum commodo eu id massa. In vitae diam ac augue semper tincidunt eu ut eros. Fusce fringilla erat porttitor lectus cursus, vel sagittis arcu lobortis. Aliquam in enim semper, aliquam massa id, cursus neque. Praesent faucibus semper libero.
 
 % Place tables after the first paragraph in which they are cited.
