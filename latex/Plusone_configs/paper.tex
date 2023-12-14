@@ -248,14 +248,14 @@ The VIX is calculated by the Chicago Board Options Exchange (CBOE) and is based 
 \\Let $t$ denote time and let $VIX_t$ denote the value of VIX on that date. At time $t$,
 we can view lots of VIX futures contracts with different expiration dates:
 \begin{eqnarray}
-    \mathrm{F^i_t} := \text{VIX futures expiring at time $T_i$ at time t}
+    {F^i_t} := \text{VIX futures expiring at time $T_i$ at time t}
 \end{eqnarray}
 where $i$ denote the index of the VIX futures contracts with a ascending expiration dates $T_1 < T_2 < ... < T_d$.
 \\A term-structure of constant-maturity VIX futures(CMFs), consist of 1,2,...,6 months in our case, are constructed as
 a linear interpolation of two nearest expiration dates VIX futures:
 \begin{eqnarray}
 \label{eq:defineV}
-    \mathrm{V^j_t} := \omega^j_tF^{L_j}_t\ + (1 - \omega^j_t)F^{R_j}_t \text{for j in \{1,2,...,6\}}
+    {V^j_t} := \omega^j_tF^{L_j}_t\ + (1 - \omega^j_t)F^{R_j}_t \text{for j in \{1,2,...,6\}}
 \end{eqnarray}
 where $L_j$ represents the VIX futures of the nearest expiration dates close to $j$-month on the left of time axis,
 $R_j$ represents the VIX futures of the nearest expiration dates close to $j$-month on the right of time axis, and
@@ -268,22 +268,22 @@ SPVXSP, SPVIX2ME, SPVIX3ME, SPVIX4ME, SPVXMP, SPVIX6ME represents 1-6 months CMF
 Derivatives like ETFs and ETNs or Strategies maintains the CMF weights of equation \ref{eq:define V} for fixed maturity $j-month$. For each $j$, we denote $R^j$
 the daily return of rolling VIX futures strategy, trading cost is not considered:
 \begin{eqnarray}
-    \mathrm{R^j_t} = \frac{\omega^j_t{\Delta}F^{L_j}_t\ + (1 - \omega^j_t){\Delta}F^{R_j}_t}{\omega^j_tF^{L_j}_t\ + (1 - \omega^j_t)F^{R_j}_t}
+    {R^j_t} = \frac{\omega^j_t{\Delta}F^{L_j}_t\ + (1 - \omega^j_t){\Delta}F^{R_j}_t}{\omega^j_tF^{L_j}_t\ + (1 - \omega^j_t)F^{R_j}_t}
 \end{eqnarray}
 where${\Delta}F^{L_j}_t = F^{L_j}_{t+1} - F^{L_j}_t$. We denote ${\Delta}t = \frac{1}{252}$, transform equation in terms of the CMFs:
 \begin{eqnarray}
 \label{eq: $R^j_t$2}
-    \mathrm{R^j_t} = \frac{{\Delta}V^j_t}{V^j_t} - \frac{F^{R_j}_{t+1} - F^{L_j}_{t+1}}{V^j_t(T_{R_j} - T_{L_j}){\Delta}t}{\Delta}t
+    {R^j_t} = \frac{{\Delta}V^j_t}{V^j_t} - \frac{F^{R_j}_{t+1} - F^{L_j}_{t+1}}{V^j_t(T_{R_j} - T_{L_j}){\Delta}t}{\Delta}t
 \end{eqnarray}
 Let Roll denote the drift term in equation \ref{eq: $R^j_t$2}, it referred to as the roll yield of rolling VIX futures strategy:
 \begin{eqnarray}
-    \mathrm{Roll^j_{t+1}} := - \frac{F^{R_j}_{t+1} - F^{L_j}_{t+1}}{V^j_t(T_{R_j} - T_{L_j}){\Delta}t}
+    {Roll^j_{t+1}} := - \frac{F^{R_j}_{t+1} - F^{L_j}_{t+1}}{V^j_t(T_{R_j} - T_{L_j}){\Delta}t}
 \end{eqnarray}
 In a Contango circumstances, $F^{R_j}_{t+1} > F^{L_j}_{t+1}$ means $Roll < 0$. On the opposite, in a Backwardation circumstances $Roll > 0$.
 We re-write equation as follows:
 \begin{eqnarray}
 \label{eq: $R^j_t$3}
-    \mathrm{R^j_t} = \frac{{\Delta}V^j_t}{V^j_t} + Roll^j_{t+1}{\Delta}t
+    {R^j_t} = \frac{{\Delta}V^j_t}{V^j_t} + Roll^j_{t+1}{\Delta}t
 \end{eqnarray}
 From equation \ref{eq: $R^j_t$3} we see $R^j_t$ consist of two parts, the change in $V^j_t$ and roll yield. As history data shown, the most likely VIX futures
 curves are contango, so the value of the rolling VIX futures strategies decay.
@@ -291,7 +291,7 @@ curves are contango, so the value of the rolling VIX futures strategies decay.
 the return of $V^j_t$ should be $V^j_t - V^{j-1}_t$, so we denote $\mu$ as :
 \begin{eqnarray}
 \label{eq: mu}
-    \mathrm{\mu^j_t} = V^j_t - V^{j-1}_t
+    {\mu^j_t} = V^j_t - V^{j-1}_t
 \end{eqnarray}
 $\mu^j_t$ contains instantaneous market views of return about $V^j_t$.
 ynorm
@@ -338,36 +338,103 @@ where \(W^{(i)}\) is the weight vector of \(i_{th}\) hidden unit while \(x\) is 
 
 \subsubsection*{2.3 Recurrent Neural Network (RNN)}
 We then implement multiple machine learning models based on RNN architecture which aims to find patterns in sequences of data. The work of Schmidt (2019) provides a comprehensive overview of the basic architecture and functions of RNNs while \textit{Sherstinsky (2023) work focuses on deriving the classical RNN formulation from differential equations and addresses the challenges in training standard RNNs. The transformation of RNN into the "Vanilla LSTM" network is explained through logical arguments, with a detailed description of the LSTM system's equations and entities. }
-
+RNN train a function $f$:
+\begin{eqnarray}
+\label{eq: RNN}
+    {h_{t}, y_t} = f(h_{t - 1}, x_t)
+\end{eqnarray}
+where $h$ represents hidden layer, it carry sequence information by $t - 1$, $x_t$ is the input at $t$, $f$ outputs result $y_t$ at $t$ and sequence information $h_t$.
 
 \subsubsection*{2.3.1 Long Short-term Memory (LSTM)}
 The Long Short-Term Memory (LSTM) model, originally proposed by Hochreiter and Schmidhuber (1997), represents a significant milestone in the field of neural networks, particularly in handling sequential data. LSTMs were designed to overcome the limitations of traditional RNNs, especially issues related to learning long-range dependencies. Traditional RNNs struggled with the vanishing and exploding gradient problems, making it challenging to retain information over long sequences. The unique memory cells and input, forget and output gates mechanism enables LSTM to store important information and forget irrelevant details over long sequences. With the recent innovation of attention mechanism, Wang and Hao (2020) introduced the Attention-based LSTM (ALSTM) model, they integrates a multi-head dot product attention within the LSTM architecture and significantly enhances model ability for complex reasoning over sequences.
 
 
 
-Eq.2 and eq.3 illustrates the mathematical details for the implementation of LSTM and ALSTM in our study.
-
-
-[eq.2], [eq.3]
+Eq \ref {eq: LSTM} and Eq \ref {eq: ALSTM} illustrates the mathematical details for the implementation of LSTM and ALSTM in our study.
+LSTM framework denote $c$ as the long-term sequence information distinguish from $h$, and design gates to filter information. A gate cell can be represent as:
+\begin{eqnarray}
+\label{eq: Gate}
+    g = \sigma(W\bullet[h_{t - 1}, x_t] + b)
+\end{eqnarray}
+where $W, b$ are trainable parameters, $\sigma$ represent activation function, so $g$ can be use as a gate. LSTM framework design three gate on RNN as follow:
+\begin{eqnarray}
+\label{eq: LSTM}
+    \begin {cases} c_t = g^f{\odot}c_{t - 1} - g^i{\odot}tanh(W\bullet[h_{t - 1}, x_t] + b)
+    \\h^t = g^o{\odot}tanh(c_t)
+    \\y^t = f(h_t)
+    \end {cases}
+\end{eqnarray}
+$g^f, g^i, g^o$ represent three gates, and $f$ is some function link LSTM outputs to downstream task.
+\\ALSTM add a encoder and a decoder attention-based layers in LSTM, Given $n$ series, stage one encoder layer can learn attention at a same time and transform to new input.
+\begin{eqnarray}
+\label{eq: ALSTM1}
+    \begin {cases} e^k_t = tanh(W\bullet[h_{t - 1}, c_{t - 1}] + bx^k)
+    \\{\alpha}^k_t = \frac{exp(e^k_t)}{\sum_{i=1}^n exp(e^i_t)}
+    \\\widetilde{x_t} = ({\alpha^1_t}x^1_t, {\alpha^2_t}x^2_t,..., {\alpha^n_t}x^n_t)
+    \end {cases}
+\end{eqnarray}
+with $\widetilde{x_t}$ as input, stage one construct with a LSTM framework named $L_1$, stage two decoder layer learn attention with all the hidden state $h_t$ of $L_1$,
+the output $\widetilde{h_t}$ transform the label $y$ of another LSTM framework named $L_2$, so two attention layers can learn relations between $n$ series.
+Let $d$ denote the hidden state of $L_2$, transform of $y$ can be formulate as:
+\begin{eqnarray}
+\label{eq: ALSTM2}
+    \begin {cases} l_t = tanh(W\bullet[d_{t - 1}, c^2_{t - 1}] + bh^i)
+    \\{\beta}_t = \frac{exp(l_t)}{\sum_{i=1}^T exp({\beta}_t)}
+    \\c_t = \sum_{i=1}^T {\beta}_ih_i
+    \\\widetilde{y_{t - 1}} = W\bullet[y_{t - 1}; c_{t - 1}] + b
+    \end {cases}
+\end{eqnarray}
+$\tilde{y}$ is the input of $L_2$.
 
 \subsubsection*{2.3.2 Gated Recurrent Unit}
  The Gated Recurrent Unit (GRU), first introduced by Cho et al. (2014), is designed to capture temporal dependencies in sequential data efficiently. This efficiency in GRU is achieved through its unique architecture, consisting of two gates: the update gate and the reset gate. The update gate plays a crucial role in determining how much of its previous state the GRU retains, enabling the effective capture of long-term dependencies. Conversely, the reset gate influences the amount of past information to be forgotten, assisting the model in concentrating on the most pertinent information. These gates effectively control the flow of information within the unit, allowing the network to retain important information from past data inputs while discarding irrelevant data.This selective memory mechanism empowers the GRU to effectively tackle the vanishing gradient problem, a common challenge in traditional RNNs.The implementation details can be found in eq.4.
 
-[eq.4]
+\begin{eqnarray}
+\label{eq: GRU}
+    \begin {cases} h^{'}_{t - 1} = h_{t - 1}{\bullet}g^r
+    \\h^{'} = tanh(W\bullet[h^{'}_{t - 1}, x_t] + b)
+    \\h^t = (1 - g^z){\odot}tanh(c_t) + g^z{\odot}h^{'}
+    \end {cases}
+\end{eqnarray}
+Follow notation in LSTM,  $g$ represents gate \ref{eq: Gate}.
 
 
 
 \subsubsection*{2.4 Temporal Covolutional Networks}
 Temporal covolutional networks (TCN), originally introduced by Lea et al. (2016), is a type of neural network that employs convolutional layers to capture dependencies in sequential data, . Unlike traditional RNN and LSTMs, TCNs use 1D convolutions to process input sequences in parallel, making them highly parallelizable and capable of capturing long-range dependencies. Implementation details can be found in eq.5.
 
-[eq.5]
-
+\begin{eqnarray}
+\label{eq: TCN}
+    TCN = FCN + \text{causal convolutions}
+\end{eqnarray}
+where FCN is fully-convolutional network with one dimension.
 
 
 \subsubsection* {2.5 Transformer}
 We also implement attention-based network architecture called transformer proposed by Vaswani et al. (2017) for prediction. Transformer departs from the traditional recurrent or convolutional layers, relying instead on the attention mechanism, This enables the model to weigh the significance of different parts of the input data differently, allowing it to capture complex dependencies and relationships within the data. Eq.6 illustrates the implementation details.
 
-[eq.6]
+\begin{eqnarray}
+\label{eq: Transformer}
+    y_i = F(encoder(X), decoder(y_1,...,y_{i - 1}))
+\end{eqnarray}
+In our case, we only use encoder to produce output, for we don't need to produce output one by one. Encoder's framework follows by:
+\begin{eqnarray}
+\label{eq: TransformerDecoder}
+    \begin {cases} \tilde{X} = \text{Positional Encoding} + X
+    \\Y = FFN(\text{self-attention}(X))
+    \end {cases}
+\end{eqnarray}
+where FFN is a feedforward network with residual added and layer norm, self-attention's framework follows by:
+\begin{eqnarray}
+\label{eq: self-attention}
+    \begin {cases} Q = W^QX
+    \\K = W^KX
+    \\V = W^VX
+    \\Z = \test{softmax}(QK^T)V
+    \end {cases}
+\end{eqnarray}
+where $Z$ is the output of self-attention layer.
+
 \section*{data and experiment design}
 Nulla mi mi, venenatis sed ipsum varius, Table~\ref{table1} volutpat euismod diam. Proin rutrum vel massa non gravida. Quisque tempor sem et dignissim rutrum. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi at justo vitae nulla elementum commodo eu id massa. In vitae diam ac augue semper tincidunt eu ut eros. Fusce fringilla erat porttitor lectus cursus, vel sagittis arcu lobortis. Aliquam in enim semper, aliquam massa id, cursus neque. Praesent faucibus semper libero.
 
