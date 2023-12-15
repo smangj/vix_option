@@ -33,7 +33,7 @@
 %
 % DO NOT INCLUDE GRAPHICS IN YOUR MANUSCRIPT
 % - Figures should be uploaded separately from your manuscript file. 
-% - Figures generated using LaTeX should be extracted and removed from the PDF before submission.
+% - Figures generated using LaTeX should be extracted and removed from the PDF before submission. 
 % - Figures containing multiple panels/subfigures must be combined into one image file before submission.
 % For figure citations, please use "Fig" instead of "Figure".
 % See http://journals.plos.org/plosone/s/figures for PLOS figure guidelines.
@@ -57,15 +57,15 @@
 %
 % Do not include text that is not math in the math environment. For example, CO2 should be written as CO\textsubscript{2} instead of CO$_2$.
 %
-% Please add line breaks to long display equations when possible in order to fit size of the column.
+% Please add line breaks to long display equations when possible in order to fit size of the column. 
 %
 % For inline equations, please do not include punctuation (commas, etc) within the math environment unless this is part of the equation.
 %
-% When adding superscript or subscripts outside of brackets/braces, please group using {}.  For example, change "[U(D,E,\gamma)]^2" to "{[U(D,E,\gamma)]}^2".
+% When adding superscript or subscripts outside of brackets/braces, please group using {}.  For example, change "[U(D,E,\gamma)]^2" to "{[U(D,E,\gamma)]}^2". 
 %
 % Do not use \cal for caligraphic font.  Instead, use \mathcal{}
 %
-% % % % % % % % % % % % % % % % % % % % % % % %
+% % % % % % % % % % % % % % % % % % % % % % % % 
 %
 % Please contact latex@plos.org with any questions.
 %
@@ -78,7 +78,8 @@
 \usepackage{amsmath,amssymb}
 \usepackage{algorithm}
 \usepackage{algorithmic}
-
+\usepackage{booktabs}
+\usepackage{rotating}
 % Use adjustwidth environment to exceed column width (see example table in text)
 \usepackage{changepage}
 
@@ -277,14 +278,14 @@ The VIX is calculated by the Chicago Board Options Exchange (CBOE) and is based 
 \\Let $t$ denote time and let $VIX_t$ denote the value of VIX on that date. At time $t$,
 we can view lots of VIX futures contracts with different expiration dates:
 \begin{eqnarray}
-    \mathrm{F^i_t} := \text{VIX futures expiring at time $T_i$ at time t}
+    {F^i_t} := \text{VIX futures expiring at time $T_i$ at time t}
 \end{eqnarray}
 where $i$ denote the index of the VIX futures contracts with a ascending expiration dates $T_1 < T_2 < ... < T_d$.
 \\A term-structure of constant-maturity VIX futures(CMFs), consist of 1,2,...,6 months in our case, are constructed as
 a linear interpolation of two nearest expiration dates VIX futures:
 \begin{eqnarray}
 \label{eq:defineV}
-    \mathrm{V^j_t} := \omega^j_tF^{L_j}_t\ + (1 - \omega^j_t)F^{R_j}_t \text{for j in \{1,2,...,6\}}
+    {V^j_t} := \omega^j_tF^{L_j}_t\ + (1 - \omega^j_t)F^{R_j}_t \text{for j in \{1,2,...,6\}}
 \end{eqnarray}
 where $L_j$ represents the VIX futures of the nearest expiration dates close to $j$-month on the left of time axis,
 $R_j$ represents the VIX futures of the nearest expiration dates close to $j$-month on the right of time axis, and
@@ -297,22 +298,22 @@ SPVXSP, SPVIX2ME, SPVIX3ME, SPVIX4ME, SPVXMP, SPVIX6ME represents 1-6 months CMF
 Derivatives like ETFs and ETNs or Strategies maintains the CMF weights of equation \ref{eq:define V} for fixed maturity $j-month$. For each $j$, we denote $R^j$
 the daily return of rolling VIX futures strategy, trading cost is not considered:
 \begin{eqnarray}
-    \mathrm{R^j_t} = \frac{\omega^j_t{\Delta}F^{L_j}_t\ + (1 - \omega^j_t){\Delta}F^{R_j}_t}{\omega^j_tF^{L_j}_t\ + (1 - \omega^j_t)F^{R_j}_t}
+    {R^j_t} = \frac{\omega^j_t{\Delta}F^{L_j}_t\ + (1 - \omega^j_t){\Delta}F^{R_j}_t}{\omega^j_tF^{L_j}_t\ + (1 - \omega^j_t)F^{R_j}_t}
 \end{eqnarray}
 where${\Delta}F^{L_j}_t = F^{L_j}_{t+1} - F^{L_j}_t$. We denote ${\Delta}t = \frac{1}{252}$, transform equation in terms of the CMFs:
 \begin{eqnarray}
 \label{eq: $R^j_t$2}
-    \mathrm{R^j_t} = \frac{{\Delta}V^j_t}{V^j_t} - \frac{F^{R_j}_{t+1} - F^{L_j}_{t+1}}{V^j_t(T_{R_j} - T_{L_j}){\Delta}t}{\Delta}t
+    {R^j_t} = \frac{{\Delta}V^j_t}{V^j_t} - \frac{F^{R_j}_{t+1} - F^{L_j}_{t+1}}{V^j_t(T_{R_j} - T_{L_j}){\Delta}t}{\Delta}t
 \end{eqnarray}
 Let Roll denote the drift term in equation \ref{eq: $R^j_t$2}, it referred to as the roll yield of rolling VIX futures strategy:
 \begin{eqnarray}
-    \mathrm{Roll^j_{t+1}} := - \frac{F^{R_j}_{t+1} - F^{L_j}_{t+1}}{V^j_t(T_{R_j} - T_{L_j}){\Delta}t}
+    {Roll^j_{t+1}} := - \frac{F^{R_j}_{t+1} - F^{L_j}_{t+1}}{V^j_t(T_{R_j} - T_{L_j}){\Delta}t}
 \end{eqnarray}
 In a Contango circumstances, $F^{R_j}_{t+1} > F^{L_j}_{t+1}$ means $Roll < 0$. On the opposite, in a Backwardation circumstances $Roll > 0$.
 We re-write equation as follows:
 \begin{eqnarray}
 \label{eq: $R^j_t$3}
-    \mathrm{R^j_t} = \frac{{\Delta}V^j_t}{V^j_t} + Roll^j_{t+1}{\Delta}t
+    {R^j_t} = \frac{{\Delta}V^j_t}{V^j_t} + Roll^j_{t+1}{\Delta}t
 \end{eqnarray}
 From equation \ref{eq: $R^j_t$3} we see $R^j_t$ consist of two parts, the change in $V^j_t$ and roll yield. As history data shown, the most likely VIX futures
 curves are contango, so the value of the rolling VIX futures strategies decay.
@@ -320,7 +321,7 @@ curves are contango, so the value of the rolling VIX futures strategies decay.
 the return of $V^j_t$ should be $V^j_t - V^{j-1}_t$, so we denote $\mu$ as :
 \begin{eqnarray}
 \label{eq: mu}
-    \mathrm{\mu^j_t} = V^j_t - V^{j-1}_t
+    {\mu^j_t} = V^j_t - V^{j-1}_t
 \end{eqnarray}
 $\mu^j_t$ contains instantaneous market views of return about $V^j_t$.
 ynorm
@@ -692,7 +693,6 @@ XGB    &  TermStructure &  TermStructure &             Derivations &            
 \begin{flushleft} The best dataset in all models on main metircs: IC, Rank IC, C-MVO Information Ratio, Long Short Information Ratio.
 \end{flushleft}
 \label{table1}
-% \end{sidewaystable}
 \end{adjustwidth}
 
 \end{table}
@@ -797,7 +797,7 @@ Nulla mi mi, venenatis sed ipsum varius, Table~\ref{table1} volutpat euismod dia
 
 \section*{Conclusion}
 
-CO\textsubscript{2} Maecenas convallis mauris sit amet sem ultrices gravida. Etiam eget sapien nibh. Sed ac ipsum eget enim egestas ullamcorper nec euismod ligula. Curabitur fringilla pulvinar lectus consectetur pellentesque. Quisque augue sem, tincidunt sit amet feugiat eget, ullamcorper sed velit.
+CO\textsubscript{2} Maecenas convallis mauris sit amet sem ultrices gravida. Etiam eget sapien nibh. Sed ac ipsum eget enim egestas ullamcorper nec euismod ligula. Curabitur fringilla pulvinar lectus consectetur pellentesque. Quisque augue sem, tincidunt sit amet feugiat eget, ullamcorper sed velit. 
 
 Sed non aliquet felis. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris commodo justo ac dui pretium imperdiet. Sed suscipit iaculis mi at feugiat. Ut neque ipsum, luctus id lacus ut, laoreet scelerisque urna. Phasellus venenatis, tortor nec vestibulum mattis, massa tortor interdum felis, nec pellentesque metus tortor nec nisl. Ut ornare mauris tellus, vel dapibus arcu suscipit sed. Nam condimentum sem eget mollis euismod. Nullam dui urna, gravida venenatis dui et, tincidunt sodales ex. Nunc est dui, sodales sed mauris nec, auctor sagittis leo. Aliquam tincidunt, ex in facilisis elementum, libero lectus luctus est, non vulputate nisl augue at dolor. For more information, see \nameref{S1_Appendix}.
 
