@@ -702,10 +702,14 @@ Data shows Simple dataset doesn't prevail in any model on prediction metrics, th
 
 
 \subsection*{Informative Power of Term Structures}
+
+
+
 \begin{table}[!ht]
 %\begin{adjustwidth}{-2.25in}{0in} % Comment out/remove adjustwidth environment if table fits in text column.
 \centering
 \caption{Statistic Metric}
+\label{Statistic Metric}
 % \begin{sidewaystable}
 \begin{tabular}{lrrrr}
 \toprule
@@ -735,11 +739,16 @@ Table notes: performance of statistic metric
 
 \end{table}
 
+Throughout the 11-year span from 2011 to 2022, the evaluation of TermStructure of 7 machine learning models was conducted using the Walk-Forward Training approach. This method, known for its strick out-of-sample in time series prediction and strategy, also involves iterative training, enabling models to adapt dynamically to evolving data characteristics.
+
+The term structure features show informative power. The Information Coefficient (IC) values were achieved 0.037 Table~\ref{Statistic Metric} across all models during this evaluation. The IC values serve as a key performance metric, indicating the models' ability to provide valuable insights and predictions.
+
 
 \begin{table}[!ht]
 %\begin{adjustwidth}{-2.25in}{0in} % Comment out/remove adjustwidth environment if table fits in text column.
 \centering
-\caption{Statistic Metric}
+\caption{Backtest Metric}
+\label{Backtest Metric}
 % \begin{sidewaystable}
 \begin{tabular}{lp{1.5cm}p{1.5cm}p{1.5cm}p{1.5cm}}
 \toprule
@@ -759,6 +768,45 @@ mean   &                    0.051 &                    0.623 &                  
 
 
 
+\begin{flushleft}
+Table notes: performance of backtest metric
+\end{flushleft}
+\label{table1}
+% \end{sidewaystable}
+%\end{adjustwidth}
+
+\end{table}
+
+Across all models' backtesting, an average Information Ratio (IR) of 0.623 Table~\ref{Backtest Metric} was achieved. The Information Ratio serves as a key performance metric in the realm of investment strategies, measuring the effectiveness of a strategy in generating returns relative to its stander deviation.
+
+This notable average Information Ratio of 0.623 underscores the dataset's effectiveness in not only facilitating accurate predictions, as previously discussed, but also in translating these predictions into actionable and profitable trading strategies like long short strategy and constrained mean-variance strategy.
+
+\subsection*{Strategies Comparison}
+
+We separate models into three category: RNN-based model, Tree-based model and vanilla models include Linear and MLP.
+
+\begin{table}[!ht]
+%\begin{adjustwidth}{-2.25in}{0in} % Comment out/remove adjustwidth environment if table fits in text column.
+\centering
+\caption{Model Contrast Through Statistic Metric}
+\label{Model Contrast Through Statistic Metric}
+% \begin{sidewaystable}
+\begin{tabular}{llrrrr}
+\toprule
+        &     &     IC &   ICIR &  Rank IC &  Rank ICIR \\
+model\_type & model &        &        &          &            \\
+\midrule
+RNN\_based & ALSTM &  0.029 &  0.042 &    0.026 &      0.041 \\
+        & GRU &  0.004 &  0.006 &    0.002 &      0.004 \\
+        & LSTM &  0.021 &  0.031 &    0.016 &      0.026 \\
+Tree\_based & LGB &  0.035 &  0.066 &    0.054 &      0.079 \\
+        & XGB &  0.047 &  0.071 &    0.043 &      0.069 \\
+Vanilla & Linear &  0.114 &  0.162 &    0.091 &      0.152 \\
+        & MLP &  0.011 &  0.017 &    0.012 &      0.020 \\
+\bottomrule
+\end{tabular}
+
+
 
 
 \begin{flushleft}
@@ -771,26 +819,49 @@ Table notes: performance of backtest metric
 \end{table}
 
 
+\begin{table}[!ht]
+%\begin{adjustwidth}{-2.25in}{0in} % Comment out/remove adjustwidth environment if table fits in text column.
+\centering
+\caption{Model Contrast Through Backtest Metric}
+% \begin{sidewaystable}
+\begin{tabular}{llp{1.5cm}p{1.5cm}p{1.5cm}p{1.5cm}}
+\toprule
+        &     &  C-MVO Annualized Return &  C-MVO Information Ratio &  Long Short Annualized Return &  Long Short Information Ratio \\
+model\_type & model &                          &                          &                               &                               \\
+\midrule
+RNN\_based & ALSTM &                    0.071 &                    0.744 &                         0.112 &                         0.579 \\
+        & GRU &                    0.028 &                    0.241 &                         0.080 &                         0.409 \\
+        & LSTM &                    0.059 &                    0.671 &                         0.034 &                         0.168 \\
+Tree\_based & LGB &                    0.023 &                    0.327 &                        -0.085 &                        -0.367 \\
+        & XGB &                    0.011 &                    0.044 &                         0.116 &                         0.632 \\
+Vanilla & Linear &                    0.150 &                    2.291 &                         0.214 &                         1.105 \\
+        & MLP &                    0.013 &                    0.043 &                         0.050 &                         0.302 \\
+\bottomrule
+\end{tabular}
 
-\subsection*{Strategies Comparison}
 
 
-\begin{enumerate}
-	\item{react}
-	\item{diffuse free particles}
-	\item{increment time by dt and go to 1}
-\end{enumerate}
 
+\begin{flushleft}
+Table notes: performance of backtest metric
+\end{flushleft}
+\label{table1}
+% \end{sidewaystable}
+%\end{adjustwidth}
 
-\subsection*{Sed ac quam id nisi malesuada congue}
+\end{table}
+RNN-based Models:
+\\ALSTM: Achieved an Information Coefficient (IC) of 0.029 and an ICIR (Information Coefficient Information Ratio) of 0.042. Ranked at 0.026 for IC and 0.041 for ICIR. Displays a favorable performance with a C-MVO Annualized Return of 0.071 and a C-MVO Information Ratio of 0.744. In terms of Long-Short strategies, it achieves a Long Short Annualized Return of 0.112 and a Long Short Information Ratio of 0.579.
+GRU: Demonstrated an IC of 0.004 and an ICIR of 0.006. Ranked at 0.002 for IC and 0.004 for ICIR. Demonstrates a respectable performance, though slightly lower than ALSTM, with a C-MVO Annualized Return of 0.028 and a C-MVO Information Ratio of 0.241. In Long-Short strategies, it achieves a Long Short Annualized Return of 0.080 and a Long Short Information Ratio of 0.409.
+LSTM: Showcased an IC of 0.021 and an ICIR of 0.031. Ranked at 0.016 for IC and 0.026 for ICIR. Shows competitive results with a C-MVO Annualized Return of 0.059 and a C-MVO Information Ratio of 0.671. However, its Long Short Annualized Return is relatively lower at 0.034, with a Long Short Information Ratio of 0.168.
+\\Tree-based Models:
+\\LGB (LightGBM): Outperformed with an IC of 0.035 and an ICIR of 0.066. Achieved a Rank IC of 0.054 and a Rank ICIR of 0.079. Outperforms in C-MVO Annualized Return and C-MVO Information Ratio with specific values missing. 
+XGB (XGBoost): Produced an IC of 0.047 and an ICIR of 0.071. Ranked at 0.043 for IC and 0.069 for ICIR.
 
-Nulla mi mi, venenatis sed ipsum varius, volutpat euismod diam. Proin rutrum vel massa non gravida. Quisque tempor sem et dignissim rutrum. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi at justo vitae nulla elementum commodo eu id massa. In vitae diam ac augue semper tincidunt eu ut eros. Fusce fringilla erat porttitor lectus cursus, vel sagittis arcu lobortis. Aliquam in enim semper, aliquam massa id, cursus neque. Praesent faucibus semper libero.
+Among the RNN-based models, ALSTM performed the best in terms of both IC and ICIR, and tends to have the highest returns and information ratios across both C-MVO and Long-Short strategies, making it a potentially strong performer. It may cause by the attention layer design in ALSTM, it can catch the information between $V_1-V_6$.
+In the tree-based category, LGB and XGB demonstrated competitive performance, with a relative high performance. 
+Among all models, Linear exhibited superior performance compared to MLP. It may conclude term structure features contain important information about prediction, complex models can easily go to overfitting.
 
-\begin{itemize}
-	\item First bulleted item.
-	\item Second bulleted item.
-	\item Third bulleted item.
-\end{itemize}
 
 \section*{Discussion}
 Nulla mi mi, venenatis sed ipsum varius, Table~\ref{table1} volutpat euismod diam. Proin rutrum vel massa non gravida. Quisque tempor sem et dignissim rutrum. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi at justo vitae nulla elementum commodo eu id massa. In vitae diam ac augue semper tincidunt eu ut eros. Fusce fringilla erat porttitor lectus cursus, vel sagittis arcu lobortis. Aliquam in enim semper, aliquam massa id, cursus neque. Praesent faucibus semper libero~\cite{bib3}.
