@@ -33,7 +33,7 @@
 %
 % DO NOT INCLUDE GRAPHICS IN YOUR MANUSCRIPT
 % - Figures should be uploaded separately from your manuscript file. 
-% - Figures generated using LaTeX should be extracted and removed from the PDF before submission. 
+% - Figures generated using LaTeX should be extracted and removed from the PDF before submission.
 % - Figures containing multiple panels/subfigures must be combined into one image file before submission.
 % For figure citations, please use "Fig" instead of "Figure".
 % See http://journals.plos.org/plosone/s/figures for PLOS figure guidelines.
@@ -57,15 +57,15 @@
 %
 % Do not include text that is not math in the math environment. For example, CO2 should be written as CO\textsubscript{2} instead of CO$_2$.
 %
-% Please add line breaks to long display equations when possible in order to fit size of the column. 
+% Please add line breaks to long display equations when possible in order to fit size of the column.
 %
 % For inline equations, please do not include punctuation (commas, etc) within the math environment unless this is part of the equation.
 %
-% When adding superscript or subscripts outside of brackets/braces, please group using {}.  For example, change "[U(D,E,\gamma)]^2" to "{[U(D,E,\gamma)]}^2". 
+% When adding superscript or subscripts outside of brackets/braces, please group using {}.  For example, change "[U(D,E,\gamma)]^2" to "{[U(D,E,\gamma)]}^2".
 %
 % Do not use \cal for caligraphic font.  Instead, use \mathcal{}
 %
-% % % % % % % % % % % % % % % % % % % % % % % % 
+% % % % % % % % % % % % % % % % % % % % % % % %
 %
 % Please contact latex@plos.org with any questions.
 %
@@ -76,6 +76,8 @@
 
 % amsmath and amssymb packages, useful for mathematical formulas and symbols
 \usepackage{amsmath,amssymb}
+\usepackage{algorithm}
+\usepackage{algorithmic}
 
 % Use adjustwidth environment to exceed column width (see example table in text)
 \usepackage{changepage}
@@ -91,6 +93,7 @@
 
 % line numbers
 \usepackage[right]{lineno}
+\usepackage{geometry}
 
 % ligatures disabled
 \usepackage[nopatch=eqnum]{microtype}
@@ -101,6 +104,11 @@
 
 % array package and thick rules for tables
 \usepackage{array}
+\usepackage{booktabs}
+
+% self imported package
+\usepackage{rotating}
+\usepackage{makecell}
 
 % create "+" rule type for thick vertical lines
 \newcolumntype{+}{!{\vrule width 2pt}}
@@ -121,13 +129,13 @@
 
 
 % Remove comment for double spacing
-%\usepackage{setspace} 
+%\usepackage{setspace}
 %\doublespacing
 
 % Text layout
 \raggedright
 \setlength{\parindent}{0.5cm}
-\textwidth 5.25in 
+\textwidth 5.25in
 \textheight 8.75in
 
 % Bold the 'Figure #' in the caption and separate it from the title/caption with a period
@@ -174,32 +182,31 @@
 % Title must be 250 characters or less.
 \begin{flushleft}
 {\Large
-\textbf\newline{Machine Learning Trading Strategy in VIX Derivatives:\\{\textit{A Walk-Forward Training and Backtesting Study
-}}} % Please use "sentence case" for title and headings (capitalize only the first word in a title (or heading), the first word in a subtitle (or subheading), and any proper nouns).
+\textbf\newline{Machine Learning Trading Strategy in VIX Derivatives:\\{\textit{A Walk-Forward Training and Backtesting Study}}} % Please use "sentence case" for title and headings (capitalize only the first word in a title (or heading), the first word in a subtitle (or subheading), and any proper nouns).
 }
 \newline
 % Insert author names, affiliations and corresponding author email (do not include titles, positions, or degrees).
 \\
-Name1 Surname\textsuperscript{1,2\Yinyang},
-Name2 Surname\textsuperscript{2\Yinyang},
-Name3 Surname\textsuperscript{2,3\textcurrency},
-Name4 Surname\textsuperscript{2},
-Name5 Surname\textsuperscript{2\ddag},
-Name6 Surname\textsuperscript{2\ddag},
-Name7 Surname\textsuperscript{1,2,3*},
-with the Lorem Ipsum Consortium\textsuperscript{\textpilcrow}
+Sangyuan Wang\textsuperscript{1\Yinyang},
+Keran Li\textsuperscript{1\Yinyang}
+JiaQi Chen \textsuperscript{2,3\textcurrency},
+ Liang Xu \textsuperscript{2},
+% Name5 Surname\textsuperscript{2\ddag},
+% Name6 Surname\textsuperscript{2\ddag},
+% Name7 Surname\textsuperscript{1,2,3*},
+%with the Lorem Ipsum Consortium\textsuperscript{\textpilcrow}
 \\
 \bigskip
-\textbf{1} Affiliation Dept/Program/Center, Institution Name, City, State, Country
+\textbf{1} Southwestern University of Finance and Economics, Chengdu, Sichuan, China
 \\
-\textbf{2} Affiliation Dept/Program/Center, Institution Name, City, State, Country
-\\
-\textbf{3} Affiliation Dept/Program/Center, Institution Name, City, State, Country
-\\
-\bigskip
+%\textbf{2} Affiliation Dept/Program/Center, Institution Name, City, State, Country
+%\\
+%\textbf{3} Affiliation Dept/Program/Center, Institution Name, City, State, Country
+%\\
+%\bigskip
 
 % Insert additional author notes using the symbols described below. Insert symbol callouts after author names as necessary.
-% 
+%
 % Remove or comment out the author notes below if they aren't used.
 %
 % Primary Equal Contribution Note
@@ -210,8 +217,8 @@ with the Lorem Ipsum Consortium\textsuperscript{\textpilcrow}
 \ddag These authors also contributed equally to this work.
 
 % Current address notes
-\textcurrency Current Address: Dept/Program/Center, Institution Name, City, State, Country % change symbol to "\textcurrency a" if more than one current address note
-% \textcurrency b Insert second current address 
+\textcurrency Current Address: Southwestern University of Finance and Economics, Chengdu, Sichuan, China % change symbol to "\textcurrency a" if more than one current address note
+% \textcurrency b Insert second current address
 % \textcurrency c Insert third current address
 
 % Deceased author note
@@ -226,36 +233,58 @@ with the Lorem Ipsum Consortium\textsuperscript{\textpilcrow}
 \end{flushleft}
 % Please keep the abstract below 300 words
 \section*{Abstract}
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur eget porta erat. Morbi consectetur est vel gravida pretium. Suspendisse ut dui eu ante cursus gravida non sed sem. Nullam sapien tellus, commodo id velit id, eleifend volutpat quam. Phasellus mauris velit, dapibus finibus elementum vel, pulvinar non tellus. Nunc pellentesque pretium diam, quis maximus dolor faucibus id. Nunc convallis sodales ante, ut ullamcorper est egestas vitae. Nam sit amet enim ultrices, ultrices elit pulvinar, volutpat risus.
+We found that information on the VIX futures curve can guide the trading of VIX derivatives. We use two sets of features derived from the VIX futures curve to predict the next day's return rates of VIX ETFs and construct a trading strategy. In this strategy, up to 4 out of 8 different machine learning models achieved an Information Coefficient (IC) value of over 0.02 over a span of 11 years, compared to the MSE and AR(1) baseline models. This indicates that the VIX futures curve indeed has predictive power over VIX ETFs. In a strict Walk-Forward back test, a simple long-short strategy achieved an average information ratio of 1.3. We used Portfolio Overlay (PO) methods to increase the average information ratio to 1.6, demonstrating that the prediction of returns is valuable not only in relative terms but also in absolute terms.
 
 
 % Please keep the Author Summary between 150 and 200 words
-% Use first person. PLOS ONE authors please skip this step. 
+% Use first person. PLOS ONE authors please skip this step.
 % Author Summary not valid for PLOS ONE submissions.
+%\section*{Author summary}
+%Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur eget porta erat. Morbi consectetur est vel gravida pretium. Suspendisse ut dui eu ante cursus gravida non sed sem. Nullam sapien tellus, commodo id velit id, eleifend volutpat quam. Phasellus mauris velit, dapibus finibus elementum vel, pulvinar non tellus. Nunc pellentesque pretium diam, quis maximus dolor faucibus id. Nunc convallis sodales ante, ut ullamcorper est egestas vitae. Nam sit amet enim ultrices, ultrices elit pulvinar, volutpat risus.
+
+%\linenumbers
 
 % Use "Eq" instead of "Equation" for equation citations.
 \section*{Introduction}
-Lorem ipsum dolor sit~\cite{bib1} amet, consectetur adipiscing elit. Curabitur eget porta erat. Morbi consectetur est vel gravida pretium. Suspendisse ut dui eu ante cursus gravida non sed sem. Nullam Eq~(\ref{eq:schemeP}) sapien tellus, commodo id velit id, eleifend volutpat quam. Phasellus mauris velit, dapibus finibus elementum vel, pulvinar non tellus. Nunc pellentesque pretium diam, quis maximus dolor faucibus id.~\cite{bib2} Nunc convallis sodales ante, ut ullamcorper est egestas vitae. Nam sit amet enim ultrices, ultrices elit pulvinar, volutpat risus.
+The implied volatility index (VIX), often termed as the “investor fear gauge” , has been a pivtoal index in the financial market after its first inception in early 1990s. Since 2003, VIX reflects the 30 days standard \& poor (S \& P 500) expected volatility implied in various call and put S P 500 options (Whaley, 2009; Cboe, 2023). Due to VIX itself is not directly tradable. Instruments such as VIX futures, options, and Exchange-traded notes(ETN) are utilised as essential tools for trading VIX. Meanwhile, With investors growing interests in VIX, S \& P introduced the VIX futures index series in 2005. This series replicates constant-maturity VIX futures indexes by systematically rolling future contracts with varying maturities. Specifically, the VIX short-term futures Index (SPVXSP) keeps a fixed 1-month constant maturity, the VIX two-month futures index (SPVIX2ME) maintains a constant 2-months maturity, three-month (SPVIX3ME), four-month (SPVIX4ME), five-month (SPVIXMP), and six-month (SPVIX6ME) futures indices, each maintain constant maturities corresponding to their respective timeframes. Fig.\ref{fig1} illustrates the correlations among these six constant maturity futures (CMFs).
 
-\begin{eqnarray}
-\label{eq:XGBoost}
-	\mathrm{P_Y} = \underbrace{H(Y_n) - H(Y_n|\mathbf{V}^{Y}_{n})}_{S_Y} + \underbrace{H(Y_n|\mathbf{V}^{Y}_{n})- H(Y_n|\mathbf{V}^{X,Y}_{n})}_{T_{X\rightarrow Y}},
-\end{eqnarray}
 
-\section*{Research Methodology}
-\subsection*{VIX term structures decompositions}
+\begin{figure}[!h]
+\caption{\bf CMfs Correlations}
+%\includegraphics[width=0.5\linewidth]{EDA_correlations.png}
+\label{fig1}
+\end{figure}
+
+The VIX term structures describes the relationship of VIX futures contracts with varying expiration dates.The term structure is in contango when VIX futures with longer maturities have higher prices than futures with shorter maturities, backwardation occurs when prices of VIX futures with shorter time to expiration exceed those with longer maturities. Our empirical analysis,  as showcased in exhibit 1 through K-means clustering, robustly indicates a dominant contango shape within the VIX future term structure. Such phenomenon can be partially explained based on volatility risk premium theory (Carr \& Wu, 2008) and  Johnson (2017) work, which divides VIX term strucuture  into two fundamental components: conditional volatility expectations and risk premiums. It becomes apparent that investors stipulate a larger risk premium for further VIX options, as contrasted with the shorter-maturity VIX options except during certain financial crisis. Notably, the VIX futures term structure holds predictive power when anomalies in the term structure revert to the classical shape given strong mean-reverting property of VIX futures illustrated by Avellaneda and Papanicolaou (2019).
+The literature has extensively explored predictive power of implied volatility (IV),  IV term structure and VIX term structure using classical statistical models. Wang and Wang (2016) among others find that incorporating IV can enhance forecast accuracy within the GARCH model framework. Additionally, studies by Bush et al. (2011), Byun and Kim (2013), and Haugom et al. (2014) have demonstrated the informative power of IV using the heterogeneous autoregressive (HAR) model.transitioning towards term structures, few studies confirms the prediction power of term structures for various financial instruments. Chang (2016) shows the information gained in VIX term structure significantly aid in predicting S\&P 500 index returns volatility while Clements (2020) uses HAR model to further affirm that the information derived from IV term structure possesses exceptional predictive power for forecasting both the level and directional changes in stock return volatility, even during the volatile period of the Global Financial Crisis.Chen (2022) employes CHH model and confirms that the volatility factor constructed from swaptions IV term structures holds significant predictive power on excess bond returns. Lastly, Ornelas and Mauad (2019) provides empirical evidence of the IV term structures informative power in forecasting exchange rate returns. Based on the robust findings from above research use classical statistical models to exploit the predictive power of term structures, in this paper, we use HAR model as the baseline to compare with other selected machine approaches.
+
+Despite the booming of machine learning (ML) approaches, relatively scarce studies use machine learning approach to exploit VIX-related issues. Hosker et al (2018) finds that recurrent neural network(RNN) and long short-term memory(LSTM) shows the best performance for forecasting 1-month VIX futures 3-days and 5-days ahead among principal components analysis and ARIMA model. Hirsa and et al. (2021) apply neural network models (random forest, support vector machines, feed-forward neural network and LSTM) to investigate the approaches that could replicate VIX index and VIX futures with fewer options compared to CBOE original methodology. Vrontos (2021) applies various machine learning models and discovers that ML models are statistical and economic superior compared to standard econometric models when forecasting the directional changes of VIX index. Lastly, Avellaneda (2021) generates VIX futures trading signals by including functional dependence of VIX term structures, VIX futures position as well as expected utility in neural network and finds that this approach shows better portfolio performance in the out of sample backtesting.
+
+In this paper, we use multiple types of machine learning models which includes Recurrent neural network models, tree-based model, transformer and graph attention neural network to exploit informative power of VIX futures term structure on next-day return of  VIX constant maturity instruments.
+
+
+By working closely with Avellaneda (2021) work,we first use information extracted from the VIX term structure to construct various VIX term-structure-related features and combine major financial market features, we then implement various machine learning methods to predict the next day return of six VIX constant-maturity instruments. Lastly, to evaluate the economic performances of our work, we utilise machine learning prediction results as trading signals to implement two trading strategies: The long-short strategy and mean-variance-adjusted portfolio optimization strategy. Our results reveal that the VIX term structure has superior informative power in predicting the return of VIX constant-maturity instruments.
+
+
+The key contributions of this study can be summarised as follows, first, based on the VIX futures term structures decomposition approach proposed by Avellaneda(2021), features with term-structure information, personal information, and major market trends information are included in the datasets. Second, various state-of-art machine learning approaches are introduced to predict the VIX rolling-ETFs next-day returns. Third, two trading strategies are used in the backtesting which are, the long-short strategy based on machine learning ranking and a mean-variance adjusted portfolio optimization strategy.
+The results reveal that firstly, the VIX futures curve has the ability to predict the next-day return of VIX ETFs. Thirdly, The economic performance of machine learning models relying on the adjusted mean-variance portfolio optimization strategy generally outperforms that of models based on the long-short strategy. The remainder of the paper is composed as follows: Section 2 provides proposed research methodology(1.VIX term structures decompositions 2.machine learning models) section 3 describes data and experiment design, Section 4 analysis results, Section 5 concludes and discuss, Appendix: graph and code.
+
+
+
+\section*{Research Methodologies and Data}
+\subsection*{1. Trading signals constructions}
 The VIX is calculated by the Chicago Board Options Exchange (CBOE) and is based on the prices of options on the S\&P 500 Index.
 \\Let $t$ denote time and let $VIX_t$ denote the value of VIX on that date. At time $t$,
 we can view lots of VIX futures contracts with different expiration dates:
 \begin{eqnarray}
-    {F^i_t} := \text{VIX futures expiring at time $T_i$ at time t}
+    \mathrm{F^i_t} := \text{VIX futures expiring at time $T_i$ at time t}
 \end{eqnarray}
 where $i$ denote the index of the VIX futures contracts with a ascending expiration dates $T_1 < T_2 < ... < T_d$.
 \\A term-structure of constant-maturity VIX futures(CMFs), consist of 1,2,...,6 months in our case, are constructed as
 a linear interpolation of two nearest expiration dates VIX futures:
 \begin{eqnarray}
 \label{eq:defineV}
-    {V^j_t} := \omega^j_tF^{L_j}_t\ + (1 - \omega^j_t)F^{R_j}_t \text{for j in \{1,2,...,6\}}
+    \mathrm{V^j_t} := \omega^j_tF^{L_j}_t\ + (1 - \omega^j_t)F^{R_j}_t \text{for j in \{1,2,...,6\}}
 \end{eqnarray}
 where $L_j$ represents the VIX futures of the nearest expiration dates close to $j$-month on the left of time axis,
 $R_j$ represents the VIX futures of the nearest expiration dates close to $j$-month on the right of time axis, and
@@ -268,22 +297,22 @@ SPVXSP, SPVIX2ME, SPVIX3ME, SPVIX4ME, SPVXMP, SPVIX6ME represents 1-6 months CMF
 Derivatives like ETFs and ETNs or Strategies maintains the CMF weights of equation \ref{eq:define V} for fixed maturity $j-month$. For each $j$, we denote $R^j$
 the daily return of rolling VIX futures strategy, trading cost is not considered:
 \begin{eqnarray}
-    {R^j_t} = \frac{\omega^j_t{\Delta}F^{L_j}_t\ + (1 - \omega^j_t){\Delta}F^{R_j}_t}{\omega^j_tF^{L_j}_t\ + (1 - \omega^j_t)F^{R_j}_t}
+    \mathrm{R^j_t} = \frac{\omega^j_t{\Delta}F^{L_j}_t\ + (1 - \omega^j_t){\Delta}F^{R_j}_t}{\omega^j_tF^{L_j}_t\ + (1 - \omega^j_t)F^{R_j}_t}
 \end{eqnarray}
 where${\Delta}F^{L_j}_t = F^{L_j}_{t+1} - F^{L_j}_t$. We denote ${\Delta}t = \frac{1}{252}$, transform equation in terms of the CMFs:
 \begin{eqnarray}
 \label{eq: $R^j_t$2}
-    {R^j_t} = \frac{{\Delta}V^j_t}{V^j_t} - \frac{F^{R_j}_{t+1} - F^{L_j}_{t+1}}{V^j_t(T_{R_j} - T_{L_j}){\Delta}t}{\Delta}t
+    \mathrm{R^j_t} = \frac{{\Delta}V^j_t}{V^j_t} - \frac{F^{R_j}_{t+1} - F^{L_j}_{t+1}}{V^j_t(T_{R_j} - T_{L_j}){\Delta}t}{\Delta}t
 \end{eqnarray}
 Let Roll denote the drift term in equation \ref{eq: $R^j_t$2}, it referred to as the roll yield of rolling VIX futures strategy:
 \begin{eqnarray}
-    {Roll^j_{t+1}} := - \frac{F^{R_j}_{t+1} - F^{L_j}_{t+1}}{V^j_t(T_{R_j} - T_{L_j}){\Delta}t}
+    \mathrm{Roll^j_{t+1}} := - \frac{F^{R_j}_{t+1} - F^{L_j}_{t+1}}{V^j_t(T_{R_j} - T_{L_j}){\Delta}t}
 \end{eqnarray}
 In a Contango circumstances, $F^{R_j}_{t+1} > F^{L_j}_{t+1}$ means $Roll < 0$. On the opposite, in a Backwardation circumstances $Roll > 0$.
 We re-write equation as follows:
 \begin{eqnarray}
 \label{eq: $R^j_t$3}
-    {R^j_t} = \frac{{\Delta}V^j_t}{V^j_t} + Roll^j_{t+1}{\Delta}t
+    \mathrm{R^j_t} = \frac{{\Delta}V^j_t}{V^j_t} + Roll^j_{t+1}{\Delta}t
 \end{eqnarray}
 From equation \ref{eq: $R^j_t$3} we see $R^j_t$ consist of two parts, the change in $V^j_t$ and roll yield. As history data shown, the most likely VIX futures
 curves are contango, so the value of the rolling VIX futures strategies decay.
@@ -291,24 +320,12 @@ curves are contango, so the value of the rolling VIX futures strategies decay.
 the return of $V^j_t$ should be $V^j_t - V^{j-1}_t$, so we denote $\mu$ as :
 \begin{eqnarray}
 \label{eq: mu}
-    {\mu^j_t} = V^j_t - V^{j-1}_t
+    \mathrm{\mu^j_t} = V^j_t - V^{j-1}_t
 \end{eqnarray}
 $\mu^j_t$ contains instantaneous market views of return about $V^j_t$.
 ynorm
 
-
-
-% For figure citations, please use "Fig" instead of "Figure".
-Nulla mi mi, Fig~\ref{fig1} venenatis sed ipsum varius, volutpat euismod diam. Proin rutrum vel massa non gravida. Quisque tempor sem et dignissim rutrum. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi at justo vitae nulla elementum commodo eu id massa. In vitae diam ac augue semper tincidunt eu ut eros. Fusce fringilla erat porttitor lectus cursus, \nameref{S1_Video} vel sagittis arcu lobortis. Aliquam in enim semper, aliquam massa id, cursus neque. Praesent faucibus semper libero.
-
-% Place figure captions after the first paragraph in which they are cited.
-\begin{figure}[!h]
-\caption{{\bf Bold the figure title.}
-Figure caption text here, please use this space for the figure panel descriptions instead of using subfigure commands. A: Lorem ipsum dolor sit amet. B: Consectetur adipiscing elit.}
-\label{fig1}
-\end{figure}
-
-\subsection*{machine learning models}
+\subsection*{2. Proposed Machine Learning Algorithms}
 
 \subsubsection*{2.1 XGBoost}
  The concept of boosting, proposed by Freund and Schapire (1999), revolves around an ensemble model strategy that combines multiple weak learners to create a more robust learner. Friedman (1999) introduced Gradient Tree Boosting, an improvement in boosting that incorporates the gradient descent algorithm into the loss function to minimize errors. Expanding on gradient boosting, Chen and Guestrin (2016) introduce XGBoost, a scalable end-to-end tree boosting system based on additive training strategy that augments gradient tree boosting with regularization, efficient handling of sparse data, and enhanced computational efficiency, resulting in superior speed and accuracy. Eq.1 denotes the objective function of XGBoost where \(\mathbf{\sum_{i=1}^{n}l(y_i,\hat{y}_i)}\) represents the training loss function and \(\mathbf{{\sum_{k=1}^{K}}\Omega(f_k)}\) denotes the complexity of trees.
@@ -329,11 +346,11 @@ In our experiment, we use leaky ReLU introduced by Mass (2013) as the activation
 \mathbf{{W^{(i)}}^{T}x},\quad &\mathbf{{W^{(i)}}^{T}x}>0\\0, \quad else
 \end{cases}
 \end{eqnarray}
-where \(W^{(i)}\) is the weight vector of \(i_{th}\) hidden unit while \(x\) is the input features. A naive MLP can be illustrated as figure 2.
+where \(W^{(i)}\) is the weight vector of \(i_{th}\) hidden unit while \(x\) is the input features. A naive MLP can be illustrated as fig.\ref{MLP}
 \begin{figure}[!h]
-\includegraphics[width=0.5\linewidth]{MLP.jpg}
-\caption{{\bf Naive MLP:} MLP network with one hidden layer}
-\label{fig2}
+%\includegraphics[width=0.5\linewidth]{MLP.jpg}
+\caption{{\bf Naive MLP}}
+\label{MLP}
 \end{figure}
 
 \subsubsection*{2.3 Recurrent Neural Network (RNN)}
@@ -401,7 +418,7 @@ Follow notation in LSTM,  $g$ represents gate \ref{eq: Gate}.
 
 
 \subsubsection*{2.4 Temporal Covolutional Networks}
-Temporal covolutional networks (TCN), originally introduced by Lea et al. (2016), is a type of neural network that employs convolutional layers to capture dependencies in sequential data, . Unlike traditional RNN and LSTMs, TCNs use 1D convolutions to process input sequences in parallel, making them highly parallelizable and capable of capturing long-range dependencies. Implementation details can be found in eq.5.
+Temporal covolutional networks (TCN), originally introduced by Lea et al. (2016), is a type of neural network that employs convolutional layers to capture dependencies in sequential data. Unlike traditional RNN and LSTMs, TCNs use 1D convolutions to process input sequences in parallel, making them highly parallelizable and capable of capturing long-range dependencies. Implementation details can be found in eq.5.
 
 \begin{eqnarray}
 \label{eq: TCN}
@@ -411,7 +428,7 @@ where FCN is fully-convolutional network with one dimension.
 
 
 \subsubsection* {2.5 Transformer}
-We also implement attention-based network architecture called transformer proposed by Vaswani et al. (2017) for prediction. Transformer departs from the traditional recurrent or convolutional layers, relying instead on the attention mechanism, This enables the model to weigh the significance of different parts of the input data differently, allowing it to capture complex dependencies and relationships within the data. Eq.6 illustrates the implementation details.
+We also implement attention-based network architecture called transformer proposed by Vaswani et al. (2017) for prediction. Transformer departs from the traditional recurrent or convolutional layers, relying instead on the attention mechanism, This enables the model to weigh the significance of different parts of the input data differently, allowing it to capture complex dependencies and relationships within the data. Eq. illustrates the implementation details.
 
 \begin{eqnarray}
 \label{eq: Transformer}
@@ -434,8 +451,7 @@ where FFN is a feedforward network with residual added and layer norm, self-atte
     \end {cases}
 \end{eqnarray}
 where $Z$ is the output of self-attention layer.
-
-\section*{data and experiment design}
+\subsection*{Data Preparations and Experiment Designs}
 \subsubsection*{Data Preparations}
 In line with our primary goal of predicting next-day arithmetical return of \(CMFs\) as denoted in eq.X, it is rational to initially incorporate CMFs-related factors \(V^j_t\) and \(Roll^j_{t+1}\) as detailed in Eq.2 and Eq.5. Additionally, to thoroughly examine the informative power of term structures, we introduce \(\mu^j_t\) denoted in Eq.7 and \(\triangle Roll_{t}^j\)to provides a comprehensive description of the CMFs term structure. We also integrate \(TLT\) and \(SPY\) into our analysis to partially represents the macro-economics conditions. Furthermore, various time-series statistical transformations are employed to explore possible extra information with details provided in table 3. The time range for \(VIX\)  futures and \(CMFs\)  data covers the period from January 3, 2005, to March 7, 2023 while \(TLT\)  and \(SPY\)  data are selected within the time frame of January 12, 1995, to April 12, 2023. Three distinct data sets are utilised to incrementally examine the informative power of VIX term structures and additional information offered by time-series statistical transformations.
 Detailed descriptions of all three datasets are provided in tables 1, 2 and 3.
@@ -525,57 +541,239 @@ Detailed descriptions of all three datasets are provided in tables 1, 2 and 3.
 \end{sidewaystable}
 
  \subsubsection*{Empirical Experiment Designs}
- The main goal of our empirical experiment aims to evaluate the statistical and economic performances among different models and different datasets.
-Before training we are dealing with tabular datasets with multi-index datetime and instruments, columns represents features. we form dataset {(Xi, yi)}i=1,2,..,I into a single combined dataset(X, y) to train model instead of train I models every task named "features stacking". With this dataset organization, conclusions are more general and less biased by outliers or over fitting and model can be trained with more data, correspondingly correlation of instruments are not considered in the model.
+ The main goal of our empirical experiment aims to evaluate the statistical and economic performances among different models and different datasets. Before training, we are dealing with 6 groups of instruments and features under a single date as shown in table 1,2 and 3. Based on the concept of "feature stacking", we combine 6 groups of instruments and features into one large group to achieve a more general conclusions. Meanwhile, the model is less biased by outliers and over-fitting is less likely to occur while correlations among CMFs are considered in the model. During training, cross-validation is widely used to determine the generalization error of an ML algorithm, so as to prevent over fitting. However, CV can be exposed to future information leakage, particularly in time-series data due to various reasons such as the inclusion of future data points caused by random sampling, the temporal dependencies of financial time-series data, etc. Therefore, to avoid the leakage of future information, we implement a walk-forward training and back-testing procedure, specifically, We set (First-Train, First-Valid, First-Test) as follows: First Train: (2005-12-20, 2010-06-30), First Valid: (2010-07-01, 2010-12-31), First Test: [2011-01-01, 2022-08-15]. This setup is based on three main considerations: 1. To ensure a sufficiently long back testing period of 11 years; 2. To ensure the first training set is large enough and includes extreme market conditions like the 2008 financial crisis; 3. To set a six-month valid set, ensuring the training data used for predictions is at least six months old, which further prevents information leakage and increases robustness. We believe that using more recent data in practice can yield better results. Additionally, we follow an expanding window process  when using the data, meaning each training includes all previous data points, to train a more robust model for prediction.
+
+ \begin{algorithm}
+        \caption{walking forward procedure}
+        \begin{algorithmic}
+            \STATE $rollingtasks \gets Algorithm TaskRollGen\ref{Task_Roll_Gen}$
+            \FOR{$task \gets rollingtasks$}
+            \STATE $model \xleftarrow{fit} task[train]$
+            \STATE $pred \xleftarrow{predict} task[test]$
+            \STATE $preds \xleftarrow{append} pred$
+            \ENDFOR
+            \STATE $PRED \xleftarrow{concat} preds \text{\quad \# PRED is a time series cover Task[test]'s horizon}$
+            \STATE $metrics \xleftarrow{calculate} PRED$
+            \STATE $backtestingresult \gets PRED, strategy \text{\quad \# bar by bar}$
+        \end{algorithmic}
+\end{algorithm}
+\begin{algorithm}
+	\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+	\renewcommand{\algorithmicensure}{\textbf{Output:}}
+	\caption{Task Roll Gen}
+	\label{Task_Roll_Gen}
+	\begin{algorithmic}
+    	\REQUIRE TASK contains \{TRAIN, VALID, TEST, roll\_lenth\}
+            \ENSURE rollingtasks with their own \{train, valid, test\}
+            \STATE $fragments \gets$ Test divided by roll\_lenth
+            \FOR{$m \gets fragments$}
+            \STATE $task \gets Task$
+            \STATE $task[test] \gets m$
+            \STATE $task[valid] \gets [start\_date_{test} - 1 - lenth_{Valid}, start\_date_{test} - 1]$
+            \STATE $task[train] \gets [start\_date_{TRAIN}, strat\_date_{valid} - 1]$ \text{\quad \# expanding}
+            \STATE $rollingtasks \xleftarrow{append} task$
+            \ENDFOR
+	\end{algorithmic}
+\end{algorithm}
+
+
+\subsubsection*{Back-testing Performance Evaluation Methods:  Constrained-mean-variance Optimization (C-MVO) strategy \& Long-short strategy}
+
+We introduce both C-MVO strategy and long-short strategy to explore the backtesting performances among various machine learning models. The following is the detailed explanation for two strategies.  In line with the classical mean-variance portfolio optimization structure proposed by Markowits (1952).  For C-MVO strategy, we incorporated several additional constraints. The \(Cov_{port}\) was derived through the estimation of a 60-days historical covariance matrix. The risk aversion parameter, denoted as \(gamma\), was fixed at a value of 0.2. To ensure prudent risk management, we imposed constraints based on portfolio characteristics. Specifically, we restricted gross leverage to a maximum of 3, and imposed absolute limits on the individual weights of cmfs, ensuring individual weights did not exceed an absolute value of 1. Furthermore, a critical risk threshold was established, with the annualized risk of the portfolio constrained to not exceed 30 \%.
+This strategy provides a rigorous approach to portfolio construction, striking a balance between expected returns and risk mitigation. The application of historical covariance data and the delineation of precise risk parameters contribute to the robustness and reliability of the derived portfolio weights, thereby enhancing the integrity of the investment strategy. The detailed optimization function is represented in eq.\ref{MVO}
+ For long-short strategy, which is a common trading strategy aims to exploit profits from relative performances of assets through a combination of long and short positions. In our strategy design,we rank six \(Cmfs\) instrument based on predicted returns in descending order.  Each trading day, we maintain a 50\% long positions in the Cmfs with largest predicted return and a 50\% short position to the lowest predicted return Cmfs, with daily re-balance.
+\begin{eqnarray}
+\label{MVO}
+    Max_{w_i}: \quad & \sum_{i=1}^{n} (W_i \times R_i)-gamma \times risk \nonumber \\
+\text{s.t.:} \quad & max(|w_i|) \leq 1 \nonumber \\
+                         & \sum_{i=1}^{N} |w_i| \leq 3 \\
+        & \left| \sum_{i=1}^{N} w_i \right| \leq 2 \nonumber \\
+        & risk \leq risk_{max} \nonumber \\
+        & where \quad risk=W_i \times Cov_{port} \times W_{i}^T, \nonumber \\
+        & risk_{max}=0.03, \quad gamma=0.2 \nonumber
+\end{eqnarray}
+
+% For figure citations, please use "Fig" instead of "Figure".
 
 
 
-\subsubsection*{Trading Strategy: A mean-variance approach}
-To ascertain optimal portfolio weights grounded in forecasted data, we employed mean-variance optimization incorporating additional constraints. The covariance structure was derived through the estimation of a 60-day historical covariance matrix. The risk aversion parameter, denoted as gamma, was fixed at a value of 0.2.
-To ensure prudent risk management, we imposed constraints on portfolio characteristics. Specifically, we restricted gross leverage to a maximum of 3, and imposed absolute limits on the individual weights of VIX futures indices, ensuring they did not exceed an absolute value of 1. Furthermore, a critical risk threshold was established, with the annualized risk of the portfolio constrained to not exceed 30%.
-This methodology, integrating forecast-driven optimization within a risk-constrained mean-variance framework, provides a rigorous approach to portfolio construction, striking a balance between expected returns and risk mitigation. The application of historical covariance data and the delineation of precise risk parameters contribute to the robustness and reliability of the derived portfolio weights, thereby enhancing the integrity of the investment strategy.
+
+% Results and Discussion can be combined.
+\section*{Results}
+Panel.\ref{summary} presents the combined results of predictive and back-testing performances, To assess prediction performance across all machine learning models, we have employed a range of metrics within the domain of quantitative trading evaluation systems. Our major metric is the information coefficient (IC), a statistical measure that quantifies the correlations between predictions of returns and subsequent realized returns of portfolio which can be denoted as \(Corr(\hat{y},{y})\)  A high positive IC indicates a robust predictions are highly correlated with actual returns, suggesting a strong predictive ability. Conversely, a low or negative IC suggests inaccuracies in prediction or even contrarian to actual outcomes. Furthermore, we have integrated ICIR (Information Coefficient Information Ratio) into our evaluation, which can be calculated as Eq.\ref{ICIR}. In addition, we have introduced Rank IC that replace \(Corr(\hat{y},{y})\) as the correlation of returns rankings denoted as \(Corr(\hat{rank},{rank})\) and subsequently computed Rank ICIR. We consider information ratios and annualised returns as key indicators for the assessments of back-testing performances.
+
+\begin{eqnarray}
+\label{ICIR}
+IR \approx \frac{\bar{IC}}{Std(IC)}
+\end{eqnarray}
 
 
-
-
-
-
-
-
-
-
-
-
-
-Nulla mi mi, venenatis sed ipsum varius, Table~\ref{table1} volutpat euismod diam. Proin rutrum vel massa non gravida. Quisque tempor sem et dignissim rutrum. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi at justo vitae nulla elementum commodo eu id massa. In vitae diam ac augue semper tincidunt eu ut eros. Fusce fringilla erat porttitor lectus cursus, vel sagittis arcu lobortis. Aliquam in enim semper, aliquam massa id, cursus neque. Praesent faucibus semper libero.
-
-% Place tables after the first paragraph in which they are cited.
 \begin{table}[!ht]
 \begin{adjustwidth}{-2.25in}{0in} % Comment out/remove adjustwidth environment if table fits in text column.
 \centering
-\caption{
-{\bf Table caption Nulla mi mi, venenatis sed ipsum varius, volutpat euismod diam.}}
-\begin{tabular}{|l+l|l|l|l|l|l|l|}
-\hline
-\multicolumn{4}{|l|}{\bf Heading1} & \multicolumn{4}{|l|}{\bf Heading2}\\ \thickhline
-$cell1 row1$ & cell2 row 1 & cell3 row 1 & cell4 row 1 & cell5 row 1 & cell6 row 1 & cell7 row 1 & cell8 row 1\\ \hline
-$cell1 row2$ & cell2 row 2 & cell3 row 2 & cell4 row 2 & cell5 row 2 & cell6 row 2 & cell7 row 2 & cell8 row 2\\ \hline
-$cell1 row3$ & cell2 row 3 & cell3 row 3 & cell4 row 3 & cell5 row 3 & cell6 row 3 & cell7 row 3 & cell8 row 3\\ \hline
+\caption{all result}
+% \begin{sidewaystable}
+\begin{tabular}{llrrrrp{1.5cm}p{1.5cm}p{1.5cm}p{1.5cm}}
+\toprule
+    &               &     IC &   ICIR &  Rank IC &  Rank ICIR &  C-MVO Annualized Return &  C-MVO Information Ratio &  Long Short Annualized Return &  Long Short Information Ratio \\
+model & dataset &        &        &          &            &                          &                          &                               &                               \\
+\midrule
+ALSTM & Derivations &  0.040 &  0.066 &    0.027 &      0.048 &                   -0.002 &                   -0.016 &                         0.033 &                         0.174 \\
+    & Simple &  0.005 &  0.007 &   -0.005 &     -0.008 &                    0.057 &                    0.803 &                         0.051 &                         0.258 \\
+    & TermStructure &  0.029 &  0.042 &    0.026 &      0.041 &                    0.071 &                    0.744 &                         0.112 &                         0.579 \\
+\midrule
+GRU & Derivations &  0.021 &  0.035 &    0.017 &      0.031 &                    0.049 &                    0.310 &                         0.096 &                         0.641 \\
+    & Simple & -0.023 & -0.033 &   -0.026 &     -0.040 &                    0.045 &                    0.517 &                         0.059 &                         0.310 \\
+    & TermStructure &  0.004 &  0.006 &    0.002 &      0.004 &                    0.028 &                    0.241 &                         0.080 &                         0.409 \\
+\midrule
+LGB & Derivations &  0.019 &  0.059 &    0.085 &      0.127 &                    0.020 &                    0.264 &                        -0.085 &                        -0.355 \\
+    & Simple & -0.024 & -0.050 &   -0.044 &     -0.069 &                   -0.004 &                   -0.044 &                        -0.121 &                        -0.511 \\
+    & TermStructure &  0.035 &  0.066 &    0.054 &      0.079 &                    0.023 &                    0.327 &                        -0.085 &                        -0.367 \\
+\midrule
+LSTM & Derivations &  0.040 &  0.067 &    0.036 &      0.064 &                    0.047 &                    0.416 &                         0.020 &                         0.123 \\
+    & Simple & -0.015 & -0.022 &   -0.026 &     -0.042 &                    0.030 &                    0.388 &                         0.044 &                         0.262 \\
+    & TermStructure &  0.021 &  0.031 &    0.016 &      0.026 &                    0.059 &                    0.671 &                         0.034 &                         0.168 \\
+\midrule
+Linear & Derivations &  0.095 &  0.147 &    0.079 &      0.140 &                    0.165 &                    1.049 &                         0.117 &                         0.646 \\
+    & Simple &  0.090 &  0.147 &    0.070 &      0.131 &                    0.068 &                    1.325 &                         0.186 &                         0.992 \\
+    & TermStructure &  0.114 &  0.162 &    0.091 &      0.152 &                    0.150 &                    2.291 &                         0.214 &                         1.105 \\
+\midrule
+MLP & Derivations & -0.011 & -0.018 &   -0.013 &     -0.024 &                   -0.023 &                   -0.074 &                         0.056 &                         0.325 \\
+    & Simple & -0.002 & -0.004 &   -0.001 &     -0.001 &                    0.195 &                    0.630 &                        -0.009 &                        -0.046 \\
+    & TermStructure &  0.011 &  0.017 &    0.012 &      0.020 &                    0.013 &                    0.043 &                         0.050 &                         0.302 \\
+\midrule
+XGB & Derivations &  0.008 &  0.012 &    0.011 &      0.019 &                    0.062 &                    0.250 &                         0.024 &                         0.141 \\
+    & Simple &  0.015 &  0.023 &    0.003 &      0.005 &                   -0.019 &                   -0.073 &                         0.042 &                         0.260 \\
+    & TermStructure &  0.047 &  0.071 &    0.043 &      0.069 &                    0.011 &                    0.044 &                         0.116 &                         0.632 \\
+\bottomrule
 \end{tabular}
+
+
+
 \begin{flushleft} Table notes Phasellus venenatis, tortor nec vestibulum mattis, massa tortor interdum felis, nec pellentesque metus tortor nec nisl. Ut ornare mauris tellus, vel dapibus arcu suscipit sed.
 \end{flushleft}
-\label{table1}
+\label{summary}
+% \end{sidewaystable}
 \end{adjustwidth}
 \end{table}
 
 
-%PLOS does not support heading levels beyond the 3rd (no 4th level headings).
-\subsection*{data preparation}
 
-\subsection*{experiment design}
 
-\subsubsection*{trading strategies construction (PO)}
-Maecenas convallis mauris sit amet sem ultrices gravida. Etiam eget sapien nibh. Sed ac ipsum eget enim egestas ullamcorper nec euismod ligula. Curabitur fringilla pulvinar lectus consectetur pellentesque. Quisque augue sem, tincidunt sit amet feugiat eget, ullamcorper sed velit. Sed non aliquet felis. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris commodo justo ac dui pretium imperdiet. Sed suscipit iaculis mi at feugiat. 
+\subsection*{Term Structure and statistical Derivations evaluation}
+Initially, from the perspective of three datasets, based on panel.\ref{summary}, for the predictive performances, models with simple datasets have shown the worst IC compared to the rest of two datasets containing term structure factors and time-series derivations. Notably, GRU (\textit{-0.023}), LGB(\textit{-0.024}), LSTM(\textit{-0.015}) and MLP(\textit{-0.002}) even shows negative IC which indicates the predicted returns are contrast with realised returns.
+by following this perspective, we discover  first findings that the robust informative power of term structure factors exists which will be explained in details in the following subsections. In our experiment, we explore three distinct datasets named Simple, TermStructure, Derivations as before, our results show that TermStructure and Derivations with term structure infomation stand out.
+\\Table~\ref{Best Dataset} select the best dataset for all models on our main metrics: IC, rank IC, information ratio of long short strategy, information ratio of constrined mean-variance optimization strategy.
+
+\begin{table}[!ht]
+\begin{adjustwidth}{-2.25in}{0in} % Comment out/remove adjustwidth environment if table fits in text column.
+\centering
+\caption{Best Dataset}
+\label{Best Dataset}
+% \begin{sidewaystable}
+\begin{tabular}{lllll}
+\toprule
+{} &             IC &        Rank IC & C-MVO Information Ratio & Long Short Information Ratio \\
+model  &                &                &                         &                              \\
+\midrule
+ALSTM  &    Derivations &    Derivations &                  Simple &                TermStructure \\
+GRU    &    Derivations &    Derivations &                  Simple &                  Derivations \\
+LGB    &  TermStructure &    Derivations &           TermStructure &                  Derivations \\
+LSTM   &    Derivations &    Derivations &           TermStructure &                       Simple \\
+Linear &  TermStructure &  TermStructure &           TermStructure &                TermStructure \\
+MLP    &  TermStructure &  TermStructure &                  Simple &                  Derivations \\
+XGB    &  TermStructure &  TermStructure &             Derivations &                TermStructure \\
+\bottomrule
+\end{tabular}
+
+
+
+
+\begin{flushleft} The best dataset in all models on main metircs: IC, Rank IC, C-MVO Information Ratio, Long Short Information Ratio.
+\end{flushleft}
+\label{table1}
+% \end{sidewaystable}
+\end{adjustwidth}
+
+\end{table}
+Data shows Simple dataset doesn't prevail in any model on prediction metrics, the best dataset on backtest metric also main distribute on Term Structure and Derivations. TermStructure is the best dataset at 46\% of the time while Derivations prevail at 39\% of the time.
+\\As described before, TermStructure mainly extent term structure features like $\mu$ and $\Delta roll$, Derivations extent time series distribution features like rolling-ma and z-score on TermStructure features. Term structure features do improve the result, but time series distribution features don't improve obviously.
+\\We will only discuss TermStructure below.
+
+
+\subsection*{Informative Power of Term Structures}
+\begin{table}[!ht]
+%\begin{adjustwidth}{-2.25in}{0in} % Comment out/remove adjustwidth environment if table fits in text column.
+\centering
+\caption{Statistic Metric}
+% \begin{sidewaystable}
+\begin{tabular}{lrrrr}
+\toprule
+{} &     IC &   ICIR &  Rank IC &  Rank ICIR \\
+model  &        &        &          &            \\
+\midrule
+ALSTM  &  0.029 &  0.042 &    0.026 &      0.041 \\
+GRU    &  0.004 &  0.006 &    0.002 &      0.004 \\
+LGB    &  0.035 &  0.066 &    0.054 &      0.079 \\
+LSTM   &  0.021 &  0.031 &    0.016 &      0.026 \\
+Linear &  0.114 &  0.162 &    0.091 &      0.152 \\
+MLP    &  0.011 &  0.017 &    0.012 &      0.020 \\
+XGB    &  0.047 &  0.071 &    0.043 &      0.069 \\
+mean   &  0.037 &  0.056 &    0.035 &      0.056 \\
+\bottomrule
+\end{tabular}
+
+
+
+
+\begin{flushleft}
+Table notes: performance of statistic metric
+\end{flushleft}
+\label{table1}
+% \end{sidewaystable}
+%\end{adjustwidth}
+
+\end{table}
+
+
+\begin{table}[!ht]
+%\begin{adjustwidth}{-2.25in}{0in} % Comment out/remove adjustwidth environment if table fits in text column.
+\centering
+\caption{Statistic Metric}
+% \begin{sidewaystable}
+\begin{tabular}{lp{1.5cm}p{1.5cm}p{1.5cm}p{1.5cm}}
+\toprule
+{} &  C-MVO Annualized Return &  C-MVO Information Ratio &  Long Short Annualized Return &  Long Short Information Ratio \\
+model  &                          &                          &                               &                               \\
+\midrule
+ALSTM  &                    0.071 &                    0.744 &                         0.112 &                         0.579 \\
+GRU    &                    0.028 &                    0.241 &                         0.080 &                         0.409 \\
+LGB    &                    0.023 &                    0.327 &                        -0.085 &                        -0.367 \\
+LSTM   &                    0.059 &                    0.671 &                         0.034 &                         0.168 \\
+Linear &                    0.150 &                    2.291 &                         0.214 &                         1.105 \\
+MLP    &                    0.013 &                    0.043 &                         0.050 &                         0.302 \\
+XGB    &                    0.011 &                    0.044 &                         0.116 &                         0.632 \\
+mean   &                    0.051 &                    0.623 &                         0.074 &                         0.404 \\
+\bottomrule
+\end{tabular}
+
+
+
+
+
+\begin{flushleft}
+Table notes: performance of backtest metric
+\end{flushleft}
+\label{table1}
+% \end{sidewaystable}
+%\end{adjustwidth}
+
+\end{table}
+
+
+
+\subsection*{Strategies Comparison}
+
 
 \begin{enumerate}
 	\item{react}
@@ -583,11 +781,6 @@ Maecenas convallis mauris sit amet sem ultrices gravida. Etiam eget sapien nibh.
 	\item{increment time by dt and go to 1}
 \end{enumerate}
 
-\subsubsection*{walking forward procedure}
-
-\subsubsection*{Evaluation metrics : statistical & economic}
-
-\subsubsection*{features stacking}
 
 \subsection*{Sed ac quam id nisi malesuada congue}
 
@@ -599,15 +792,12 @@ Nulla mi mi, venenatis sed ipsum varius, volutpat euismod diam. Proin rutrum vel
 	\item Third bulleted item.
 \end{itemize}
 
-
-\subsection*{analysis results}
-
 \section*{Discussion}
 Nulla mi mi, venenatis sed ipsum varius, Table~\ref{table1} volutpat euismod diam. Proin rutrum vel massa non gravida. Quisque tempor sem et dignissim rutrum. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi at justo vitae nulla elementum commodo eu id massa. In vitae diam ac augue semper tincidunt eu ut eros. Fusce fringilla erat porttitor lectus cursus, vel sagittis arcu lobortis. Aliquam in enim semper, aliquam massa id, cursus neque. Praesent faucibus semper libero~\cite{bib3}.
 
 \section*{Conclusion}
 
-CO\textsubscript{2} Maecenas convallis mauris sit amet sem ultrices gravida. Etiam eget sapien nibh. Sed ac ipsum eget enim egestas ullamcorper nec euismod ligula. Curabitur fringilla pulvinar lectus consectetur pellentesque. Quisque augue sem, tincidunt sit amet feugiat eget, ullamcorper sed velit. 
+CO\textsubscript{2} Maecenas convallis mauris sit amet sem ultrices gravida. Etiam eget sapien nibh. Sed ac ipsum eget enim egestas ullamcorper nec euismod ligula. Curabitur fringilla pulvinar lectus consectetur pellentesque. Quisque augue sem, tincidunt sit amet feugiat eget, ullamcorper sed velit.
 
 Sed non aliquet felis. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris commodo justo ac dui pretium imperdiet. Sed suscipit iaculis mi at feugiat. Ut neque ipsum, luctus id lacus ut, laoreet scelerisque urna. Phasellus venenatis, tortor nec vestibulum mattis, massa tortor interdum felis, nec pellentesque metus tortor nec nisl. Ut ornare mauris tellus, vel dapibus arcu suscipit sed. Nam condimentum sem eget mollis euismod. Nullam dui urna, gravida venenatis dui et, tincidunt sodales ex. Nunc est dui, sodales sed mauris nec, auctor sagittis leo. Aliquam tincidunt, ex in facilisis elementum, libero lectus luctus est, non vulputate nisl augue at dolor. For more information, see \nameref{S1_Appendix}.
 
@@ -641,6 +831,34 @@ Sed non aliquet felis. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
 \section*{Acknowledgments}
 Cras egestas velit mauris, eu mollis turpis pellentesque sit amet. Interdum et malesuada fames ac ante ipsum primis in faucibus. Nam id pretium nisi. Sed ac quam id nisi malesuada congue. Sed interdum aliquet augue, at pellentesque quam rhoncus vitae.
 
+
+
+\begin{table}
+  \centering
+  \caption{A 4 by 4 Table}
+ \begin{tabular}{cccc} % Use c for centered columns; you can also use other alignment options like l (left) or r (right)
+    \hline % Horizontal line at the top
+    Column 1 & Column 2 & Column 3 & Column 4 \\
+    \hline % Horizontal line under column headers
+    Cell 1,1 & Cell 1,2 & Cell 1,3 & Cell 1,4 \\
+    Cell 2,1 & Cell 2,2 & Cell 2,3 & Cell 2,4 \\
+    Cell 3,1 & Cell 3,2 & Cell 3,3 & Cell 3,4 \\
+    Cell 4,1 & Cell 4,2 & Cell 4,3 & Cell 4,4 \\
+    \hline % Horizontal line at the bottom
+  \end{tabular}
+\end{table}
+\begin{eqnarray}
+\label{eq:schemeP}
+	\mathrm{P_Y} = \underbrace{H(Y_n) - H(Y_n|\mathbf{V}^{Y}_{n})}_{S_Y} + \underbrace{H(Y_n|\mathbf{V}^{Y}_{n})- H(Y_n|\mathbf{V}^{X,Y}_{n})}_{T_{X\rightarrow Y}},
+\end{eqnarray}
+
+% Place figure captions after the first paragraph in which they are cited.
+\begin{figure}[!h]
+\caption{{\bf Bold the figure title.}
+Figure caption text here, please use this space for the figure panel descriptions instead of using subfigure commands. A: Lorem ipsum dolor sit amet. B: Consectetur adipiscing elit.}
+\label{fig1}
+\end{figure}
+
 \nolinenumbers
 
 % Either type in your references using
@@ -653,9 +871,9 @@ Cras egestas velit mauris, eu mollis turpis pellentesque sit amet. Interdum et m
 %
 % Compile your BiBTeX database using our plos2015.bst
 % style file and paste the contents of your .bbl file
-% here. See http://journals.plos.org/plosone/s/latex for 
+% here. See http://journals.plos.org/plosone/s/latex for
 % step-by-step instructions.
-% 
+%
 \begin{thebibliography}{10}
 
 \bibitem{bib1}
@@ -677,7 +895,6 @@ Magwire MM, Bayer F, Webster CL, Cao C, Jiggins FM.
 \newblock PLoS Genet. 2011 Oct;7(10):e1002337.
 
 \end{thebibliography}
-
 
 
 \end{document}
