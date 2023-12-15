@@ -76,7 +76,10 @@
 
 % amsmath and amssymb packages, useful for mathematical formulas and symbols
 \usepackage{amsmath,amssymb}
-
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{booktabs}
+\usepackage{rotating}
 % Use adjustwidth environment to exceed column width (see example table in text)
 \usepackage{changepage}
 
@@ -121,13 +124,13 @@
 
 
 % Remove comment for double spacing
-%\usepackage{setspace} 
+%\usepackage{setspace}
 %\doublespacing
 
 % Text layout
 \raggedright
 \setlength{\parindent}{0.5cm}
-\textwidth 5.25in 
+\textwidth 5.25in
 \textheight 8.75in
 
 % Bold the 'Figure #' in the caption and separate it from the title/caption with a period
@@ -199,7 +202,7 @@ with the Lorem Ipsum Consortium\textsuperscript{\textpilcrow}
 \bigskip
 
 % Insert additional author notes using the symbols described below. Insert symbol callouts after author names as necessary.
-% 
+%
 % Remove or comment out the author notes below if they aren't used.
 %
 % Primary Equal Contribution Note
@@ -211,7 +214,7 @@ with the Lorem Ipsum Consortium\textsuperscript{\textpilcrow}
 
 % Current address notes
 \textcurrency Current Address: Dept/Program/Center, Institution Name, City, State, Country % change symbol to "\textcurrency a" if more than one current address note
-% \textcurrency b Insert second current address 
+% \textcurrency b Insert second current address
 % \textcurrency c Insert third current address
 
 % Deceased author note
@@ -230,7 +233,7 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur eget porta er
 
 
 % Please keep the Author Summary between 150 and 200 words
-% Use first person. PLOS ONE authors please skip this step. 
+% Use first person. PLOS ONE authors please skip this step.
 % Author Summary not valid for PLOS ONE submissions.
 
 % Use "Eq" instead of "Equation" for equation citations.
@@ -553,19 +556,51 @@ Nulla mi mi, venenatis sed ipsum varius, Table~\ref{table1} volutpat euismod dia
 \begin{table}[!ht]
 \begin{adjustwidth}{-2.25in}{0in} % Comment out/remove adjustwidth environment if table fits in text column.
 \centering
-\caption{
-{\bf Table caption Nulla mi mi, venenatis sed ipsum varius, volutpat euismod diam.}}
-\begin{tabular}{|l+l|l|l|l|l|l|l|}
-\hline
-\multicolumn{4}{|l|}{\bf Heading1} & \multicolumn{4}{|l|}{\bf Heading2}\\ \thickhline
-$cell1 row1$ & cell2 row 1 & cell3 row 1 & cell4 row 1 & cell5 row 1 & cell6 row 1 & cell7 row 1 & cell8 row 1\\ \hline
-$cell1 row2$ & cell2 row 2 & cell3 row 2 & cell4 row 2 & cell5 row 2 & cell6 row 2 & cell7 row 2 & cell8 row 2\\ \hline
-$cell1 row3$ & cell2 row 3 & cell3 row 3 & cell4 row 3 & cell5 row 3 & cell6 row 3 & cell7 row 3 & cell8 row 3\\ \hline
+\caption{all result}
+% \begin{sidewaystable}
+\begin{tabular}{llrrrrp{1.5cm}p{1.5cm}p{1.5cm}p{1.5cm}}
+\toprule
+    &               &     IC &   ICIR &  Rank IC &  Rank ICIR &  C-MVO Annualized Return &  C-MVO Information Ratio &  Long Short Annualized Return &  Long Short Information Ratio \\
+model & dataset &        &        &          &            &                          &                          &                               &                               \\
+\midrule
+ALSTM & Derivations &  0.040 &  0.066 &    0.027 &      0.048 &                   -0.002 &                   -0.016 &                         0.033 &                         0.174 \\
+    & Simple &  0.005 &  0.007 &   -0.005 &     -0.008 &                    0.057 &                    0.803 &                         0.051 &                         0.258 \\
+    & TermStructure &  0.029 &  0.042 &    0.026 &      0.041 &                    0.071 &                    0.744 &                         0.112 &                         0.579 \\
+\midrule
+GRU & Derivations &  0.021 &  0.035 &    0.017 &      0.031 &                    0.049 &                    0.310 &                         0.096 &                         0.641 \\
+    & Simple & -0.023 & -0.033 &   -0.026 &     -0.040 &                    0.045 &                    0.517 &                         0.059 &                         0.310 \\
+    & TermStructure &  0.004 &  0.006 &    0.002 &      0.004 &                    0.028 &                    0.241 &                         0.080 &                         0.409 \\
+\midrule
+LGB & Derivations &  0.019 &  0.059 &    0.085 &      0.127 &                    0.020 &                    0.264 &                        -0.085 &                        -0.355 \\
+    & Simple & -0.024 & -0.050 &   -0.044 &     -0.069 &                   -0.004 &                   -0.044 &                        -0.121 &                        -0.511 \\
+    & TermStructure &  0.035 &  0.066 &    0.054 &      0.079 &                    0.023 &                    0.327 &                        -0.085 &                        -0.367 \\
+\midrule
+LSTM & Derivations &  0.040 &  0.067 &    0.036 &      0.064 &                    0.047 &                    0.416 &                         0.020 &                         0.123 \\
+    & Simple & -0.015 & -0.022 &   -0.026 &     -0.042 &                    0.030 &                    0.388 &                         0.044 &                         0.262 \\
+    & TermStructure &  0.021 &  0.031 &    0.016 &      0.026 &                    0.059 &                    0.671 &                         0.034 &                         0.168 \\
+\midrule
+Linear & Derivations &  0.095 &  0.147 &    0.079 &      0.140 &                    0.165 &                    1.049 &                         0.117 &                         0.646 \\
+    & Simple &  0.090 &  0.147 &    0.070 &      0.131 &                    0.068 &                    1.325 &                         0.186 &                         0.992 \\
+    & TermStructure &  0.114 &  0.162 &    0.091 &      0.152 &                    0.150 &                    2.291 &                         0.214 &                         1.105 \\
+\midrule
+MLP & Derivations & -0.011 & -0.018 &   -0.013 &     -0.024 &                   -0.023 &                   -0.074 &                         0.056 &                         0.325 \\
+    & Simple & -0.002 & -0.004 &   -0.001 &     -0.001 &                    0.195 &                    0.630 &                        -0.009 &                        -0.046 \\
+    & TermStructure &  0.011 &  0.017 &    0.012 &      0.020 &                    0.013 &                    0.043 &                         0.050 &                         0.302 \\
+\midrule
+XGB & Derivations &  0.008 &  0.012 &    0.011 &      0.019 &                    0.062 &                    0.250 &                         0.024 &                         0.141 \\
+    & Simple &  0.015 &  0.023 &    0.003 &      0.005 &                   -0.019 &                   -0.073 &                         0.042 &                         0.260 \\
+    & TermStructure &  0.047 &  0.071 &    0.043 &      0.069 &                    0.011 &                    0.044 &                         0.116 &                         0.632 \\
+\bottomrule
 \end{tabular}
+
+
+
 \begin{flushleft} Table notes Phasellus venenatis, tortor nec vestibulum mattis, massa tortor interdum felis, nec pellentesque metus tortor nec nisl. Ut ornare mauris tellus, vel dapibus arcu suscipit sed.
 \end{flushleft}
 \label{table1}
+% \end{sidewaystable}
 \end{adjustwidth}
+
 \end{table}
 
 
@@ -575,7 +610,7 @@ $cell1 row3$ & cell2 row 3 & cell3 row 3 & cell4 row 3 & cell5 row 3 & cell6 row
 \subsection*{experiment design}
 
 \subsubsection*{trading strategies construction (PO)}
-Maecenas convallis mauris sit amet sem ultrices gravida. Etiam eget sapien nibh. Sed ac ipsum eget enim egestas ullamcorper nec euismod ligula. Curabitur fringilla pulvinar lectus consectetur pellentesque. Quisque augue sem, tincidunt sit amet feugiat eget, ullamcorper sed velit. Sed non aliquet felis. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris commodo justo ac dui pretium imperdiet. Sed suscipit iaculis mi at feugiat. 
+Maecenas convallis mauris sit amet sem ultrices gravida. Etiam eget sapien nibh. Sed ac ipsum eget enim egestas ullamcorper nec euismod ligula. Curabitur fringilla pulvinar lectus consectetur pellentesque. Quisque augue sem, tincidunt sit amet feugiat eget, ullamcorper sed velit. Sed non aliquet felis. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris commodo justo ac dui pretium imperdiet. Sed suscipit iaculis mi at feugiat.
 
 \begin{enumerate}
 	\item{react}
@@ -584,8 +619,39 @@ Maecenas convallis mauris sit amet sem ultrices gravida. Etiam eget sapien nibh.
 \end{enumerate}
 
 \subsubsection*{walking forward procedure}
-
-\subsubsection*{Evaluation metrics : statistical & economic}
+\begin{algorithm}
+        \caption{walking forward procedure}
+        \begin{algorithmic}
+            \STATE $rollingtasks \gets Algorithm TaskRollGen\ref{Task_Roll_Gen}$
+            \FOR{$task \gets rollingtasks$}
+            \STATE $model \xleftarrow{fit} task[train]$
+            \STATE $pred \xleftarrow{predict} task[test]$
+            \STATE $preds \xleftarrow{append} pred$
+            \ENDFOR
+            \STATE $PRED \xleftarrow{concat} preds \text{\quad \# PRED is a time series cover Task[test]'s horizon}$
+            \STATE $metrics \xleftarrow{calculate} PRED$
+            \STATE $backtestingresult \gets PRED, strategy \text{\quad \# bar by bar}$
+        \end{algorithmic}
+\end{algorithm}
+\begin{algorithm}
+	\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+	\renewcommand{\algorithmicensure}{\textbf{Output:}}
+	\caption{Task Roll Gen}
+	\label{Task_Roll_Gen}
+	\begin{algorithmic}
+    	\REQUIRE TASK contains \{TRAIN, VALID, TEST, roll\_lenth\}
+            \ENSURE rollingtasks with their own \{train, valid, test\}
+            \STATE $fragments \gets$ Test divided by roll\_lenth
+            \FOR{$m \gets fragments$}
+            \STATE $task \gets Task$
+            \STATE $task[test] \gets m$
+            \STATE $task[valid] \gets [start\_date_{test} - 1 - lenth_{Valid}, start\_date_{test} - 1]$
+            \STATE $task[train] \gets [start\_date_{TRAIN}, strat\_date_{valid} - 1]$ \text{\quad \# expanding}
+            \STATE $rollingtasks \xleftarrow{append} task$
+            \ENDFOR
+	\end{algorithmic}
+\end{algorithm}
+\subsubsection*{Evaluation metrics : statistical \& economic}
 
 \subsubsection*{features stacking}
 
@@ -600,10 +666,174 @@ Nulla mi mi, venenatis sed ipsum varius, volutpat euismod diam. Proin rutrum vel
 \end{itemize}
 
 
-\subsection*{analysis results}
+\subsection*{Analysis Results}
+\subsubsection*{Dataset Contains Term Structure Infomation Stand Out}
+In our experiment, we explore three distinct datasets named Simple, TermStructure, Derivations as before, our results show that TermStructure and Derivations with term structure infomation stand out.
+\\Table~\ref{Best Dataset} select the best dataset for all models on our main metrics: IC, rank IC, information ratio of long short strategy, information ratio of constrined mean-variance optimization strategy.
+
+\begin{table}[!ht]
+\begin{adjustwidth}{-2.25in}{0in} % Comment out/remove adjustwidth environment if table fits in text column.
+\centering
+\caption{Best Dataset}
+\label{Best Dataset}
+% \begin{sidewaystable}
+\begin{tabular}{lllll}
+\toprule
+{} &             IC &        Rank IC & C-MVO Information Ratio & Long Short Information Ratio \\
+model  &                &                &                         &                              \\
+\midrule
+ALSTM  &    Derivations &    Derivations &                  Simple &                TermStructure \\
+GRU    &    Derivations &    Derivations &                  Simple &                  Derivations \\
+LGB    &  TermStructure &    Derivations &           TermStructure &                  Derivations \\
+LSTM   &    Derivations &    Derivations &           TermStructure &                       Simple \\
+Linear &  TermStructure &  TermStructure &           TermStructure &                TermStructure \\
+MLP    &  TermStructure &  TermStructure &                  Simple &                  Derivations \\
+XGB    &  TermStructure &  TermStructure &             Derivations &                TermStructure \\
+\bottomrule
+\end{tabular}
+
+
+
+
+\begin{flushleft} The best dataset in all models on main metircs: IC, Rank IC, C-MVO Information Ratio, Long Short Information Ratio.
+\end{flushleft}
+\label{table1}
+% \end{sidewaystable}
+\end{adjustwidth}
+
+\end{table}
+Data shows Simple dataset doesn't prevail in any model on prediction metrics, the best dataset on backtest metric also main distribute on Term Structure and Derivations. TermStructure is the best dataset at 46\% of the time while Derivations prevail at 39\% of the time.
+\\As described before, TermStructure mainly extent term structure features like $\mu$ and $\Delta roll$, Derivations extent time series distribution features like rolling-ma and z-score on TermStructure features. Term structure features do improve the result, but time series distribution features don't improve obviously.
+\\We will only discuss TermStructure below.
+
+\subsubsection*{}
+
+\begin{table}[!ht]
+\begin{adjustwidth}{-2.25in}{0in} % Comment out/remove adjustwidth environment if table fits in text column.
+\centering
+\caption{Statistic Metric}
+% \begin{sidewaystable}
+\begin{tabular}{lrrrr}
+\toprule
+{} &     IC &   ICIR &  Rank IC &  Rank ICIR \\
+model  &        &        &          &            \\
+\midrule
+ALSTM  &  0.029 &  0.042 &    0.026 &      0.041 \\
+GRU    &  0.004 &  0.006 &    0.002 &      0.004 \\
+LGB    &  0.035 &  0.066 &    0.054 &      0.079 \\
+LSTM   &  0.021 &  0.031 &    0.016 &      0.026 \\
+Linear &  0.114 &  0.162 &    0.091 &      0.152 \\
+MLP    &  0.011 &  0.017 &    0.012 &      0.020 \\
+XGB    &  0.047 &  0.071 &    0.043 &      0.069 \\
+mean   &  0.037 &  0.056 &    0.035 &      0.056 \\
+\bottomrule
+\end{tabular}
+
+
+
+
+\begin{flushleft}
+Table notes: performance of statistic metric
+\end{flushleft}
+\label{table1}
+% \end{sidewaystable}
+\end{adjustwidth}
+
+\end{table}
+
+
+\begin{table}[!ht]
+\begin{adjustwidth}{-2.25in}{0in} % Comment out/remove adjustwidth environment if table fits in text column.
+\centering
+\caption{Statistic Metric}
+% \begin{sidewaystable}
+\begin{tabular}{lp{1.5cm}p{1.5cm}p{1.5cm}p{1.5cm}}
+\toprule
+{} &  C-MVO Annualized Return &  C-MVO Information Ratio &  Long Short Annualized Return &  Long Short Information Ratio \\
+model  &                          &                          &                               &                               \\
+\midrule
+ALSTM  &                    0.071 &                    0.744 &                         0.112 &                         0.579 \\
+GRU    &                    0.028 &                    0.241 &                         0.080 &                         0.409 \\
+LGB    &                    0.023 &                    0.327 &                        -0.085 &                        -0.367 \\
+LSTM   &                    0.059 &                    0.671 &                         0.034 &                         0.168 \\
+Linear &                    0.150 &                    2.291 &                         0.214 &                         1.105 \\
+MLP    &                    0.013 &                    0.043 &                         0.050 &                         0.302 \\
+XGB    &                    0.011 &                    0.044 &                         0.116 &                         0.632 \\
+mean   &                    0.051 &                    0.623 &                         0.074 &                         0.404 \\
+\bottomrule
+\end{tabular}
+
+
+
+
+
+\begin{flushleft}
+Table notes: performance of backtest metric
+\end{flushleft}
+\label{table1}
+% \end{sidewaystable}
+\end{adjustwidth}
+
+\end{table}
+
+
+\subsubsection*{Models Contrast}
+
+
 
 \section*{Discussion}
 Nulla mi mi, venenatis sed ipsum varius, Table~\ref{table1} volutpat euismod diam. Proin rutrum vel massa non gravida. Quisque tempor sem et dignissim rutrum. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi at justo vitae nulla elementum commodo eu id massa. In vitae diam ac augue semper tincidunt eu ut eros. Fusce fringilla erat porttitor lectus cursus, vel sagittis arcu lobortis. Aliquam in enim semper, aliquam massa id, cursus neque. Praesent faucibus semper libero~\cite{bib3}.
+
+
+
+\begin{table}[!ht]
+\begin{adjustwidth}{-2.25in}{0in} % Comment out/remove adjustwidth environment if table fits in text column.
+\centering
+\caption{Backtest Metric}
+% \begin{sidewaystable}
+\begin{tabular}{llp{2cm}p{2cm}p{2cm}p{2cm}p{2cm}p{2cm}}
+\toprule
+    &               &  C-MVO Annualized Return &  C-MVO Information Ratio &  C-MVO Max Drawdown &  Long Short Max Drawdown &  Long Short Annualized Return &  Long Short Information Ratio \\
+model & dataset &                          &                          &                     &                          &                               &                               \\
+\midrule
+ALSTM & Simple &                 0.057287 &                 0.802599 &           -0.202557 &                -0.370155 &                      0.051089 &                      0.258037 \\
+    & Statistical Derivations &                -0.001859 &                -0.016439 &           -0.381626 &                -0.392643 &                      0.032920 &                      0.174392 \\
+    & TermStructure &                 0.070618 &                 0.743925 &           -0.202290 &                -0.452147 &                      0.111682 &                      0.578975 \\
+GRU & Simple &                 0.045304 &                 0.517254 &           -0.232781 &                -0.634396 &                      0.058965 &                      0.310354 \\
+    & Statistical Derivations &                 0.049236 &                 0.310389 &           -0.632122 &                -0.304792 &                      0.096182 &                      0.640611 \\
+    & TermStructure &                 0.027837 &                 0.241176 &           -0.383124 &                -0.446989 &                      0.079937 &                      0.409258 \\
+LGB & Simple &                -0.003863 &                -0.043739 &           -0.218599 &                -1.779844 &                     -0.121349 &                     -0.511463 \\
+    & Statistical Derivations &                 0.019886 &                 0.263737 &           -0.194941 &                -1.374026 &                     -0.084887 &                     -0.354627 \\
+    & TermStructure &                 0.023292 &                 0.327154 &           -0.166017 &                -1.346228 &                     -0.084790 &                     -0.367168 \\
+LSTM & Simple &                 0.029657 &                 0.388443 &           -0.238059 &                -0.367246 &                      0.044252 &                      0.262347 \\
+    & Statistical Derivations &                 0.047028 &                 0.416228 &           -0.228143 &                -0.535382 &                      0.019771 &                      0.122704 \\
+    & TermStructure &                 0.058512 &                 0.671485 &           -0.270701 &                -0.423780 &                      0.033785 &                      0.167775 \\
+Linear & Simple &                 0.068256 &                 1.324847 &           -0.107284 &                -0.182701 &                      0.186216 &                      0.992174 \\
+    & Statistical Derivations &                 0.164652 &                 1.048583 &           -0.473651 &                -0.375987 &                      0.117332 &                      0.645722 \\
+    & TermStructure &                 0.150301 &                 2.291034 &           -0.085517 &                -0.202081 &                      0.214001 &                      1.105489 \\
+MLP & Simple &                 0.194595 &                 0.629803 &           -0.661026 &                -0.919978 &                     -0.008624 &                     -0.045972 \\
+    & Statistical Derivations &                -0.023281 &                -0.073628 &           -1.500128 &                -0.803446 &                      0.055949 &                      0.324753 \\
+    & TermStructure &                 0.012887 &                 0.043224 &           -1.247869 &                -0.404693 &                      0.049920 &                      0.302452 \\
+SFM & Simple &                 0.055921 &                 0.265086 &           -0.607000 &                -0.592480 &                      0.043182 &                      0.215211 \\
+    & Statistical Derivations &                -0.005174 &                -0.021433 &           -0.652835 &                -0.680252 &                      0.033137 &                      0.179453 \\
+    & TermStructure &                -0.024066 &                -0.108211 &           -1.000576 &                -1.069861 &                     -0.017675 &                     -0.090425 \\
+XGB & Simple &                -0.019219 &                -0.072545 &           -1.143294 &                -0.731367 &                      0.042195 &                      0.259511 \\
+    & Statistical Derivations &                 0.062245 &                 0.249836 &           -0.953685 &                -0.477849 &                      0.023661 &                      0.141244 \\
+    & TermStructure &                 0.011343 &                 0.044457 &           -1.282061 &                -0.419102 &                      0.115907 &                      0.631908 \\
+\bottomrule
+\end{tabular}
+
+
+
+
+\begin{flushleft} Table notes Phasellus venenatis, tortor nec vestibulum mattis, massa tortor interdum felis, nec pellentesque metus tortor nec nisl. Ut ornare mauris tellus, vel dapibus arcu suscipit sed.
+\end{flushleft}
+\label{table1}
+% \end{sidewaystable}
+\end{adjustwidth}
+
+\end{table}
+
 
 \section*{Conclusion}
 
