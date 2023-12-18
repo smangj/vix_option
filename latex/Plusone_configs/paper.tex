@@ -323,6 +323,63 @@ $\mu^j_t$ contains instantaneous market views of return about $V^j_t$.
 \mathrm{Obj}=\underbrace{\mathbf{\sum_{i=1}^{n}l(y_i,\hat{y}_i)}}_{Training \: Loss} +\underbrace{\mathbf{{\sum_{k=1}^{K}}\Omega(f_k)}}_{Complexity \: of \: trees}
 \end{eqnarray}
 
+\subsubsection*{2.2 LightGBM}
+LightGBM (Light Gradient Boosting Machine) is an algorithmic framework for Gradient Boosting Decision Trees (GBDT) proposed by Guolin Ke et al. (2017). It supports efficient parallel computation and boasts advantages such as faster training speed and lower memory consumption.
+
+It primarily incorporates two algorithmic improvements: Gradient-based One-Side Sampling (GOSS) and Exclusive Feature Bundling (EFB).
+
+GOSS retains instances with large gradients and performs random sampling on instances with small gradients. It then adjusts the new sampling with weight adjustment to ensure that the information gain remains unchanged. This approach allows for the calculation of information gain using only the remaining data with high gradients. Compared to XGBoost, which traverses all feature values, this method \ref{Gradient-based One-Side Sampling} saves a considerable amount of time and space costs.
+\begin{algorithm}
+	\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+	\renewcommand{\algorithmicensure}{\textbf{Output:}}
+	\caption{Gradient-based One-Side Sampling}
+	\label{Gradient-based One-Side Sampling}
+	\begin{algorithmic}
+        \REQUIRE $I$: training data, $d$: iterations
+        \REQUIRE $a$: sampling ratio of large gradient data
+        \REQUIRE $b$: sampling ratio of small gradient data
+        \REQUIRE $loss$: loss function, $L$: weak learner
+        \STATE $models \gets {}, fact \gets \frac{1-a}{b}$
+        \STATE $topN \gets a{\times}len(I), randN \gets b{\times}len(I)$
+        \FOR {$i=1 \to d$}
+        \STATE $preds \gets models.predict(I)$
+        \STATE $g \gets loss(I, preds), \omega \gets EqualWeight$
+        \STATE $sorted \gets GetSortedIndices(abs(g))$
+        \STATE $topSet \gets sorted[1:topN]$
+        \STATE $randSet \gets RandomPick(sorted[topN:len(I)], randN)$
+        \STATE $usedSet \gets topSet + randSet$
+        \STATE $\omega[randSet] \times= fact$
+        \STATE $newModel \gets L(I[usedSet], g[usedSet], \omega[usedSet])$
+        \STATE $models.append(newModel)$
+        \ENDFOR
+	\end{algorithmic}
+\end{algorithm}
+High-dimensional data are usually mutually exclusive. EFB can safely bundle exclusive features into a single feature by designed feature scanning algorithm \ref{Merge Exclusive Features}.
+\begin{algorithm}
+	\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+	\renewcommand{\algorithmicensure}{\textbf{Output:}}
+	\caption{Merge Exclusive Features}
+	\label{Merge Exclusive Features}
+	\begin{algorithmic}
+        \REQUIRE $numData$: number of data
+        \REQUIRE $F$: One bundle of exclusive features
+        \STATE $binRanges \gets {0}, totalBin \gets 0$
+        \FOR{$f \gets F$}
+        \STATE $totalBin += f.numBin$
+        \STATE $binRanges.append(totalBin)$
+        \ENDFOR
+        \FOR{$i=1 \to numData$}
+        \STATE $newBin[i] \gets 0$
+        \FOR{$j=1 \to len(F)$}
+        \IF{$F[j].bin[i] \neq 0$}
+        \STATE $newBin[i] \gets F[j].bin[i] + binRanges[j]$
+        \ENDIF
+        \ENDFOR
+        \ENDFOR
+        \ENSURE newBing, binRanges
+	\end{algorithmic}
+\end{algorithm}
+
 
 \subsubsection*{2.2 Multilayer Perceptron (MLP)}
 The Multi-Layer Perceptron (MLP) is a class of feed-forward artificial neural network (ANN). It consists of at least three layers of nodes: an input layer, a hidden layer, and an output layer. Unlike a linear perceptron, each node (or neuron) in the MLP uses a nonlinear activation function. This aspect of MLP allows it to distinguish data that is not linearly separable, which is a limitation of the basic perceptron. MLPs are widely used for solving complex problems in machine learning, including pattern recognition and classification tasks, by learning a non-linear function approximator for either classification or regression. They are trained using back propagation, ensuring that the error between the actual and predicted outputs is minimized. Due to their ability to capture complex relationships in data, MLPs have become a fundamental tool in the field of deep learning and neural networks.
