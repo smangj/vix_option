@@ -33,7 +33,7 @@
 %
 % DO NOT INCLUDE GRAPHICS IN YOUR MANUSCRIPT
 % - Figures should be uploaded separately from your manuscript file. 
-% - Figures generated using LaTeX should be extracted and removed from the PDF before submission. 
+% - Figures generated using LaTeX should be extracted and removed from the PDF before submission.
 % - Figures containing multiple panels/subfigures must be combined into one image file before submission.
 % For figure citations, please use "Fig" instead of "Figure".
 % See http://journals.plos.org/plosone/s/figures for PLOS figure guidelines.
@@ -57,15 +57,15 @@
 %
 % Do not include text that is not math in the math environment. For example, CO2 should be written as CO\textsubscript{2} instead of CO$_2$.
 %
-% Please add line breaks to long display equations when possible in order to fit size of the column. 
+% Please add line breaks to long display equations when possible in order to fit size of the column.
 %
 % For inline equations, please do not include punctuation (commas, etc) within the math environment unless this is part of the equation.
 %
-% When adding superscript or subscripts outside of brackets/braces, please group using {}.  For example, change "[U(D,E,\gamma)]^2" to "{[U(D,E,\gamma)]}^2". 
+% When adding superscript or subscripts outside of brackets/braces, please group using {}.  For example, change "[U(D,E,\gamma)]^2" to "{[U(D,E,\gamma)]}^2".
 %
 % Do not use \cal for caligraphic font.  Instead, use \mathcal{}
 %
-% % % % % % % % % % % % % % % % % % % % % % % % 
+% % % % % % % % % % % % % % % % % % % % % % % %
 %
 % Please contact latex@plos.org with any questions.
 %
@@ -78,8 +78,7 @@
 \usepackage{amsmath,amssymb}
 \usepackage{algorithm}
 \usepackage{algorithmic}
-\usepackage{booktabs}
-\usepackage{rotating}
+
 % Use adjustwidth environment to exceed column width (see example table in text)
 \usepackage{changepage}
 
@@ -137,7 +136,7 @@
 \raggedright
 \setlength{\parindent}{0.5cm}
 \textwidth 5.25in
-\textheight 8.75in
+\textheight 9 in
 
 % Bold the 'Figure #' in the caption and separate it from the title/caption with a period
 % Captions will be left justified
@@ -234,9 +233,7 @@ JiaQi Chen \textsuperscript{2,3\textcurrency},
 \end{flushleft}
 % Please keep the abstract below 300 words
 \section*{Abstract}
-We found that information on the VIX futures curve can guide the trading of VIX derivatives. We use two sets of features derived from the VIX futures curve to predict the next day's return rates of VIX ETFs and construct a trading strategy. In this strategy, up to 4 out of 8 different machine learning models achieved an Information Coefficient (IC) value of over 0.02 over a span of 11 years, compared to the MSE and AR(1) baseline models. This indicates that the VIX futures curve indeed has predictive power over VIX ETFs. In a strict Walk-Forward back test, a simple long-short strategy achieved an average information ratio of 1.3. We used Portfolio Overlay (PO) methods to increase the average information ratio to 1.6, demonstrating that the prediction of returns is valuable not only in relative terms but also in absolute terms.
-
-
+This study investigates the predictive capabilities of term structures derived from VIX constant-maturity futures (VIX CMFs), expanding from the methodology proposed by Avellaneda (2021). Both predictive and back testing performances are evaluated based on various metrics with a strict walk-forward expanding time windows procedure. The main conclusions are the VIX Cmfs term structure information, specifically \(\mu_t\) and \(\triangle roll\), extracted from \(V_t\) and \(roll_t\), is highly effective in predicting the next-day returns of VIX CMFs. This finding is supported by back-testing analysis, indicating potential economic benefits. However, it was also observed that time-series derivatives have a minimal impact on enhancing predictive accuracy. \textit{(machine learning)}. Another contribution of our work is the development of the Constrained-Mean-Variance Portfolio Optimization (C-MVO) strategy. This strategy demonstrates superior back-testing performance across most models compared to the ordinal-based long-short strategy, offering valuable insights and practical implications for the development of trading strategies for VIX CMFs based on numerical predictions.
 % Please keep the Author Summary between 150 and 200 words
 % Use first person. PLOS ONE authors please skip this step.
 % Author Summary not valid for PLOS ONE submissions.
@@ -249,26 +246,17 @@ We found that information on the VIX futures curve can guide the trading of VIX 
 \section*{Introduction}
 The implied volatility index (VIX), often termed as the “investor fear gauge” , has been a pivtoal index in the financial market after its first inception in early 1990s. Since 2003, VIX reflects the 30 days standard \& poor (S \& P 500) expected volatility implied in various call and put S P 500 options (Whaley, 2009; Cboe, 2023). Due to VIX itself is not directly tradable. Instruments such as VIX futures, options, and Exchange-traded notes(ETN) are utilised as essential tools for trading VIX. Meanwhile, With investors growing interests in VIX, S \& P introduced the VIX futures index series in 2005. This series replicates constant-maturity VIX futures indexes by systematically rolling future contracts with varying maturities. Specifically, the VIX short-term futures Index (SPVXSP) keeps a fixed 1-month constant maturity, the VIX two-month futures index (SPVIX2ME) maintains a constant 2-months maturity, three-month (SPVIX3ME), four-month (SPVIX4ME), five-month (SPVIXMP), and six-month (SPVIX6ME) futures indices, each maintain constant maturities corresponding to their respective timeframes. Fig.\ref{fig1} illustrates the correlations among these six constant maturity futures (CMFs).
 
-
 \begin{figure}[!h]
-\caption{\bf CMfs Correlations}
+\caption{\bf CMFs Correlations}
 %\includegraphics[width=0.5\linewidth]{EDA_correlations.png}
 \label{fig1}
 \end{figure}
 
 The VIX term structures describes the relationship of VIX futures contracts with varying expiration dates.The term structure is in contango when VIX futures with longer maturities have higher prices than futures with shorter maturities, backwardation occurs when prices of VIX futures with shorter time to expiration exceed those with longer maturities. Our empirical analysis,  as showcased in exhibit 1 through K-means clustering, robustly indicates a dominant contango shape within the VIX future term structure. Such phenomenon can be partially explained based on volatility risk premium theory (Carr \& Wu, 2008) and  Johnson (2017) work, which divides VIX term strucuture  into two fundamental components: conditional volatility expectations and risk premiums. It becomes apparent that investors stipulate a larger risk premium for further VIX options, as contrasted with the shorter-maturity VIX options except during certain financial crisis. Notably, the VIX futures term structure holds predictive power when anomalies in the term structure revert to the classical shape given strong mean-reverting property of VIX futures illustrated by Avellaneda and Papanicolaou (2019).
-The literature has extensively explored predictive power of implied volatility (IV),  IV term structure and VIX term structure using classical statistical models. Wang and Wang (2016) among others find that incorporating IV can enhance forecast accuracy within the GARCH model framework. Additionally, studies by Bush et al. (2011), Byun and Kim (2013), and Haugom et al. (2014) have demonstrated the informative power of IV using the heterogeneous autoregressive (HAR) model.transitioning towards term structures, few studies confirms the prediction power of term structures for various financial instruments. Chang (2016) shows the information gained in VIX term structure significantly aid in predicting S\&P 500 index returns volatility while Clements (2020) uses HAR model to further affirm that the information derived from IV term structure possesses exceptional predictive power for forecasting both the level and directional changes in stock return volatility, even during the volatile period of the Global Financial Crisis.Chen (2022) employes CHH model and confirms that the volatility factor constructed from swaptions IV term structures holds significant predictive power on excess bond returns. Lastly, Ornelas and Mauad (2019) provides empirical evidence of the IV term structures informative power in forecasting exchange rate returns. Based on the robust findings from above research use classical statistical models to exploit the predictive power of term structures, in this paper, we use HAR model as the baseline to compare with other selected machine approaches.
-
-Despite the booming of machine learning (ML) approaches, relatively scarce studies use machine learning approach to exploit VIX-related issues. Hosker et al (2018) finds that recurrent neural network(RNN) and long short-term memory(LSTM) shows the best performance for forecasting 1-month VIX futures 3-days and 5-days ahead among principal components analysis and ARIMA model. Hirsa and et al. (2021) apply neural network models (random forest, support vector machines, feed-forward neural network and LSTM) to investigate the approaches that could replicate VIX index and VIX futures with fewer options compared to CBOE original methodology. Vrontos (2021) applies various machine learning models and discovers that ML models are statistical and economic superior compared to standard econometric models when forecasting the directional changes of VIX index. Lastly, Avellaneda (2021) generates VIX futures trading signals by including functional dependence of VIX term structures, VIX futures position as well as expected utility in neural network and finds that this approach shows better portfolio performance in the out of sample backtesting.
-
-In this paper, we use multiple types of machine learning models which includes Recurrent neural network models, tree-based model, transformer and graph attention neural network to exploit informative power of VIX futures term structure on next-day return of  VIX constant maturity instruments.
-
-
-By working closely with Avellaneda (2021) work,we first use information extracted from the VIX term structure to construct various VIX term-structure-related features and combine major financial market features, we then implement various machine learning methods to predict the next day return of six VIX constant-maturity instruments. Lastly, to evaluate the economic performances of our work, we utilise machine learning prediction results as trading signals to implement two trading strategies: The long-short strategy and mean-variance-adjusted portfolio optimization strategy. Our results reveal that the VIX term structure has superior informative power in predicting the return of VIX constant-maturity instruments.
-
-
-The key contributions of this study can be summarised as follows, first, based on the VIX futures term structures decomposition approach proposed by Avellaneda(2021), features with term-structure information, personal information, and major market trends information are included in the datasets. Second, various state-of-art machine learning approaches are introduced to predict the VIX rolling-ETFs next-day returns. Third, two trading strategies are used in the backtesting which are, the long-short strategy based on machine learning ranking and a mean-variance adjusted portfolio optimization strategy.
-The results reveal that firstly, the VIX futures curve has the ability to predict the next-day return of VIX ETFs. Thirdly, The economic performance of machine learning models relying on the adjusted mean-variance portfolio optimization strategy generally outperforms that of models based on the long-short strategy. The remainder of the paper is composed as follows: Section 2 provides proposed research methodology(1.VIX term structures decompositions 2.machine learning models) section 3 describes data and experiment design, Section 4 analysis results, Section 5 concludes and discuss, Appendix: graph and code.
+\\The literature has extensively explored predictive power of implied volatility (IV),  IV term structure and VIX term structure using classical statistical models. Wang and Wang (2016) among others find that incorporating IV can enhance forecast accuracy within the GARCH model framework. Additionally, studies by Bush et al. (2011), Byun and Kim (2013), and Haugom et al. (2014) have demonstrated the informative power of IV using the heterogeneous autoregressive (HAR) model.transitioning towards term structures, few studies confirms the prediction power of term structures for various financial instruments. Chang (2016) shows the information gained in VIX term structure significantly aid in predicting S\&P 500 index returns volatility while Clements (2020) uses HAR model to further affirm that the information derived from IV term structure possesses exceptional predictive power for forecasting both the level and directional changes in stock return volatility, even during the volatile period of the Global Financial Crisis.Chen (2022) employes CHH model and confirms that the volatility factor constructed from swaptions IV term structures holds significant predictive power on excess bond returns. Lastly, Ornelas and Mauad (2019) provides empirical evidence of the IV term structures informative power in forecasting exchange rate returns. Based on the robust findings from above research use classical statistical models to exploit the predictive power of term structures, in this paper, we use HAR model as the baseline to compare with other selected machine approaches.
+\\Despite the booming of machine learning (ML) approaches, relatively scarce studies use machine learning approach to exploit VIX-related issues. Hosker et al (2018) finds that recurrent neural network(RNN) and long short-term memory(LSTM) shows the best performance for forecasting 1-month VIX futures 3-days and 5-days ahead among principal components analysis and ARIMA model. Hirsa and et al. (2021) apply neural network models (random forest, support vector machines, feed-forward neural network and LSTM) to investigate the approaches that could replicate VIX index and VIX futures with fewer options compared to CBOE original methodology. Vrontos (2021) applies various machine learning models and discovers that ML models are statistical and economic superior compared to standard econometric models when forecasting the directional changes of VIX index. Lastly, Avellaneda (2021) generates VIX futures trading signals by including functional dependence of VIX term structures, VIX futures position as well as expected utility in neural network and finds that this approach shows better portfolio performance in the out of sample backtesting.
+\\This paper employs a variety of machine learning models, including neural-based network models, tree-based models, and vanilla linear regression model to explore the informative power of VIX CMFs term structure on next-day returns of VIX constant maturity instruments. By working closely with Avellaneda (2021) work,we first use variables extracted from the VIX term structure to construct various VIX term-structure-related features and combine major financial market features, we then implement various machine learning methods to predict the next day return of six VIX CMFs. To asses the economic impact among models, we utilise machine learning prediction results as trading signals, implementing two trading strategies: The long-short strategy and constrained mean-variance optimization(C-MVO) strategy.
+\\The key contributions of this study can be summarised as follows,  firstly, leveraging the VIX CMFs decomposition methods proposed by Avellaneda (2021), we demonstrate that the term structure information \(\mu_t\) and \(\triangle roll\) extracted from \(V_t\) and \(roll_t\) is highly informative for predicting next-day returns of VIX CMFs, and could bring economic benefits based on our back-testing analysis. However, we also found that time-series derivatives contribute minimally to predictive enhancements. \textit{Second, various state-of-art machine learning approaches are introduced to predict the VIX rolling-ETFs next-day returns.} Thirdly, our proposed Constrained-Mean-Variance Portfolio Optimization (C-MVO) strategy exhibits superior back-testing performance across most models compared to the long-short strategy, providing valuable insights for researchers and practitioners looking to develop VIX CMFs trading strategies by following the path of numerical predictions. The remainder of the paper is organised as follows: Section 2 details the decomposition methods of CMFs term structure and the machine learning approaches employed.  Section 3 describes data preparation and experiment designs, Section 4 analyse and discuss results, Appendix includes supporting graphs and tables.
 
 
 
@@ -278,58 +266,58 @@ The VIX is calculated by the Chicago Board Options Exchange (CBOE) and is based 
 \\Let $t$ denote time and let $VIX_t$ denote the value of VIX on that date. At time $t$,
 we can view lots of VIX futures contracts with different expiration dates:
 \begin{eqnarray}
-    {F^i_t} := \text{VIX futures expiring at time $T_i$ at time t}
+    \mathrm{F^i_t} := \text{VIX futures expiring at time $T_i$ at time t}
 \end{eqnarray}
 where $i$ denote the index of the VIX futures contracts with a ascending expiration dates $T_1 < T_2 < ... < T_d$.
-\\A term-structure of constant-maturity VIX futures(CMFs), consist of 1,2,...,6 months in our case, are constructed as
+\\A term-structure of constant-maturity VIX futures(CMFs), consist of \({1,2,...,6}\) months in our case, are constructed as
 a linear interpolation of two nearest expiration dates VIX futures:
 \begin{eqnarray}
 \label{eq:defineV}
-    {V^j_t} := \omega^j_tF^{L_j}_t\ + (1 - \omega^j_t)F^{R_j}_t \text{for j in \{1,2,...,6\}}
+    \mathrm{V^j_t} := \omega^j_tF^{L_j}_t\ + (1 - \omega^j_t)F^{R_j}_t \text{for j in \{1,2,...,6\}}
 \end{eqnarray}
-where $L_j$ represents the VIX futures of the nearest expiration dates close to $j$-month on the left of time axis,
-$R_j$ represents the VIX futures of the nearest expiration dates close to $j$-month on the right of time axis, and
+where $L_j$ represents the VIX futures of the nearest expiration dates close to $j$-month but with sooner expiration period than $j$-month,
+$R_j$ represents the VIX futures of the nearest expiration dates close to $j$-month but with later expiration period than $j$-month, and
 $\omega^j_t = \frac{T_{R_j} - 30j}{T_{R_j} - T_{L_j}}$. Note that $VIX_t$ is like a zero-horizon CMF.
 CMFs are commonly used for they do not suffer fluctuations caused by contract expiry.
 
 \subsubsection*{Rolling VIX Futures Derivatives and Strategies}
-Through a rolling VIX futures derivatives or strategies can reappearance the daily returns of CMFs.
-SPVXSP, SPVIX2ME, SPVIX3ME, SPVIX4ME, SPVXMP, SPVIX6ME represents 1-6 months CMFs, they can be traded or replicated with trades in the rolling VIX futures strategies.
-Derivatives like ETFs and ETNs or Strategies maintains the CMF weights of equation \ref{eq:define V} for fixed maturity $j-month$. For each $j$, we denote $R^j$
-the daily return of rolling VIX futures strategy, trading cost is not considered:
+By using rolling VIX futures derivatives or strategies, we can replicate the daily returns of CMFs.
+SPVXSP, SPVIX2ME, SPVIX3ME, SPVIX4ME, SPVXMP, SPVIX6ME represents 1-6 months CMFs, they can either be traded with published financial derivatives or replicated with rolling VIX futures strategies.
+Derivatives like ETFs and ETNs or Strategies maintains the CMF weights of equation ~\ref{eq:defineV} for fixed maturity $j-month$. For each $j$, we denote $R^j$
+as the daily return of rolling VIX futures strategy, trading cost is not considered:
 \begin{eqnarray}
-    {R^j_t} = \frac{\omega^j_t{\Delta}F^{L_j}_t\ + (1 - \omega^j_t){\Delta}F^{R_j}_t}{\omega^j_tF^{L_j}_t\ + (1 - \omega^j_t)F^{R_j}_t}
+    \mathrm{R^j_t} = \frac{\omega^j_t{\Delta}F^{L_j}_t\ + (1 - \omega^j_t){\Delta}F^{R_j}_t}{\omega^j_tF^{L_j}_t\ + (1 - \omega^j_t)F^{R_j}_t}
 \end{eqnarray}
 where${\Delta}F^{L_j}_t = F^{L_j}_{t+1} - F^{L_j}_t$. We denote ${\Delta}t = \frac{1}{252}$, transform equation in terms of the CMFs:
 \begin{eqnarray}
 \label{eq: $R^j_t$2}
-    {R^j_t} = \frac{{\Delta}V^j_t}{V^j_t} - \frac{F^{R_j}_{t+1} - F^{L_j}_{t+1}}{V^j_t(T_{R_j} - T_{L_j}){\Delta}t}{\Delta}t
+    \mathrm{R^j_t} = \frac{{\Delta}V^j_t}{V^j_t} - \frac{F^{R_j}_{t+1} - F^{L_j}_{t+1}}{V^j_t(T_{R_j} - T_{L_j}){\Delta}t}{\Delta}t
 \end{eqnarray}
 Let Roll denote the drift term in equation \ref{eq: $R^j_t$2}, it referred to as the roll yield of rolling VIX futures strategy:
 \begin{eqnarray}
-    {Roll^j_{t+1}} := - \frac{F^{R_j}_{t+1} - F^{L_j}_{t+1}}{V^j_t(T_{R_j} - T_{L_j}){\Delta}t}
+\label{roll}
+    \mathrm{Roll^j_{t+1}} := - \frac{F^{R_j}_{t+1} - F^{L_j}_{t+1}}{V^j_t(T_{R_j} - T_{L_j}){\Delta}t}
 \end{eqnarray}
 In a Contango circumstances, $F^{R_j}_{t+1} > F^{L_j}_{t+1}$ means $Roll < 0$. On the opposite, in a Backwardation circumstances $Roll > 0$.
 We re-write equation as follows:
 \begin{eqnarray}
 \label{eq: $R^j_t$3}
-    {R^j_t} = \frac{{\Delta}V^j_t}{V^j_t} + Roll^j_{t+1}{\Delta}t
+    \mathrm{R^j_t} = \frac{{\Delta}V^j_t}{V^j_t} + Roll^j_{t}{\Delta}t
 \end{eqnarray}
 From equation \ref{eq: $R^j_t$3} we see $R^j_t$ consist of two parts, the change in $V^j_t$ and roll yield. As history data shown, the most likely VIX futures
 curves are contango, so the value of the rolling VIX futures strategies decay.
-\\xxx shows that volatility is a mean-reversion process, in a ideal world, suppose $V^j_t$ and CMFs are both stable for a long time like a month, then
+\\Avellaneda(2019) shows that volatility is a mean-reversion process, in an ideal world, suppose $V^j_t$ and CMFs are both stable for long-period such as one month, then
 the return of $V^j_t$ should be $V^j_t - V^{j-1}_t$, so we denote $\mu$ as :
 \begin{eqnarray}
 \label{eq: mu}
-    {\mu^j_t} = V^j_t - V^{j-1}_t
+    \mathrm{\mu^j_t} = V^j_t - V^{j-1}_t
 \end{eqnarray}
 $\mu^j_t$ contains instantaneous market views of return about $V^j_t$.
-ynorm
 
 \subsection*{2. Proposed Machine Learning Algorithms}
 
 \subsubsection*{2.1 XGBoost}
- The concept of boosting, proposed by Freund and Schapire (1999), revolves around an ensemble model strategy that combines multiple weak learners to create a more robust learner. Friedman (1999) introduced Gradient Tree Boosting, an improvement in boosting that incorporates the gradient descent algorithm into the loss function to minimize errors. Expanding on gradient boosting, Chen and Guestrin (2016) introduce XGBoost, a scalable end-to-end tree boosting system based on additive training strategy that augments gradient tree boosting with regularization, efficient handling of sparse data, and enhanced computational efficiency, resulting in superior speed and accuracy. Eq.1 denotes the objective function of XGBoost where \(\mathbf{\sum_{i=1}^{n}l(y_i,\hat{y}_i)}\) represents the training loss function and \(\mathbf{{\sum_{k=1}^{K}}\Omega(f_k)}\) denotes the complexity of trees.
+ The concept of boosting, proposed by Freund and Schapire (1999), revolves around an ensemble model strategy that combines multiple weak learners to create a more robust learner. Friedman (1999) introduced Gradient Tree Boosting, an improvement in boosting that incorporates the gradient descent algorithm into the loss function to minimize errors. Expanding on gradient boosting, Chen and Guestrin (2016) introduce XGBoost, a scalable end-to-end tree boosting system based on additive training strategy that augments gradient tree boosting with regularization, efficient handling of sparse data, and enhanced computational efficiency, resulting in superior speed and accuracy. Eq.\ref{eq:schemeP} denotes the objective function of XGBoost where \(\mathbf{\sum_{i=1}^{n}l(y_i,\hat{y}_i)}\) represents the training loss function and \(\mathbf{{\sum_{k=1}^{K}}\Omega(f_k)}\) denotes the complexity of trees.
 \begin{eqnarray}
 \label{eq:schemeP}
 \mathrm{Obj}=\underbrace{\mathbf{\sum_{i=1}^{n}l(y_i,\hat{y}_i)}}_{Training \: Loss} +\underbrace{\mathbf{{\sum_{k=1}^{K}}\Omega(f_k)}}_{Complexity \: of \: trees}
@@ -337,8 +325,7 @@ ynorm
 
 
 \subsubsection*{2.2 Multilayer Perceptron (MLP)}
-
-(introduction of MLP).
+The Multi-Layer Perceptron (MLP) is a class of feed-forward artificial neural network (ANN). It consists of at least three layers of nodes: an input layer, a hidden layer, and an output layer. Unlike a linear perceptron, each node (or neuron) in the MLP uses a nonlinear activation function. This aspect of MLP allows it to distinguish data that is not linearly separable, which is a limitation of the basic perceptron. MLPs are widely used for solving complex problems in machine learning, including pattern recognition and classification tasks, by learning a non-linear function approximator for either classification or regression. They are trained using back propagation, ensuring that the error between the actual and predicted outputs is minimized. Due to their ability to capture complex relationships in data, MLPs have become a fundamental tool in the field of deep learning and neural networks.
 In our experiment, we use leaky ReLU introduced by Mass (2013) as the activation function \(\phi\) for MLP, the mathematical expression of leaky ReLU  is shown in Eq.2. Given activation function \(\phi\), features \(X \in R^ {n\times d}\) where \(x\) presents the batch size and \(d\) presents the dimensionalities
 \begin{eqnarray}
 \label{eq:schemeP}
@@ -355,7 +342,7 @@ where \(W^{(i)}\) is the weight vector of \(i_{th}\) hidden unit while \(x\) is 
 \end{figure}
 
 \subsubsection*{2.3 Recurrent Neural Network (RNN)}
-We then implement multiple machine learning models based on RNN architecture which aims to find patterns in sequences of data. The work of Schmidt (2019) provides a comprehensive overview of the basic architecture and functions of RNNs while \textit{Sherstinsky (2023) work focuses on deriving the classical RNN formulation from differential equations and addresses the challenges in training standard RNNs. The transformation of RNN into the "Vanilla LSTM" network is explained through logical arguments, with a detailed description of the LSTM system's equations and entities. }
+We then implement multiple machine learning models based on RNN architecture which aims to find patterns in sequences of data. The work of Schmidt (2019) provides a comprehensive overview of the basic architecture and functions of RNNs while Sherstinsky (2023) work focuses on deriving the classical RNN formulation from differential equations and addresses the challenges in training standard RNNs. The transformation of RNN into the "Vanilla LSTM" network is explained through logical arguments, with a detailed description of the LSTM system's equations and entities.
 RNN train a function $f$:
 \begin{eqnarray}
 \label{eq: RNN}
@@ -368,7 +355,7 @@ The Long Short-Term Memory (LSTM) model, originally proposed by Hochreiter and S
 
 
 
-Eq \ref {eq: LSTM} and Eq \ref {eq: ALSTM} illustrates the mathematical details for the implementation of LSTM and ALSTM in our study.
+Eq \ref {eq: LSTM} and Eq \ref {eq: ALSTM1},\ref {eq: ALSTM2} illustrates the mathematical details for the implementation of LSTM and ALSTM in our study.
 LSTM framework denote $c$ as the long-term sequence information distinguish from $h$, and design gates to filter information. A gate cell can be represent as:
 \begin{eqnarray}
 \label{eq: Gate}
@@ -416,46 +403,44 @@ $\tilde{y}$ is the input of $L_2$.
 \end{eqnarray}
 Follow notation in LSTM,  $g$ represents gate \ref{eq: Gate}.
 
+%\subsubsection*{2.4 Temporal Covolutional Networks}
+% Temporal covolutional networks (TCN), originally introduced by Lea et al. (2016), is a type of neural network that employs convolutional layers to capture dependencies in sequential data. Unlike traditional RNN and LSTMs, TCNs use 1D convolutions to process input sequences in parallel, making them highly parallelizable and capable of capturing long-range dependencies. Implementation details can be found in eq.5.
+
+% \begin{eqnarray}
+% \label{eq: TCN}
+%     TCN = FCN + \text{causal convolutions}
+% \end{eqnarray}
+% where FCN is fully-convolutional network with one dimension.
 
 
-\subsubsection*{2.4 Temporal Covolutional Networks}
-Temporal covolutional networks (TCN), originally introduced by Lea et al. (2016), is a type of neural network that employs convolutional layers to capture dependencies in sequential data. Unlike traditional RNN and LSTMs, TCNs use 1D convolutions to process input sequences in parallel, making them highly parallelizable and capable of capturing long-range dependencies. Implementation details can be found in eq.5.
+% \subsubsection* {2.5 Transformer}
+% We also implement attention-based network architecture called transformer proposed by Vaswani et al. (2017) for prediction. Transformer departs from the traditional recurrent or convolutional layers, relying instead on the attention mechanism, This enables the model to weigh the significance of different parts of the input data differently, allowing it to capture complex dependencies and relationships within the data. Eq. illustrates the implementation details.
 
-\begin{eqnarray}
-\label{eq: TCN}
-    TCN = FCN + \text{causal convolutions}
-\end{eqnarray}
-where FCN is fully-convolutional network with one dimension.
-
-
-\subsubsection* {2.5 Transformer}
-We also implement attention-based network architecture called transformer proposed by Vaswani et al. (2017) for prediction. Transformer departs from the traditional recurrent or convolutional layers, relying instead on the attention mechanism, This enables the model to weigh the significance of different parts of the input data differently, allowing it to capture complex dependencies and relationships within the data. Eq. illustrates the implementation details.
-
-\begin{eqnarray}
-\label{eq: Transformer}
-    y_i = F(encoder(X), decoder(y_1,...,y_{i - 1}))
-\end{eqnarray}
-In our case, we only use encoder to produce output, for we don't need to produce output one by one. Encoder's framework follows by:
-\begin{eqnarray}
-\label{eq: TransformerDecoder}
-    \begin {cases} \tilde{X} = \text{Positional Encoding} + X
-    \\Y = FFN(\text{self-attention}(X))
-    \end {cases}
-\end{eqnarray}
-where FFN is a feedforward network with residual added and layer norm, self-attention's framework follows by:
-\begin{eqnarray}
-\label{eq: self-attention}
-    \begin {cases} Q = W^QX
-    \\K = W^KX
-    \\V = W^VX
-    \\Z = \test{softmax}(QK^T)V
-    \end {cases}
-\end{eqnarray}
-where $Z$ is the output of self-attention layer.
+% \begin{eqnarray}
+% \label{eq: Transformer}
+%     y_i = F(encoder(X), decoder(y_1,...,y_{i - 1}))
+% \end{eqnarray}
+% In our case, we only use encoder to produce output, for we don't need to produce output one by one. Encoder's framework follows by:
+% \begin{eqnarray}
+% \label{eq: TransformerDecoder}
+%     \begin {cases} \tilde{X} = \text{Positional Encoding} + X
+%     \\Y = FFN(\text{self-attention}(X))
+%     \end {cases}
+% \end{eqnarray}
+% where FFN is a feedforward network with residual added and layer norm, self-attention's framework follows by:
+% \begin{eqnarray}
+% \label{eq: self-attention}
+%     \begin {cases} Q = W^QX
+%     \\K = W^KX
+%     \\V = W^VX
+%     \\Z = \test{softmax}(QK^T)V
+%     \end {cases}
+% \end{eqnarray}
+% where $Z$ is the output of self-attention layer.
 \subsection*{Data Preparations and Experiment Designs}
 \subsubsection*{Data Preparations}
-In line with our primary goal of predicting next-day arithmetical return of \(CMFs\) as denoted in eq.X, it is rational to initially incorporate CMFs-related factors \(V^j_t\) and \(Roll^j_{t+1}\) as detailed in Eq.2 and Eq.5. Additionally, to thoroughly examine the informative power of term structures, we introduce \(\mu^j_t\) denoted in Eq.7 and \(\triangle Roll_{t}^j\)to provides a comprehensive description of the CMFs term structure. We also integrate \(TLT\) and \(SPY\) into our analysis to partially represents the macro-economics conditions. Furthermore, various time-series statistical transformations are employed to explore possible extra information with details provided in table 3. The time range for \(VIX\)  futures and \(CMFs\)  data covers the period from January 3, 2005, to March 7, 2023 while \(TLT\)  and \(SPY\)  data are selected within the time frame of January 12, 1995, to April 12, 2023. Three distinct data sets are utilised to incrementally examine the informative power of VIX term structures and additional information offered by time-series statistical transformations.
-Detailed descriptions of all three datasets are provided in tables 1, 2 and 3.
+In line with our primary goal of predicting next-day arithmetical return of CMFs. it is rational to initially incorporate CMFs-related factors \(V^j_t\) and \(Roll^j_{t}\) as detailed in Eq.\ref{eq:defineV} and Eq.\ref{roll} Additionally, to thoroughly examine the informative power of term structures, we introduce \(\mu^j_t\) denoted in Eq.\ref{eq: mu} and  \(\triangle Roll_{t}^j\)to provides a comprehensive description of the CMFs term structure. We also integrate \(TLT\) and \(SPY\) into our analysis to partially represents the macro-economics conditions. Furthermore, various time-series statistical transformations are employed to explore possible extra information with details provided in table \ref{table_all}. The time range for \(VIX\)  futures and \(CMFs\)  data covers the period from January 3, 2005, to March 7, 2023 while \(TLT\)  and \(SPY\)  data are selected within the time frame of January 12, 1995, to April 12, 2023. Three distinct data sets are utilised to incrementally examine the informative power of VIX term structures and additional information offered by time-series statistical transformations.
+Detailed descriptions of all three datasets are provided in tables \ref{table_simple}, \ref{table_term} and \ref{table_all}.
 \begin{table}[!ht]
 %\begin{adjustwidth}{-2.25in}{0in} % Comment out/remove adjustwidth environment if table fits in text column.
 \centering
@@ -480,7 +465,7 @@ Detailed descriptions of all three datasets are provided in tables 1, 2 and 3.
   \end{tabular}
 \begin{flushleft} Table notes: The initial data sets comprise solely of CMFs-related factors and macroeconomic variables.
 \end{flushleft}
-\label{table1}
+\label{table_simple}
 %\end{adjustwidth}
 \end{table}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -508,14 +493,16 @@ Detailed descriptions of all three datasets are provided in tables 1, 2 and 3.
   \end{tabular}
 \begin{flushleft} Table notes: Term structures have been added to the data sets based on the simple datasets.
 \end{flushleft}
-\label{table1}
+\label{table_term}
 %\end{adjustwidth}
 \end{table}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{sidewaystable}
+%\begin{sidewaystable}
+\begin{table}[!ht]
 \caption{{\bf Statistical Derivations Data Sets}}
-%\begin{adjustwidth}{2.25in}{0in} % Comment out/remove adjustwidth environment if table fits in text column.
+\begin{adjustwidth}{-2.25in}{0in} % Comment out/remove adjustwidth environment if table fits in text column.
 \centering
+\scalebox{0.8}{
 \begin{tabular}{|c|c|c|c|c|c|}% Use c for centered columns; you can also use other alignment options like l (left) or r (right)
     \hline % Horizontal line at the top
     \(VIX_{CMFs}\)  & CMFs-related Factors & Macro-factors & Term Structure Factors & Time-series Statistical Derivations\\
@@ -533,16 +520,19 @@ Detailed descriptions of all three datasets are provided in tables 1, 2 and 3.
     \hline
     \(CMF_{6}\) & \({[V_{t}^6},{Roll_{t}^6]}\) & \([log_{SPY_t},log_{TLT_t},VIX_t]\) & \({[\mu_{t}^6, \triangle Roll_{t}^6]}\) & \makecell[c]{\([Std_{T}(All_{t}^{6}), Skew_{T}^{6}(All_{t}^{6}),Kurt_T(All_{t}^{6}),Mean_{T}(All_{t}^{6})\),\\ \(z\ score_{T}(term_{t}^{6})\)\\ , \(where \: T \in \{5,20, 60\}\)]}  \\
     \hline % Horizontal line at the bottom
-\end{tabular}
+\end{tabular}}
 \begin{flushleft} Table notes: \( All_{t}^{j} \in \{CMFs\ related \ Factors, Macro \ factors, Term\ Structure\ Factors\}\) and \(term_{t}^{j} \in \{Term\ Structure\ Factors \}\)
-
 \end{flushleft}
-\label{table1}
-%\end{adjustwidth}
-\end{sidewaystable}
+\label{table_all}
+\end{adjustwidth}
+\end{table}
+%\end{sidewaystable}
 
  \subsubsection*{Empirical Experiment Designs}
- The main goal of our empirical experiment aims to evaluate the statistical and economic performances among different models and different datasets. Before training, we are dealing with 6 groups of instruments and features under a single date as shown in table 1,2 and 3. Based on the concept of "feature stacking", we combine 6 groups of instruments and features into one large group to achieve a more general conclusions. Meanwhile, the model is less biased by outliers and over-fitting is less likely to occur while correlations among CMFs are considered in the model. During training, cross-validation is widely used to determine the generalization error of an ML algorithm, so as to prevent over fitting. However, CV can be exposed to future information leakage, particularly in time-series data due to various reasons such as the inclusion of future data points caused by random sampling, the temporal dependencies of financial time-series data, etc. Therefore, to avoid the leakage of future information, we implement a walk-forward training and back-testing procedure, specifically, We set (First-Train, First-Valid, First-Test) as follows: First Train: (2005-12-20, 2010-06-30), First Valid: (2010-07-01, 2010-12-31), First Test: [2011-01-01, 2022-08-15]. This setup is based on three main considerations: 1. To ensure a sufficiently long back testing period of 11 years; 2. To ensure the first training set is large enough and includes extreme market conditions like the 2008 financial crisis; 3. To set a six-month valid set, ensuring the training data used for predictions is at least six months old, which further prevents information leakage and increases robustness. We believe that using more recent data in practice can yield better results. Additionally, we follow an expanding window process  when using the data, meaning each training includes all previous data points, to train a more robust model for prediction.
+ The main goal of our empirical experiment aims to evaluate the statistical and backtesting performances among different models and different datasets. Before training, we are dealing with 6 groups of instruments and features under a single date as shown in table \ref{table_simple}, \ref{table_term} and \ref{table_all}. Based on the concept of "feature stacking", we combine 6 groups of instruments and features into one large group to achieve a more general conclusions. Meanwhile, the model is less biased by outliers and over-fitting is less likely to occur while correlations among prediction targets are not considered in the model. During training, cross-validation is widely used to determine the generalization error of an ML algorithm, so as to prevent over fitting. However, CV can be exposed to future information leakage, particularly in time-series data due to various reasons such as the inclusion of future data points caused by random sampling, the temporal dependencies of financial time-series data, etc. Therefore, to avoid the leakage of future information, we implement a walk-forward training and back-testing procedure, specifically, We set (TRAIN, VALID, TEST) as follows: TRAIN: (2005-12-20, 2010-06-30), VALID: (2010-07-01, 2010-12-31), TEST: [2011-01-01, 2022-08-15]. This setup is based on three main considerations:
+ \\1. To ensure a sufficiently long back testing period of 11 years; \\2. To ensure the first training set is large enough and includes extreme market conditions like the 2008 financial crisis;
+ \\3. To set a six-month valid set, ensuring the training data used for predictions is at least six months old, which further prevents information leakage and increases robustness. We believe that using more recent data in practice can yield better results;
+ \\4. we follow an expanding window process  when using the data, meaning each training includes all previous data points, to train a more robust model for prediction;
 
  \begin{algorithm}
         \caption{walking forward procedure}
@@ -582,7 +572,7 @@ Detailed descriptions of all three datasets are provided in tables 1, 2 and 3.
 
 We introduce both C-MVO strategy and long-short strategy to explore the backtesting performances among various machine learning models. The following is the detailed explanation for two strategies.  In line with the classical mean-variance portfolio optimization structure proposed by Markowits (1952).  For C-MVO strategy, we incorporated several additional constraints. The \(Cov_{port}\) was derived through the estimation of a 60-days historical covariance matrix. The risk aversion parameter, denoted as \(gamma\), was fixed at a value of 0.2. To ensure prudent risk management, we imposed constraints based on portfolio characteristics. Specifically, we restricted gross leverage to a maximum of 3, and imposed absolute limits on the individual weights of cmfs, ensuring individual weights did not exceed an absolute value of 1. Furthermore, a critical risk threshold was established, with the annualized risk of the portfolio constrained to not exceed 30 \%.
 This strategy provides a rigorous approach to portfolio construction, striking a balance between expected returns and risk mitigation. The application of historical covariance data and the delineation of precise risk parameters contribute to the robustness and reliability of the derived portfolio weights, thereby enhancing the integrity of the investment strategy. The detailed optimization function is represented in eq.\ref{MVO}
- For long-short strategy, which is a common trading strategy aims to exploit profits from relative performances of assets through a combination of long and short positions. In our strategy design,we rank six \(Cmfs\) instrument based on predicted returns in descending order.  Each trading day, we maintain a 50\% long positions in the Cmfs with largest predicted return and a 50\% short position to the lowest predicted return Cmfs, with daily re-balance.
+ For long-short strategy, which is a common trading strategy aims to exploit profits from relative performances of assets through a combination of long and short positions. In our strategy design,we rank six \(Cmfs\) instrument based on predicted returns in descending order. Each trading day, we maintain an equal long and short positions between CMFs with largest predicted return and lowest predicted return, with daily re-balance.
 \begin{eqnarray}
 \label{MVO}
     Max_{w_i}: \quad & \sum_{i=1}^{n} (W_i \times R_i)-gamma \times risk \nonumber \\
@@ -601,10 +591,10 @@ This strategy provides a rigorous approach to portfolio construction, striking a
 
 % Results and Discussion can be combined.
 \section*{Results}
-Panel.\ref{summary} presents the combined results of predictive and back-testing performances, To assess prediction performance across all machine learning models, we have employed a range of metrics within the domain of quantitative trading evaluation systems. Our major metric is the information coefficient (IC), a statistical measure that quantifies the correlations between predictions of returns and subsequent realized returns of portfolio which can be denoted as \(Corr(\hat{y},{y})\)  A high positive IC indicates a robust predictions are highly correlated with actual returns, suggesting a strong predictive ability. Conversely, a low or negative IC suggests inaccuracies in prediction or even contrarian to actual outcomes. Furthermore, we have integrated ICIR (Information Coefficient Information Ratio) into our evaluation, which can be calculated as Eq.\ref{ICIR}. In addition, we have introduced Rank IC that replace \(Corr(\hat{y},{y})\) as the correlation of returns rankings denoted as \(Corr(\hat{rank},{rank})\) and subsequently computed Rank ICIR. We consider information ratios and annualised returns as key indicators for the assessments of back-testing performances.
+Panel.\ref{summary} presents the combined results of predictive and back-testing performances, to assess prediction performance across all machine learning models, we have employed a range of metrics within the domain of quantitative trading evaluation systems. Our major metric is the information coefficient (IC), a statistical measure that quantifies the correlations between predictions of returns and subsequent realized returns of portfolio which can be denoted as \(Corr(\hat{y},{y})\)  A high positive IC indicates a robust predictions are highly correlated with actual returns, suggesting a strong predictive ability. Conversely, a low or negative IC suggests inaccuracies in prediction or even contrarian to actual outcomes. Furthermore, we have integrated IR (Information  Ratio) into our evaluation, which can be calculated as Eq.\ref{IR}. In addition, we have introduced ICIR, Rank IC that replace \(Corr(\hat{y},{y})\) as the correlation of returns rankings denoted as \(Corr(\hat{rank},{rank})\) and subsequently computed Rank ICIR. We consider information ratio (see explanations in Goodwin (1998) work) and annualised returns as key indicators for the assessments of back-testing performances.
 
 \begin{eqnarray}
-\label{ICIR}
+\label{IR}
 IR \approx \frac{\bar{IC}}{Std(IC)}
 \end{eqnarray}
 
@@ -648,23 +638,17 @@ XGB & Derivations &  0.008 &  0.012 &    0.011 &      0.019 &                   
     & TermStructure &  0.047 &  0.071 &    0.043 &      0.069 &                    0.011 &                    0.044 &                         0.116 &                         0.632 \\
 \bottomrule
 \end{tabular}
-
-
-
-\begin{flushleft} Table notes Phasellus venenatis, tortor nec vestibulum mattis, massa tortor interdum felis, nec pellentesque metus tortor nec nisl. Ut ornare mauris tellus, vel dapibus arcu suscipit sed.
+\begin{flushleft} Table notes:(WTA)
 \end{flushleft}
 \label{summary}
 % \end{sidewaystable}
 \end{adjustwidth}
 \end{table}
 
-
-
-
-\subsection*{Term Structure and statistical Derivations evaluation}
-Initially, from the perspective of three datasets, based on panel.\ref{summary}, for the predictive performances, models with simple datasets have shown the worst IC compared to the rest of two datasets containing term structure factors and time-series derivations. Notably, GRU (\textit{-0.023}), LGB(\textit{-0.024}), LSTM(\textit{-0.015}) and MLP(\textit{-0.002}) even shows negative IC which indicates the predicted returns are contrast with realised returns.
-by following this perspective, we discover  first findings that the robust informative power of term structure factors exists which will be explained in details in the following subsections. In our experiment, we explore three distinct datasets named Simple, TermStructure, Derivations as before, our results show that TermStructure and Derivations with term structure infomation stand out.
-\\Table~\ref{Best Dataset} select the best dataset for all models on our main metrics: IC, rank IC, information ratio of long short strategy, information ratio of constrined mean-variance optimization strategy.
+\subsection*{Factors Evaluations}
+Initially, from the perspective of three datasets, based on panel.\ref{summary}, for the predictive performances, models with simple datasets have shown the worst IC compared to the rest of two datasets containing term structure factors and time-series derivations. Notably, GRU (-0.023), LGB(-0.024), LSTM(-0.015) and MLP(-0.002) even shows negative IC which indicates the predicted returns are contrast with realised returns. By following this perspective, we discover  first findings that the robust informative power of term structure factors exists which will be explained in details in the following subsections. In our experiment, we explore three distinct datasets named Simple, TermStructure, Derivations as before, our results show that TermStructure and Derivations with term structure infomation stand out.
+\\Table~\ref{Best Dataset} select the best datasets for all models based on main metrics: IC, rank IC, information ratio of long short strategy, information ratio of constrained mean-variance optimization strategy.
+Data shows Simple dataset doesn't prevail in any model on prediction metrics and backtesting metrics. 46 \% for TermStructure and 39\% for derivations.As described before, TermStructure mainly extent term structure features like $\mu$ and $\Delta roll$, Derivations extent time series distribution features like rolling-ma and z-score on TermStructure features. Term structure features do improve the result, but time series distribution features don't improve obviously.We will only discuss TermStructure below.
 
 \begin{table}[!ht]
 \begin{adjustwidth}{-2.25in}{0in} % Comment out/remove adjustwidth environment if table fits in text column.
@@ -686,29 +670,19 @@ MLP    &  TermStructure &  TermStructure &                  Simple &            
 XGB    &  TermStructure &  TermStructure &             Derivations &                TermStructure \\
 \bottomrule
 \end{tabular}
-
-
-
-
 \begin{flushleft} The best dataset in all models on main metircs: IC, Rank IC, C-MVO Information Ratio, Long Short Information Ratio.
 \end{flushleft}
 \label{table1}
+% \end{sidewaystable}
 \end{adjustwidth}
-
 \end{table}
-Data shows Simple dataset doesn't prevail in any model on prediction metrics, the best dataset on backtest metric also main distribute on Term Structure and Derivations. TermStructure is the best dataset at 46\% of the time while Derivations prevail at 39\% of the time.
-\\As described before, TermStructure mainly extent term structure features like $\mu$ and $\Delta roll$, Derivations extent time series distribution features like rolling-ma and z-score on TermStructure features. Term structure features do improve the result, but time series distribution features don't improve obviously.
-\\We will only discuss TermStructure below.
-
-
-\subsection*{Informative Power of Term Structures}
-
-
+Throughout the 11-year span from 2011 to 2022, the evaluation of TermStructure of 7 machine learning models was conducted using the Walk-Forward Training approach. This method, known for its strick out-of-sample in time series prediction and strategy, also involves iterative training, enabling models to adapt dynamically to evolving data characteristics.
+table \ref{Statistic Metric} shows the the average Information Coefficient (IC) value of 0.037 which prove the existence of term structure factors informative power and its ability to provide valuable insights.Across all models' backtesting, an average Information Ratio (IR) of 0.623 was achieved as illustrated in  Table~\ref{Backtest Metric}. This notable average Information Ratio of 0.623 underscores the dataset's effectiveness in not only facilitating accurate predictions, as previously discussed, but also in translating these predictions into actionable and profitable trading strategies like long short strategy and constrained mean-variance strategy.
 
 \begin{table}[!ht]
 %\begin{adjustwidth}{-2.25in}{0in} % Comment out/remove adjustwidth environment if table fits in text column.
 \centering
-\caption{Statistic Metric}
+\caption{Predictive Metrics}
 \label{Statistic Metric}
 % \begin{sidewaystable}
 \begin{tabular}{lrrrr}
@@ -726,28 +700,20 @@ XGB    &  0.047 &  0.071 &    0.043 &      0.069 \\
 mean   &  0.037 &  0.056 &    0.035 &      0.056 \\
 \bottomrule
 \end{tabular}
-
-
-
-
 \begin{flushleft}
-Table notes: performance of statistic metric
+Table notes: performances based on statistic metrics
 \end{flushleft}
 \label{table1}
 % \end{sidewaystable}
 %\end{adjustwidth}
-
 \end{table}
 
-Throughout the 11-year span from 2011 to 2022, the evaluation of TermStructure of 7 machine learning models was conducted using the Walk-Forward Training approach. This method, known for its strick out-of-sample in time series prediction and strategy, also involves iterative training, enabling models to adapt dynamically to evolving data characteristics.
-
-The term structure features show informative power. The Information Coefficient (IC) values were achieved 0.037 Table~\ref{Statistic Metric} across all models during this evaluation. The IC values serve as a key performance metric, indicating the models' ability to provide valuable insights and predictions.
 
 
 \begin{table}[!ht]
 %\begin{adjustwidth}{-2.25in}{0in} % Comment out/remove adjustwidth environment if table fits in text column.
 \centering
-\caption{Backtest Metric}
+\caption{Backtesting Metrics}
 \label{Backtest Metric}
 % \begin{sidewaystable}
 \begin{tabular}{lp{1.5cm}p{1.5cm}p{1.5cm}p{1.5cm}}
@@ -769,21 +735,60 @@ mean   &                    0.051 &                    0.623 &                  
 
 
 \begin{flushleft}
-Table notes: performance of backtest metric
+Table notes: performance based on backtesting metrics
 \end{flushleft}
 \label{table1}
 % \end{sidewaystable}
 %\end{adjustwidth}
-
 \end{table}
 
-Across all models' backtesting, an average Information Ratio (IR) of 0.623 Table~\ref{Backtest Metric} was achieved. The Information Ratio serves as a key performance metric in the realm of investment strategies, measuring the effectiveness of a strategy in generating returns relative to its stander deviation.
+\subsection*{Trading Strategies Evaluations}
+Utilizing numerical predicted returns obtained from various machine learning models, we implemented both the Constrained Mean-Variance Optimization (C-MVO) strategy under the mean-variance framework and the widely-used long-short strategy. For detailed descriptions of these strategies, refer to the previous sections. Table.\ref{summary} presents the back-testing performances  for both the C-MVO and long-short strategies. The C-MVO strategy's average information ratio of 0.623 indicates robust back-testing performance, whereas the long-short strategy's average ratio of 0.404 suggests acceptable performance. These evidences further support the solid informative power in VIX Cmfs term structure. Meanwhile, according to table\ref{strategy}, the information ratios for ALSTM (0.744), LGB (0.327), LSTM (0.671), and Linear (2.291) models each surpass the corresponding performances under the long-short strategy. A plausible explanation for this discrepancy is that the C-MVO strategy more effectively leverages the direct numerical predictions for all six CMFs' returns, whereas the long-short strategy, relying solely on ordinal rankings derived from these predictions, may lose critical information like the exact magnitude relationships among the CMFs' predicted returns.
 
-This notable average Information Ratio of 0.623 underscores the dataset's effectiveness in not only facilitating accurate predictions, as previously discussed, but also in translating these predictions into actionable and profitable trading strategies like long short strategy and constrained mean-variance strategy.
+\begin{table}[!ht]
+%\begin{adjustwidth}{-2.25in}{0in} % Comment out/remove adjustwidth environment if table fits in text column.
+\centering
+\caption{Statistic Metric}
+% \begin{sidewaystable}
+\begin{tabular}{lp{1.5cm}p{1.5cm}p{1.5cm}p{1.5cm}}
+\toprule
+{} &  C-MVO Annualized Return &  C-MVO Information Ratio &  Long Short Annualized Return &  Long Short Information Ratio \\
+model  &                          &                          &                               &                               \\
+\midrule
+ALSTM  &                    0.071 &                    0.744 &                         0.112 &                         0.579 \\
+GRU    &                    0.028 &                    0.241 &                         0.080 &                         0.409 \\
+LGB    &                    0.023 &                    0.327 &                        -0.085 &                        -0.367 \\
+LSTM   &                    0.059 &                    0.671 &                         0.034 &                         0.168 \\
+Linear &                    0.150 &                    2.291 &                         0.214 &                         1.105 \\
+MLP    &                    0.013 &                    0.043 &                         0.050 &                         0.302 \\
+XGB    &                    0.011 &                    0.044 &                         0.116 &                         0.632 \\
+\hline
+mean   &                    0.051 &                    0.623 &                         0.074 &                         0.404 \\
+\bottomrule
+\end{tabular}
+\begin{flushleft}
+Table notes: performance of backtest metric
+\end{flushleft}
+\label{strategy}
+% \end{sidewaystable}
+%\end{adjustwidth}
+\end{table}
+\nolinenumbers
 
-\subsection*{Strategies Comparison}
 
-We separate models into three category: RNN-based model, Tree-based model and vanilla models include Linear and MLP.
+
+\subsection*{Models Evaluations}
+For evaluations of all machine learning models, we first separate models into three category: RNN-based model, Tree-based model and vanilla models include Linear and MLP.
+Intially, the RNN-based Models, ALSTM Achieved an IC of 0.029 and an ICIR of 0.042. Ranked at 0.026 for IC and 0.041 for ICIR. Displays a favorable performance with a C-MVO Annualized Return of 0.071 and a C-MVO Information Ratio of 0.744. In terms of Long-Short strategies, it achieves a Long Short Annualized Return of 0.112 and a Long Short Information Ratio of 0.579.
+GRU: Demonstrated an IC of 0.004 and an ICIR of 0.006. Ranked at 0.002 for IC and 0.004 for ICIR. Demonstrates a respectable performance, though slightly lower than ALSTM, with a C-MVO Annualized Return of 0.028 and a C-MVO Information Ratio of 0.241. In Long-Short strategies, it achieves a Long Short Annualized Return of 0.080 and a Long Short Information Ratio of 0.409.
+LSTM: Showcased an IC of 0.021 and an ICIR of 0.031. Ranked at 0.016 for IC and 0.026 for ICIR. Shows competitive results with a C-MVO Annualized Return of 0.059 and a C-MVO Information Ratio of 0.671. However, its Long Short Annualized Return is relatively lower at 0.034, with a Long Short Information Ratio of 0.168.
+\\Tree-based Models:
+\\LGB (LightGBM): Outperformed with an IC of 0.035 and an ICIR of 0.066. Achieved a Rank IC of 0.054 and a Rank ICIR of 0.079. Outperforms in C-MVO Annualized Return and C-MVO Information Ratio with specific values missing.
+XGB (XGBoost): Produced an IC of 0.047 and an ICIR of 0.071. Ranked at 0.043 for IC and 0.069 for ICIR.
+
+Among the RNN-based models, ALSTM performed the best in terms of both IC and ICIR, and tends to have the highest returns and information ratios across both C-MVO and Long-Short strategies, making it a potentially strong performer. It may cause by the attention layer design in ALSTM, it can catch the information between $V_1-V_6$.
+In the tree-based category, LGB and XGB demonstrated competitive performance, with a relative high performance.
+Among all models, Linear exhibited superior performance compared to MLP. It may conclude term structure features contain important information about prediction, complex models can easily go to overfitting.
 
 \begin{table}[!ht]
 %\begin{adjustwidth}{-2.25in}{0in} % Comment out/remove adjustwidth environment if table fits in text column.
@@ -850,87 +855,8 @@ Table notes: performance of backtest metric
 %\end{adjustwidth}
 
 \end{table}
-RNN-based Models:
-\\ALSTM: Achieved an Information Coefficient (IC) of 0.029 and an ICIR (Information Coefficient Information Ratio) of 0.042. Ranked at 0.026 for IC and 0.041 for ICIR. Displays a favorable performance with a C-MVO Annualized Return of 0.071 and a C-MVO Information Ratio of 0.744. In terms of Long-Short strategies, it achieves a Long Short Annualized Return of 0.112 and a Long Short Information Ratio of 0.579.
-GRU: Demonstrated an IC of 0.004 and an ICIR of 0.006. Ranked at 0.002 for IC and 0.004 for ICIR. Demonstrates a respectable performance, though slightly lower than ALSTM, with a C-MVO Annualized Return of 0.028 and a C-MVO Information Ratio of 0.241. In Long-Short strategies, it achieves a Long Short Annualized Return of 0.080 and a Long Short Information Ratio of 0.409.
-LSTM: Showcased an IC of 0.021 and an ICIR of 0.031. Ranked at 0.016 for IC and 0.026 for ICIR. Shows competitive results with a C-MVO Annualized Return of 0.059 and a C-MVO Information Ratio of 0.671. However, its Long Short Annualized Return is relatively lower at 0.034, with a Long Short Information Ratio of 0.168.
-\\Tree-based Models:
-\\LGB (LightGBM): Outperformed with an IC of 0.035 and an ICIR of 0.066. Achieved a Rank IC of 0.054 and a Rank ICIR of 0.079. Outperforms in C-MVO Annualized Return and C-MVO Information Ratio with specific values missing. 
-XGB (XGBoost): Produced an IC of 0.047 and an ICIR of 0.071. Ranked at 0.043 for IC and 0.069 for ICIR.
-
-Among the RNN-based models, ALSTM performed the best in terms of both IC and ICIR, and tends to have the highest returns and information ratios across both C-MVO and Long-Short strategies, making it a potentially strong performer. It may cause by the attention layer design in ALSTM, it can catch the information between $V_1-V_6$.
-In the tree-based category, LGB and XGB demonstrated competitive performance, with a relative high performance. 
-Among all models, Linear exhibited superior performance compared to MLP. It may conclude term structure features contain important information about prediction, complex models can easily go to overfitting.
 
 
-\section*{Discussion}
-Nulla mi mi, venenatis sed ipsum varius, Table~\ref{table1} volutpat euismod diam. Proin rutrum vel massa non gravida. Quisque tempor sem et dignissim rutrum. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi at justo vitae nulla elementum commodo eu id massa. In vitae diam ac augue semper tincidunt eu ut eros. Fusce fringilla erat porttitor lectus cursus, vel sagittis arcu lobortis. Aliquam in enim semper, aliquam massa id, cursus neque. Praesent faucibus semper libero~\cite{bib3}.
-
-\section*{Conclusion}
-
-CO\textsubscript{2} Maecenas convallis mauris sit amet sem ultrices gravida. Etiam eget sapien nibh. Sed ac ipsum eget enim egestas ullamcorper nec euismod ligula. Curabitur fringilla pulvinar lectus consectetur pellentesque. Quisque augue sem, tincidunt sit amet feugiat eget, ullamcorper sed velit. 
-
-Sed non aliquet felis. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris commodo justo ac dui pretium imperdiet. Sed suscipit iaculis mi at feugiat. Ut neque ipsum, luctus id lacus ut, laoreet scelerisque urna. Phasellus venenatis, tortor nec vestibulum mattis, massa tortor interdum felis, nec pellentesque metus tortor nec nisl. Ut ornare mauris tellus, vel dapibus arcu suscipit sed. Nam condimentum sem eget mollis euismod. Nullam dui urna, gravida venenatis dui et, tincidunt sodales ex. Nunc est dui, sodales sed mauris nec, auctor sagittis leo. Aliquam tincidunt, ex in facilisis elementum, libero lectus luctus est, non vulputate nisl augue at dolor. For more information, see \nameref{S1_Appendix}.
-
-\section*{Supporting information}
-
-% Include only the SI item label in the paragraph heading. Use the \nameref{label} command to cite SI items in the text.
-\paragraph*{S1 Fig.}
-\label{S1_Fig}
-{\bf Bold the title sentence.} Add descriptive text after the title of the item (optional).
-
-\paragraph*{S2 Fig.}
-\label{S2_Fig}
-{\bf Lorem ipsum.} Maecenas convallis mauris sit amet sem ultrices gravida. Etiam eget sapien nibh. Sed ac ipsum eget enim egestas ullamcorper nec euismod ligula. Curabitur fringilla pulvinar lectus consectetur pellentesque.
-
-\paragraph*{S1 File.}
-\label{S1_File}
-{\bf Lorem ipsum.}  Maecenas convallis mauris sit amet sem ultrices gravida. Etiam eget sapien nibh. Sed ac ipsum eget enim egestas ullamcorper nec euismod ligula. Curabitur fringilla pulvinar lectus consectetur pellentesque.
-
-\paragraph*{S1 Video.}
-\label{S1_Video}
-{\bf Lorem ipsum.}  Maecenas convallis mauris sit amet sem ultrices gravida. Etiam eget sapien nibh. Sed ac ipsum eget enim egestas ullamcorper nec euismod ligula. Curabitur fringilla pulvinar lectus consectetur pellentesque.
-
-\paragraph*{S1 Appendix.}
-\label{S1_Appendix}
-{\bf Lorem ipsum.} Maecenas convallis mauris sit amet sem ultrices gravida. Etiam eget sapien nibh. Sed ac ipsum eget enim egestas ullamcorper nec euismod ligula. Curabitur fringilla pulvinar lectus consectetur pellentesque.
-
-\paragraph*{S1 Table.}
-\label{S1_Table}
-{\bf Lorem ipsum.} Maecenas convallis mauris sit amet sem ultrices gravida. Etiam eget sapien nibh. Sed ac ipsum eget enim egestas ullamcorper nec euismod ligula. Curabitur fringilla pulvinar lectus consectetur pellentesque.
-
-\section*{Acknowledgments}
-Cras egestas velit mauris, eu mollis turpis pellentesque sit amet. Interdum et malesuada fames ac ante ipsum primis in faucibus. Nam id pretium nisi. Sed ac quam id nisi malesuada congue. Sed interdum aliquet augue, at pellentesque quam rhoncus vitae.
-
-
-
-\begin{table}
-  \centering
-  \caption{A 4 by 4 Table}
- \begin{tabular}{cccc} % Use c for centered columns; you can also use other alignment options like l (left) or r (right)
-    \hline % Horizontal line at the top
-    Column 1 & Column 2 & Column 3 & Column 4 \\
-    \hline % Horizontal line under column headers
-    Cell 1,1 & Cell 1,2 & Cell 1,3 & Cell 1,4 \\
-    Cell 2,1 & Cell 2,2 & Cell 2,3 & Cell 2,4 \\
-    Cell 3,1 & Cell 3,2 & Cell 3,3 & Cell 3,4 \\
-    Cell 4,1 & Cell 4,2 & Cell 4,3 & Cell 4,4 \\
-    \hline % Horizontal line at the bottom
-  \end{tabular}
-\end{table}
-\begin{eqnarray}
-\label{eq:schemeP}
-	\mathrm{P_Y} = \underbrace{H(Y_n) - H(Y_n|\mathbf{V}^{Y}_{n})}_{S_Y} + \underbrace{H(Y_n|\mathbf{V}^{Y}_{n})- H(Y_n|\mathbf{V}^{X,Y}_{n})}_{T_{X\rightarrow Y}},
-\end{eqnarray}
-
-% Place figure captions after the first paragraph in which they are cited.
-\begin{figure}[!h]
-\caption{{\bf Bold the figure title.}
-Figure caption text here, please use this space for the figure panel descriptions instead of using subfigure commands. A: Lorem ipsum dolor sit amet. B: Consectetur adipiscing elit.}
-\label{fig1}
-\end{figure}
-
-\nolinenumbers
 
 % Either type in your references using
 % \begin{thebibliography}{}
@@ -945,6 +871,9 @@ Figure caption text here, please use this space for the figure panel description
 % here. See http://journals.plos.org/plosone/s/latex for
 % step-by-step instructions.
 %
+\subsubsection*{End notes}
+In our experiment, we also employ various innovative and complex models such as transformer, SFM, graph attention networks, and tabnet. However, these models are subjected to overfitting caused by insufficient daily-frequency data, thereby leading to bad predictive performances. Therefore, we decide not to include these models in the main part of our paper, the related performances are included in the appendix.
+
 \begin{thebibliography}{10}
 
 \bibitem{bib1}
