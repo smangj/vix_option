@@ -7,6 +7,7 @@
   - copy from all.txt
   - instruments: just remain VIX_1M-VIX_6M
 - entrance: run_qlib.py write config in yaml_config
+- 此框架基于qlib
 
 ## 环境配置
 
