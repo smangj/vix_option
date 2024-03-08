@@ -9,7 +9,11 @@
 - entrance: run_qlib.py write config in yaml_config
 - 此框架基于qlib
 
+### 
+- entrance: run_qlib.py
+
 ## 环境配置
 
 - Python版本：3.8
 - 环境及依赖包管理器：[PDM](https://pdm.fming.dev/latest/)
+  - see in pyproject.toml
